@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiUser, FiMail, FiLock, FiSmartphone } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import Image from 'next/image';
+import Image from "next/image";
 import AuthInput from "@/components/auth/AuthInput";
 import { SLIDER_DATA } from "@/constants/auth-slider";
 
@@ -15,7 +15,7 @@ export default function SignUpPage() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % SLIDER_DATA.length);
-    }, 5000); 
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
@@ -24,16 +24,19 @@ export default function SignUpPage() {
       {/* Left Side: Form Container */}
       <section className="flex flex-col px-6 py-8 md:px-12 lg:px-20 justify-center h-full max-w-2xl mx-auto w-full">
         {/* Chopbeta Logo */}
-        <Link href="/" className="flex items-center gap-2 mb-10 self-start hover:opacity-90 transition-opacity">
-        <Image 
-          src="/chopbeta.png" 
-          alt="ChopBeta Logo" 
-          width={120}
-          height={40} 
-          className="object-contain"
-          priority
-        />
-      </Link>
+        <Link
+          href="/"
+          className="flex items-center gap-2 mb-10 self-start hover:opacity-90 transition-opacity"
+        >
+          <Image
+            src="/chopbeta.png"
+            alt="ChopBeta Logo"
+            width={120}
+            height={40}
+            className="object-contain"
+            priority
+          />
+        </Link>
 
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -98,7 +101,7 @@ export default function SignUpPage() {
             </label>
           </div>
 
-          <button className="w-full py-3.5 bg-[#A8D5BA] hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-sm active:scale-[0.98]">
+          <button className="w-full py-3.5 bg-[#A8D5BA] hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-sm active:scale-[0.98] cursor-pointer">
             Create Your Account
           </button>
         </form>
@@ -133,7 +136,7 @@ export default function SignUpPage() {
         </p>
       </section>
 
-      {/* Right Side: Image Slider (Hidden on mobile/tablet) */}
+      {/* Right Side: Image Slider */}
       <section className="hidden lg:block relative p-6 max-h-screen sticky top-0">
         <div className="relative h-full w-full rounded-[40px] overflow-hidden bg-gray-100 shadow-2xl">
           <AnimatePresence mode="wait">
@@ -145,13 +148,12 @@ export default function SignUpPage() {
               transition={{ duration: 0.7, ease: "easeInOut" }}
               className="absolute inset-0"
             >
-              
               <Image
                 src={SLIDER_DATA[currentSlide].image}
                 alt="Promotion"
-                fill 
+                fill
                 className="object-cover"
-                priority 
+                priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
