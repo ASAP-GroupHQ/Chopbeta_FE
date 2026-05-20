@@ -7,36 +7,60 @@ import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
 import AuthInput from "@/components/auth/AuthInput";
+import OtpVerification from "@/components/auth/OtpVerification";
 import { SLIDER_DATA } from "@/constants/auth-slider";
 
 export default function SignUpPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isOtpStage, setIsOtpStage] = useState(false);
 
   useEffect(() => {
+    if (isOtpStage) return; // Freeze slide intervals when the OTP form screen overrides the viewport
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % SLIDER_DATA.length);
-    }, 5000);
+    }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isOtpStage]);
+
+  // Handle Form Submission Redirect Simulation
+  const handleSignupSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsOtpStage(true); // Jump directly into the local OTP prompt block
+  };
+
+  const handleOtpCompletion = (code: string) => {
+    alert(`Account verified with code: ${code}`);
+
+    // Verify OTP here
+  };
+
+  // If user hits submit, cleanly render the full screen responsive OTP overlay
+  if (isOtpStage) {
+    return (
+      <OtpVerification
+        onBackToSignup={() => setIsOtpStage(false)}
+        onVerifySuccess={handleOtpCompletion}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white font-sans">
       {/* Left Side: Form Container */}
       <section className="flex flex-col px-6 py-8 md:px-12 lg:px-20 justify-center h-full max-w-2xl mx-auto w-full">
-        {/* Chopbeta Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 mb-10 self-start hover:opacity-90 transition-opacity"
-        >
-          <Image
-            src="/chopbeta.png"
-            alt="ChopBeta Logo"
-            width={120}
-            height={40}
-            className="object-contain"
-            priority
-          />
-        </Link>
+        {/* Branding - visible on all screens */}
+        <div className="flex items-center gap-2 mb-10 self-start">
+          <Link href="/" className="hover:opacity-90 transition-opacity">
+            <Image
+              src="/chopbeta.png"
+              alt="ChopBeta Logo"
+              width={120}
+              height={40}
+              className="object-contain"
+              priority
+            />
+          </Link>
+        </div>
 
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -46,35 +70,39 @@ export default function SignUpPage() {
           <h1 className="text-2xl font-bold text-[#1A2E35]">
             Create Your Account
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-1.5">
             Input your details to create a new account
           </p>
         </div>
 
         {/* Form */}
-        <form className="space-y-4 w-full" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-4 w-full" onSubmit={handleSignupSubmit}>
           <AuthInput
             label="Full Name"
             placeholder="Enter full name"
             Icon={FiUser}
+            required
           />
           <AuthInput
             label="Email Address"
             type="email"
             placeholder="Enter email address"
             Icon={FiMail}
+            required
           />
           <AuthInput
             label="Create a New Password"
             type="password"
             placeholder="Enter new password"
             Icon={FiLock}
+            required
           />
           <AuthInput
             label="Confirm New Password"
             type="password"
             placeholder="Re-type your password to confirm"
             Icon={FiLock}
+            required
           />
 
           <div className="flex items-center gap-2 text-[13px] text-gray-600 py-2">
@@ -82,8 +110,9 @@ export default function SignUpPage() {
               type="checkbox"
               className="w-4 h-4 rounded border-gray-300 accent-green-700 cursor-pointer"
               id="terms"
+              required
             />
-            <label htmlFor="terms" className="cursor-pointer">
+            <label htmlFor="terms" className="cursor-pointer select-none">
               I agree to the{" "}
               <Link
                 href="#"
@@ -101,7 +130,10 @@ export default function SignUpPage() {
             </label>
           </div>
 
-          <button className="w-full py-3.5 bg-[#A8D5BA] hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-sm active:scale-[0.98] cursor-pointer">
+          <button
+            type="submit"
+            className="w-full py-3.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-sm active:scale-[0.98] cursor-pointer"
+          >
             Create Your Account
           </button>
         </form>
@@ -117,10 +149,16 @@ export default function SignUpPage() {
 
         {/* Social Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700">
+          <button
+            type="button"
+            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700"
+          >
             <FiSmartphone className="text-gray-500" size={18} /> Phone number
           </button>
-          <button className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700">
+          <button
+            type="button"
+            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700"
+          >
             <FcGoogle size={18} /> Google
           </button>
         </div>
@@ -148,12 +186,10 @@ export default function SignUpPage() {
               transition={{ duration: 0.7, ease: "easeInOut" }}
               className="absolute inset-0"
             >
-              <Image
+              <img
                 src={SLIDER_DATA[currentSlide].image}
-                alt="Promotion"
-                fill
-                className="object-cover"
-                priority
+                className="w-full h-full object-cover"
+                alt="ChopBeta Preview"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
@@ -180,6 +216,7 @@ export default function SignUpPage() {
                   {SLIDER_DATA.map((_, index) => (
                     <button
                       key={index}
+                      type="button"
                       onClick={() => setCurrentSlide(index)}
                       className={`h-1.5 rounded-full transition-all duration-500 ${index === currentSlide ? "w-10 bg-orange-500" : "w-2 bg-white/50 hover:bg-white"}`}
                     />
