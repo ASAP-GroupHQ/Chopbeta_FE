@@ -1,13 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { FiArrowRight, FiMenu } from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiArrowRight, FiMenu, FiX } from "react-icons/fi";
 import { CORE_FEATURES, SAMPLE_MEALS } from "@/constants/landing-data";
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   // Motion Presets
   const fadeInUp = {
     initial: { opacity: 0, y: 30 },
@@ -15,14 +17,14 @@ export default function Home() {
     transition: { duration: 0.6, ease: "easeOut" },
   };
 
-  const staggerContainer = {
+  const fabricsContainer = {
     animate: { transition: { staggerChildren: 0.1 } },
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#F4FAF6] via-white to-white text-[#1A2E35] font-sans overflow-x-hidden">
+    <main className="min-h-screen bg-gradient-to-b from-[#F4FAF6] via-white to-white text-[#1A2E35] font-sans overflow-x-hidden relative">
       {/* HEADER NAVBAR */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between relative z-20">
         <div className="relative w-32 h-10">
           <Image
             src="/chopbeta.png"
@@ -32,6 +34,8 @@ export default function Home() {
             priority
           />
         </div>
+
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
           <Link href="#" className="hover:text-green-700 transition-colors">
             Features
@@ -43,6 +47,7 @@ export default function Home() {
             About ASAP Team
           </Link>
         </nav>
+
         <div className="flex items-center gap-4">
           <Link
             href="/login"
@@ -52,24 +57,86 @@ export default function Home() {
           </Link>
           <Link
             href="/signup"
-            className="px-5 py-2.5 bg-green-700 text-white font-semibold text-sm rounded-xl hover:bg-green-800 transition-all shadow-sm"
+            className="hidden sm:inline-block px-5 py-2.5 bg-green-700 text-white font-semibold text-sm rounded-xl hover:bg-green-800 transition-all shadow-sm"
           >
             Get Started
           </Link>
-          <button className="md:hidden text-gray-600">
-            <FiMenu size={24} />
+
+          {/* Mobile Hamburg - Close Button Toggle */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden text-gray-600 p-1 focus:outline-none z-30"
+            aria-label="Toggle Menu"
+          >
+            {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
         </div>
       </header>
 
-      {/* HERO HERO SECTION */}
+      {/* MOBILE MENU NAV DRAWER OVERLAY */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="absolute top-0 left-0 w-full bg-white border-b border-gray-100 shadow-xl z-10 pt-24 pb-8 px-6 md:hidden flex flex-col gap-6"
+          >
+            <nav className="flex flex-col gap-4 font-semibold text-lg text-gray-700">
+              <Link
+                onClick={() => setIsMenuOpen(false)}
+                href="#"
+                className="hover:text-green-700 py-1 transition-colors"
+              >
+                Features
+              </Link>
+              <Link
+                onClick={() => setIsMenuOpen(false)}
+                href="#"
+                className="hover:text-green-700 py-1 transition-colors"
+              >
+                Pricing
+              </Link>
+              <Link
+                onClick={() => setIsMenuOpen(false)}
+                href="#"
+                className="hover:text-green-700 py-1 transition-colors"
+              >
+                About ASAP Team
+              </Link>
+            </nav>
+
+            <hr className="border-gray-100" />
+
+            <div className="flex flex-col gap-3">
+              <Link
+                onClick={() => setIsMenuOpen(false)}
+                href="/login"
+                className="w-full py-3 border border-gray-200 text-center font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                onClick={() => setIsMenuOpen(false)}
+                href="/signup"
+                className="w-full py-3 bg-green-700 text-white text-center font-bold rounded-xl hover:bg-green-800 transition-colors shadow-md"
+              >
+                Get Started
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* HERO SECTION */}
       <section className="max-w-7xl mx-auto px-6 pt-12 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         {/* Left Side: Call to Action Details */}
         <motion.div
           className="lg:col-span-5 space-y-6 text-center lg:text-left z-10"
           initial="initial"
           animate="animate"
-          variants={staggerContainer}
+          variants={fabricsContainer}
         >
           <motion.div
             variants={fadeInUp}
@@ -117,7 +184,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Right Side */}
+        {/* Right Side: Dashboard Canvas */}
         <motion.div
           className="lg:col-span-7 relative w-full h-[450px] sm:h-[550px] bg-emerald-700/5 rounded-[40px] border border-emerald-500/10 p-4 sm:p-8 flex items-center justify-center"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -130,7 +197,7 @@ export default function Home() {
 
           {/* Core Interactive Center Wheel Block */}
           <div className="relative w-full h-full max-w-xl bg-white/80 backdrop-blur-md border border-white rounded-[32px] shadow-2xl p-6 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* Left side - Budget Metric Cards */}
+            {/* Left Side: Budget Metric Cards */}
             <div className="md:col-span-5 flex flex-col justify-between gap-4">
               {/* Glassmorphic Balance Block */}
               <motion.div
@@ -177,7 +244,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right side - Schedule Feed Stack */}
+            {/* Right Side: Schedule Feed Stack */}
             <div className="md:col-span-7 flex flex-col justify-between">
               <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-2">
                 <h3 className="font-bold text-sm text-[#1A2E35]">
