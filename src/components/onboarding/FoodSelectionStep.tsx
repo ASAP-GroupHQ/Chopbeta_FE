@@ -161,7 +161,7 @@ export default function FoodSelectionStep({
                 customText: isOthersSelected ? customText : "",
               })
             }
-            className={`w-full py-4 text-center text-base font-bold rounded-xl transition-all duration-300 shadow-md ${
+            className={`w-full py-4 text-center text-base font-bold rounded-xl transition-all duration-300 shadow-md cursor-pointer ${
               isFormValid
                 ? "bg-green-700 hover:bg-green-800 text-white active:scale-[0.99]"
                 : "bg-green-700/30 text-white cursor-not-allowed shadow-none"
@@ -173,7 +173,8 @@ export default function FoodSelectionStep({
       </section>
 
       {/* RIGHT AREA: AUTOMATED CAROUSEL CONTAINER */}
-      <section className="hidden lg:block relative p-6 max-h-screen sticky top-0">
+      <section className="hidden lg:block relative w-full h-full min-h-[500px] lg:h-screen p-6 sticky top-0">
+      {/* <section className="relative w-full h-screen p-6"> */}
         <div className="relative h-full w-full rounded-[40px] overflow-hidden bg-gray-900 shadow-2xl">
           <AnimatePresence mode="wait">
             <motion.div
@@ -182,7 +183,7 @@ export default function FoodSelectionStep({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
-              className="absolute inset-0"
+              className="absolute inset-0 w-full h-full"
             >
               <Image
                 src={slides[currentSlide]?.image}
@@ -190,7 +191,7 @@ export default function FoodSelectionStep({
                 fill
                 sizes="50vw"
                 className="object-cover scale-105"
-                priority
+                // priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
             </motion.div>

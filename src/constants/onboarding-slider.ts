@@ -7,22 +7,22 @@ export interface OnboardingSlide {
 export const ALLERGIES_SLIDES: OnboardingSlide[] = [
   {
     id: 1,
-    image: "/images/onboarding/allergy-1.png",
+    image: "/images/onboarding/allergy-1.jpg",
     alt: "Healthy Meal Options",
   },
   {
     id: 2,
-    image: "/images/onboarding/allergy-2.png",
+    image: "/images/onboarding/allergy-2.jpg",
     alt: "Fresh Salads and Bowls",
   },
   {
     id: 3,
-    image: "/images/onboarding/dislike-2.png",
+    image: "/images/onboarding/dislike-2.jpg",
     alt: "Balanced Diet Options",
   },
   {
     id: 4,
-    image: "/images/onboarding/dislike-1.png",
+    image: "/images/onboarding/dislike-1.jpg",
     alt: "Student Budget Preps",
   },
 ];
@@ -30,23 +30,23 @@ export const ALLERGIES_SLIDES: OnboardingSlide[] = [
 export const DISLIKES_SLIDES: OnboardingSlide[] = [
   {
     id: 1,
-    image: "/images/onboarding/dislike-2.png",
+    image: "/images/onboarding/dislike-2.jpg",
     alt: "Balanced Diet Options",
   },
   {
     id: 2,
-    image: "/images/onboarding/dislike-1.png",
+    image: "/images/onboarding/dislike-1.jpg",
     alt: "Student Budget Preps",
   },
 
   {
     id: 3,
-    image: "/images/onboarding/allergy-1.png",
+    image: "/images/onboarding/allergy-1.jpg",
     alt: "Healthy Meal Options",
   },
   {
     id: 4,
-    image: "/images/onboarding/allergy-2.png",
+    image: "/images/onboarding/allergy-2.jpg",
     alt: "Fresh Salads and Bowls",
   },
 ];
