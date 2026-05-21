@@ -103,7 +103,7 @@ export default function Home() {
               </Link>
               <Link
                 onClick={() => setIsMenuOpen(false)}
-                href="#"
+                href="/about-asap"
                 className="hover:text-green-700 py-1 transition-colors"
               >
                 About ASAP Team
@@ -182,7 +182,7 @@ export default function Home() {
               href="/login"
               className="w-full sm:w-auto px-8 py-4 border border-gray-200 hover:bg-gray-50 font-bold rounded-2xl transition-all text-center text-base"
             >
-              View Demo
+              Explore
             </Link>
           </motion.div>
         </motion.div>
