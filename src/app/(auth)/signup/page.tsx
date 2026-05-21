@@ -9,10 +9,12 @@ import Image from "next/image";
 import AuthInput from "@/components/auth/AuthInput";
 import OtpVerification from "@/components/auth/OtpVerification";
 import { SLIDER_DATA } from "@/constants/auth-slider";
+import AllergiesStep from "@/components/onboarding/AllergiesStep";
 
 export default function SignUpPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isOtpStage, setIsOtpStage] = useState(false);
+  const [isOnboardingStage, setIsOnboardingStage] = useState(false);
 
   useEffect(() => {
     if (isOtpStage) return; // Freeze slide intervals when the OTP form screen overrides the viewport
@@ -29,10 +31,29 @@ export default function SignUpPage() {
   };
 
   const handleOtpCompletion = (code: string) => {
-    alert(`Account verified with code: ${code}`);
+    // Clear the OTP container stage and activate the Allergies view layout
+    setIsOtpStage(false);
+    // Verify OTP here first
 
-    // Verify OTP here
+    setIsOnboardingStage(true);
   };
+
+  const handleOnboardingComplete = (data: {
+    selectedAllergies: string[];
+    customAllergyText: string;
+  }) => {
+    console.log("Allergies submitted successfully:", data);
+    // redirect to dashboard
+  };
+
+  if (isOnboardingStage) {
+    return (
+      <AllergiesStep
+        onBack={() => setIsOnboardingStage(false)}
+        onComplete={handleOnboardingComplete}
+      />
+    );
+  }
 
   // If user hits submit, cleanly render the full screen responsive OTP overlay
   if (isOtpStage) {
