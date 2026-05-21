@@ -11,14 +11,13 @@ import OtpVerification from "@/components/auth/OtpVerification";
 import { SLIDER_DATA } from "@/constants/auth-slider";
 import AllergiesStep from "@/components/onboarding/AllergiesStep";
 import FoodSelectionStep from "@/components/onboarding/FoodSelectionStep";
+import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 
 export default function SignUpPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isOtpStage, setIsOtpStage] = useState(false);
   // const [isOnboardingStage, setIsOnboardingStage] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState<
-    "none" | "allergies" | "dislikes"
-  >("none");
+  const [onboardingStep, setOnboardingStep] = useState<"none" | "allergies" | "dislikes" | "success">("none");
 
   useEffect(() => {
     if (isOtpStage) return; // Freeze slide intervals when the OTP form screen overrides the viewport
@@ -71,21 +70,37 @@ export default function SignUpPage() {
     setOnboardingStep("dislikes"); // Move to dislikes layout
   };
 
-  const handleDislikesComplete = (data: {
-    selectedItems: string[];
-    customText: string;
-  }) => {
-    const completeProfile = {
-      ...userProfileData,
-      dislikes: data.selectedItems,
-      customDislikeText: data.customText,
-    };
+  // const handleDislikesComplete = (data: {
+  //   selectedItems: string[];
+  //   customText: string;
+  // }) => {
+  //   const completeProfile = {
+  //     ...userProfileData,
+  //     dislikes: data.selectedItems,
+  //     customDislikeText: data.customText,
+  //   };
 
-    console.log("Complete User Onboarding Data Captured:", completeProfile);
+  //   console.log("Complete User Onboarding Data Captured:", completeProfile);
 
-    // Redirect to the dashboard after final step completion
-    window.location.href = "/dashboard";
-  };
+  //   // Redirect to the dashboard after final step completion
+  //   window.location.href = "/dashboard";
+  // };
+
+  const handleDislikesComplete = (data: { selectedItems: string[]; customText: string }) => {
+  // Save data to state or hit a local storage variable here for now...
+  setOnboardingStep("success"); // Triggers the screen transition state instantly
+};
+
+if (onboardingStep === "success") {
+  return (
+    <SuccessfulScreen
+      message="Successful 🎉"
+      subMessage="You're now ready to explore ChopBeta!"
+      redirectTo="/dashboard"
+      delaySeconds={3.5}
+    />
+  );
+}
 
   if (onboardingStep === "dislikes") {
     return (

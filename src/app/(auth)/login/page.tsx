@@ -1,12 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FiMail, FiLock, FiUser } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
 import AuthInput from "@/components/auth/AuthInput";
+import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 
 export default function LoginPage() {
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // API
+    setShowSuccess(true);
+  };
+
+  if (showSuccess) {
+    return (
+      <SuccessfulScreen 
+        message="Welcome Back! 👋"
+        subMessage="Logging you back into your ChopBeta account..."
+        redirectTo="/dashboard"
+        delaySeconds={2.5}
+      />
+    );
+  }
+
+
   return (
     <main className="min-h-screen bg-white relative px-4 sm:px-6 lg:px-8 font-sans">
       
@@ -44,7 +65,7 @@ export default function LoginPage() {
           </div>
 
           {/* Form Fields */}
-          <form className="space-y-5 w-full" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-5 w-full" onSubmit={handleLoginSubmit}>
             <AuthInput
               label="Email Address or Phone number"
               type="text"
