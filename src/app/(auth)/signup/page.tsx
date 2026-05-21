@@ -10,11 +10,15 @@ import AuthInput from "@/components/auth/AuthInput";
 import OtpVerification from "@/components/auth/OtpVerification";
 import { SLIDER_DATA } from "@/constants/auth-slider";
 import AllergiesStep from "@/components/onboarding/AllergiesStep";
+import FoodSelectionStep from "@/components/onboarding/FoodSelectionStep";
 
 export default function SignUpPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isOtpStage, setIsOtpStage] = useState(false);
-  const [isOnboardingStage, setIsOnboardingStage] = useState(false);
+  // const [isOnboardingStage, setIsOnboardingStage] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState<
+    "none" | "allergies" | "dislikes"
+  >("none");
 
   useEffect(() => {
     if (isOtpStage) return; // Freeze slide intervals when the OTP form screen overrides the viewport
@@ -23,6 +27,14 @@ export default function SignUpPage() {
     }, 4000);
     return () => clearInterval(timer);
   }, [isOtpStage]);
+
+  // Dynamic state payload storage
+  const [userProfileData, setUserProfileData] = useState({
+    allergies: [] as string[],
+    customAllergyText: "",
+    dislikes: [] as string[],
+    customDislikeText: "",
+  });
 
   // Handle Form Submission Redirect Simulation
   const handleSignupSubmit = (e: React.FormEvent) => {
@@ -35,22 +47,62 @@ export default function SignUpPage() {
     setIsOtpStage(false);
     // Verify OTP here first
 
-    setIsOnboardingStage(true);
+    // setIsOnboardingStage(true);
+    setOnboardingStep("allergies");
   };
 
-  const handleOnboardingComplete = (data: {
-    selectedAllergies: string[];
-    customAllergyText: string;
+  // const handleOnboardingComplete = (data: {
+  //   selectedAllergies: string[];
+  //   customAllergyText: string;
+  // }) => {
+  //   console.log("Allergies submitted successfully:", data);
+  //   // redirect to dashboard
+  // };
+
+  const handleAllergiesComplete = (data: {
+    selectedItems: string[];
+    customText: string;
   }) => {
-    console.log("Allergies submitted successfully:", data);
-    // redirect to dashboard
+    setUserProfileData((prev) => ({
+      ...prev,
+      allergies: data.selectedItems,
+      customAllergyText: data.customText,
+    }));
+    setOnboardingStep("dislikes"); // Move to dislikes layout
   };
 
-  if (isOnboardingStage) {
+  const handleDislikesComplete = (data: {
+    selectedItems: string[];
+    customText: string;
+  }) => {
+    const completeProfile = {
+      ...userProfileData,
+      dislikes: data.selectedItems,
+      customDislikeText: data.customText,
+    };
+
+    console.log("Complete User Onboarding Data Captured:", completeProfile);
+
+    // Redirect to the dashboard after final step completion
+    window.location.href = "/dashboard";
+  };
+
+  if (onboardingStep === "dislikes") {
     return (
-      <AllergiesStep
-        onBack={() => setIsOnboardingStage(false)}
-        onComplete={handleOnboardingComplete}
+      <FoodSelectionStep
+        type="dislikes"
+        onBack={() => setOnboardingStep("allergies")}
+        onContinue={handleDislikesComplete}
+      />
+    );
+  }
+
+  if (onboardingStep === "allergies") {
+    return (
+      <FoodSelectionStep
+        type="allergies"
+        onBack={() => setOnboardingStep("none")}
+        onContinue={handleAllergiesComplete}
       />
     );
   }

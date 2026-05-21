@@ -7,12 +7,12 @@ export interface OnboardingSlide {
 export const ALLERGIES_SLIDES: OnboardingSlide[] = [
   {
     id: 1,
-    image: "/images/onboarding/allergie-1.png",
+    image: "/images/onboarding/allergy-1.png",
     alt: "Healthy Meal Options",
   },
   {
     id: 2,
-    image: "/images/onboarding/allergie-2.png",
+    image: "/images/onboarding/allergy-2.png",
     alt: "Fresh Salads and Bowls",
   },
   {
@@ -24,6 +24,30 @@ export const ALLERGIES_SLIDES: OnboardingSlide[] = [
     id: 4,
     image: "/images/onboarding/dislike-1.png",
     alt: "Student Budget Preps",
+  },
+];
+
+export const DISLIKES_SLIDES: OnboardingSlide[] = [
+  {
+    id: 1,
+    image: "/images/onboarding/dislike-2.png",
+    alt: "Balanced Diet Options",
+  },
+  {
+    id: 2,
+    image: "/images/onboarding/dislike-1.png",
+    alt: "Student Budget Preps",
+  },
+
+  {
+    id: 3,
+    image: "/images/onboarding/allergy-1.png",
+    alt: "Healthy Meal Options",
+  },
+  {
+    id: 4,
+    image: "/images/onboarding/allergy-2.png",
+    alt: "Fresh Salads and Bowls",
   },
 ];
 
@@ -40,6 +64,24 @@ export const ALLERGY_OPTIONS = [
   "Palm oil",
   "Soybeans",
   "Corn",
+  "None",
+  "Others",
+];
+
+export const DISLIKE_OPTIONS = [
+  "Shellfish",
+  "Okra",
+  "Beans",
+  "Dry fish",
+  "Ewedu",
+  "beef",
+  "Fish",
+  "Nut",
+  "ponmo",
+  "Egg",
+  "white rice",
+  "pork",
+  "Pap",
   "None",
   "Others",
 ];
