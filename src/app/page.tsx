@@ -43,7 +43,10 @@ export default function Home() {
           <Link href="#" className="hover:text-green-700 transition-colors">
             Pricing
           </Link>
-          <Link href="#" className="hover:text-green-700 transition-colors">
+          <Link
+            href="/about-asap"
+            className="hover:text-green-700 transition-colors"
+          >
             About ASAP Team
           </Link>
         </nav>
