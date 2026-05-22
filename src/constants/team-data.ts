@@ -10,7 +10,7 @@ export const ASAP_TEAM: TeamMember[] = [
     id: 1,
     name: "Tamarauseri Treasure Epebifie",
     role: "Backend & Lead Engineer",
-    image: "/images/team/treasure.jfif",
+    image: "/images/team/treasure.png",
   },
   {
     id: 2,
@@ -28,19 +28,19 @@ export const ASAP_TEAM: TeamMember[] = [
     id: 4,
     name: "Omofonmwan Esther",
     role: "Product Manager",
-    image: "/images/team/esther.jfif",
+    image: "/images/team/esther.png",
   },
   {
     id: 5,
     name: "Ogunleye Oluwaseyi",
     role: "Product Manager",
-    image: "/images/team/seyi.jfif",
+    image: "/images/team/seyi.png",
   },
   {
     id: 6,
     name: "Marvellous Ndukwe",
     role: "Brand & Product Designer",
-    image: "/images/team/marvellous.jfif",
+    image: "/images/team/marvellous.png",
   },
   {
     id: 7,
