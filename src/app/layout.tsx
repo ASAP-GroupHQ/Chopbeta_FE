@@ -13,11 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chopbeta",
-  description: "Generate your personalized meal plan in seconds",
+  title: {
+    default: "ChopBeta - Your Personal Meal Planner",
+    template: "%s | ChopBeta",
+  },
+  description: "Generate your personalized meal plan based on your budget in seconds.",
 
   icons: {
-    icon: "/chopbeta.png",
+    icon: "/chopbeta-favicon.png",
   }
 };
 
