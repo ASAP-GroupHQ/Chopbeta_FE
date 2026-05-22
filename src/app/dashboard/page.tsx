@@ -2,18 +2,41 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { FiChevronDown } from "react-icons/fi";
 import LayoutWrapper from "@/components/dashboard/LayoutWrapper";
 import HeroBanner from "@/components/dashboard/HeroBanner";
 import QuickActions from "@/components/dashboard/QuickActions";
 import QuickMeals from "@/components/dashboard/QuickMeals";
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const fadeInUpVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      ease: [0.215, 0.61, 0.355, 1],
+    },
+  },
+};
+
 export default function DashboardPage() {
   const [greeting, setGreeting] = useState("Hello");
   const [currentDay, setCurrentDay] = useState("Monday");
 
   useEffect(() => {
-    // 1. Calculate Greeting State
     const currentHour = new Date().getHours();
     if (currentHour < 12) setGreeting("Good Morning");
     else if (currentHour < 16) setGreeting("Good Afternoon");
@@ -34,9 +57,17 @@ export default function DashboardPage() {
 
   return (
     <LayoutWrapper>
-      <div className="space-y-6">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6"
+      >
         {/* UPPER HEADER STRIP */}
-        <div className="flex items-center justify-between w-full">
+        <motion.div
+          variants={fadeInUpVariants}
+          className="flex items-center justify-between w-full"
+        >
           <div className="space-y-0.5">
             <h1 className="text-2xl sm:text-3xl font-black text-[#1A2E35] flex items-center gap-2">
               {greeting}, Victor 👋
@@ -110,23 +141,31 @@ export default function DashboardPage() {
               <FiChevronDown className="w-4 h-4 text-gray-500 stroke-[2.5]" />
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Hero Banner Feature */}
-        <HeroBanner />
+        {/* Hero Banner */}
+        <motion.div variants={fadeInUpVariants}>
+          <HeroBanner />
+        </motion.div>
 
-        {/* TWO-COLUMN GRID SYSTEM DESIGN */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* LEFT SIDE CANVAS (8 Columns on Large Viewports) */}
+          {/* LEFT SIDE */}
           <div className="lg:col-span-8 space-y-5">
-            <QuickActions />
-            <QuickMeals />
+            <motion.div variants={fadeInUpVariants}>
+              <QuickActions />
+            </motion.div>
+            <motion.div variants={fadeInUpVariants}>
+              <QuickMeals />
+            </motion.div>
           </div>
 
-          {/* RIGHT SIDE CANVAS (4 Columns on Large Viewports) */}
+          {/* RIGHT SIDE */}
           <div className="lg:col-span-4 space-y-5">
-            {/* Today's Progress Card Panel Component Frame */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-5">
+            {/* Today's Progress Card */}
+            <motion.div
+              variants={fadeInUpVariants}
+              className="bg-white rounded-2xl border border-gray-100 p-5 space-y-5"
+            >
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-black text-[#1A2E35]">
                   Today&apos;s Progress
@@ -209,7 +248,15 @@ export default function DashboardPage() {
 
                 <div className="space-y-2">
                   <div className="w-9 h-9 mx-auto rounded-full bg-orange-50 flex items-center justify-center text-[#E85D26]">
-                    🔥
+                    <div className="relative w-5 h-5">
+                      <Image
+                        src="/images/meals/fire.png"
+                        alt="Streak Fire Icon"
+                        fill
+                        sizes="20px"
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
                   <p className="text-[10px] font-medium text-gray-400">
                     Streak
@@ -228,23 +275,29 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-[#1E6B3C] h-full w-1/2 rounded-full" />
+                  {/* Micro-interaction: Animated fill layout bar loading state */}
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: "50%" }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+                    className="bg-[#1E6B3C] h-full rounded-full"
+                  />
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Extra Ad Banner - coming soon */}
-            <div className="border border-orange-500/20 rounded-2xl bg-gradient-to-br from-orange-50/20 to-transparent p-5 text-center relative overflow-hidden min-h-[140px] flex flex-col justify-center items-center">
-              <div className="absolute top-2 left-4 scale-75 filter saturate-50 opacity-10">
-                {/* 👥 */}
-              </div>
+            <motion.div
+              variants={fadeInUpVariants}
+              className="border border-orange-500/20 rounded-2xl bg-gradient-to-br from-orange-50/20 to-transparent p-5 text-center relative overflow-hidden min-h-[140px] flex flex-col justify-center items-center"
+            >
               <p className="text-xs font-bold text-[#1A2E35] max-w-[180px] leading-relaxed">
-                Comming soon...
+                Coming soon...
               </p>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </LayoutWrapper>
   );
 }

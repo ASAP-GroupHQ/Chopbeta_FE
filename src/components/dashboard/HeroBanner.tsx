@@ -6,7 +6,8 @@ import Image from "next/image";
 export default function HeroBanner() {
   return (
     <section className="w-full bg-[#1E6B3C] rounded-[24px] overflow-hidden p-6 sm:p-8 lg:p-10 relative flex items-center min-h-[200px] sm:min-h-[240px] lg:min-h-[260px] shadow-sm">
-      <div className="relative z-10 text-white max-w-[60%] sm:max-w-[55%] md:max-w-[50%] space-y-4">
+      {/* Typography Action Column */}
+      <div className="relative z-10 text-white w-full md:max-w-[50%] space-y-4">
         <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight leading-snug">
           Generate your <span className="text-[#F4823A]">personalized</span>{" "}
           meal plan in seconds.
@@ -34,12 +35,12 @@ export default function HeroBanner() {
       </div>
 
       {/* Image Box */}
-      <div className="absolute right-0 bottom-0 top-0 w-[45%] sm:w-[50%] h-full pointer-events-none select-none z-0">
+      <div className="hidden md:block absolute right-0 bottom-0 top-0 w-[45%] sm:w-[50%] h-full pointer-events-none select-none z-0">
         <Image
           src="/hero.png"
           alt="Personalized meal assortment container preview mockup"
           fill
-          sizes="(max-width: 640px) 45vw, 50vw"
+          sizes="(max-width: 768px) 0vw, 50vw"
           className="object-contain object-right-bottom scale-105 sm:scale-110 origin-bottom-right"
           priority
         />
