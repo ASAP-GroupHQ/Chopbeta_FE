@@ -58,14 +58,14 @@ export default function DashboardPage() {
   return (
     <LayoutWrapper>
       <motion.div
-        variants={containerVariants}
+        // variants={containerVariants}
         initial="hidden"
         animate="visible"
         className="space-y-6"
       >
         {/* UPPER HEADER STRIP */}
         <motion.div
-          variants={fadeInUpVariants}
+          // variants={fadeInUpVariants}
           className="flex items-center justify-between w-full"
         >
           <div className="space-y-0.5">
@@ -144,17 +144,24 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Hero Banner */}
-        <motion.div variants={fadeInUpVariants}>
+        <motion.div 
+        
+        // variants={fadeInUpVariants}
+        >
           <HeroBanner />
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* LEFT SIDE */}
           <div className="lg:col-span-8 space-y-5">
-            <motion.div variants={fadeInUpVariants}>
+            <motion.div 
+              // variants={fadeInUpVariants}
+            >
               <QuickActions />
             </motion.div>
-            <motion.div variants={fadeInUpVariants}>
+            <motion.div 
+              // variants={fadeInUpVariants}
+            >
               <QuickMeals />
             </motion.div>
           </div>
@@ -163,7 +170,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-4 space-y-5">
             {/* Today's Progress Card */}
             <motion.div
-              variants={fadeInUpVariants}
+              // variants={fadeInUpVariants}
               className="bg-white rounded-2xl border border-gray-100 p-5 space-y-5"
             >
               <div className="flex items-center justify-between">
@@ -288,7 +295,7 @@ export default function DashboardPage() {
 
             {/* Extra Ad Banner - coming soon */}
             <motion.div
-              variants={fadeInUpVariants}
+              // variants={fadeInUpVariants}
               className="border border-orange-500/20 rounded-2xl bg-gradient-to-br from-orange-50/20 to-transparent p-5 text-center relative overflow-hidden min-h-[140px] flex flex-col justify-center items-center"
             >
               <p className="text-xs font-bold text-[#1A2E35] max-w-[180px] leading-relaxed">

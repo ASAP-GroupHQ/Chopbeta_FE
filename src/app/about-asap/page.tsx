@@ -83,14 +83,14 @@ export default function AboutAsapPage() {
       <section className="max-w-7xl mx-auto px-6 pb-24">
         <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
-          variants={containerVariants}
+          // variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {ASAP_TEAM.map((member) => (
             <motion.div
               key={member.id}
-              variants={cardVariants}
+              // variants={cardVariants}
               whileHover={{ scale: 1.03, y: -5 }}
               className="p-6 bg-white rounded-[24px] border border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:border-green-600/30 transition-all cursor-pointer text-center group flex flex-col items-center gap-4"
             >
