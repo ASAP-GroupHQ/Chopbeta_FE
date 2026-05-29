@@ -68,7 +68,7 @@ export const ASAP_TEAM: TeamMember[] = [
   },
   {
     id: 11,
-    name: "Olwuapelumi Mary",
+    name: "Oluwapelumi Mary",
     role: "Data Analyst",
     image: "/images/team/mary.jpeg",
   },
