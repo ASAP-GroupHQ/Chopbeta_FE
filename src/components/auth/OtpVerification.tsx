@@ -14,7 +14,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   onBackToSignup,
   onVerifySuccess,
 }) => {
-  const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState<number>(59);
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
@@ -31,7 +31,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     if (timeLeft === 0) {
       setTimeLeft(59);
       // For demo purposes, we clear the previous input boxes
-      setOtp(["", "", "", ""]);
+      setOtp(["", "", "", "", "", ""]);
       if (inputRefs.current[0]) inputRefs.current[0].focus();
     }
   };
@@ -45,13 +45,13 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     setOtp(newOtp);
 
     // Auto-advance focus to the next input field
-    if (value && index < 3 && inputRefs.current[index + 1]) {
+    if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1].focus();
     }
 
-    // Trigger success callback automatically once all 4 slots are fully loaded
+    // Trigger success callback automatically once all 6 slots are fully loaded
     const finalCode = newOtp.join("");
-    if (finalCode.length === 4 && index === 3) {
+    if (finalCode.length === 6 && index === 5) {
       onVerifySuccess(finalCode);
     }
   };
@@ -111,14 +111,14 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
           </p>
         </div>
 
-        {/* 4 Digit Unified Input Group container row */}
+        {/* 6 Digit Unified Input Group container row */}
         <div className="flex justify-center items-center gap-3 sm:gap-4 my-8">
           {otp.map((digit, index) => (
             <input
               key={index}
               type="text"
               inputMode="numeric"
-              pattern="[0-8]*"
+              pattern="[0-9]*"
               maxLength={1}
               ref={(el) => {
                 if (el) inputRefs.current[index] = el;
@@ -126,7 +126,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
               value={digit}
               onChange={(e) => handleChange(e.target.value, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              className={`w-14 h-14 sm:w-16 sm:h-16 text-center text-xl font-bold rounded-2xl border outline-none transition-all duration-200 ${
+              className={`w-10 h-10 sm:w-16 sm:h-16 text-center text-xl font-bold rounded-2xl border outline-none transition-all duration-200 ${
                 digit
                   ? "bg-[#D1E7DD] border-green-700 text-green-900 shadow-sm"
                   : "bg-white border-gray-200 text-[#1A2E35] focus:border-green-700 focus:ring-2 focus:ring-green-500/10" 

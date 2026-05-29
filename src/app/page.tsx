@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#F4FAF6] via-white to-white text-[#1A2E35] font-sans overflow-x-hidden relative">
       {/* HEADER NAVBAR */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between relative z-20">
+      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between relative z-50">
         <div className="relative w-32 h-10">
           <Image
             src="/chopbeta.png"
@@ -68,7 +68,7 @@ export default function Home() {
           {/* Mobile Hamburg - Close Button Toggle */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-gray-600 p-1 focus:outline-none z-30"
+            className="md:hidden text-gray-600 p-2 hover:bg-gray-100 rounded-lg focus:outline-none relative z-50 transition-colors"
             aria-label="Toggle Menu"
           >
             {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -79,64 +79,76 @@ export default function Home() {
       {/* MOBILE MENU NAV DRAWER OVERLAY */}
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute top-0 left-0 w-full bg-white border-b border-gray-100 shadow-xl z-10 pt-24 pb-8 px-6 md:hidden flex flex-col gap-6"
-          >
-            <nav className="flex flex-col gap-4 font-semibold text-lg text-gray-700">
-              <Link
-                onClick={() => setIsMenuOpen(false)}
-                href="#"
-                className="hover:text-green-700 py-1 transition-colors"
-              >
-                Features
-              </Link>
-              <Link
-                onClick={() => setIsMenuOpen(false)}
-                href="#"
-                className="hover:text-green-700 py-1 transition-colors"
-              >
-                Pricing
-              </Link>
-              <Link
-                onClick={() => setIsMenuOpen(false)}
-                href="/about-asap"
-                className="hover:text-green-700 py-1 transition-colors"
-              >
-                About ASAP Team
-              </Link>
-            </nav>
+          <>
+            {/* Dark Background Backdrop Blur tint to focus attention on the menu context */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+            />
 
-            <hr className="border-gray-100" />
+            {/* Menu Panel Element */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="fixed top-0 left-0 w-full bg-white border-b border-gray-100 shadow-2xl z-40 pt-24 pb-8 px-6 md:hidden flex flex-col gap-6"
+            >
+              <nav className="flex flex-col gap-4 font-semibold text-lg text-gray-700">
+                <Link
+                  onClick={() => setIsMenuOpen(false)}
+                  href="#"
+                  className="hover:text-green-700 py-1 transition-colors"
+                >
+                  Features
+                </Link>
+                <Link
+                  onClick={() => setIsMenuOpen(false)}
+                  href="#"
+                  className="hover:text-green-700 py-1 transition-colors"
+                >
+                  Pricing
+                </Link>
+                <Link
+                  onClick={() => setIsMenuOpen(false)}
+                  href="/about-asap"
+                  className="hover:text-green-700 py-1 transition-colors"
+                >
+                  About ASAP Team
+                </Link>
+              </nav>
 
-            <div className="flex flex-col gap-3">
-              <Link
-                onClick={() => setIsMenuOpen(false)}
-                href="/login"
-                className="w-full py-3 border border-gray-200 text-center font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                onClick={() => setIsMenuOpen(false)}
-                href="/signup"
-                className="w-full py-3 bg-green-700 text-white text-center font-bold rounded-xl hover:bg-green-800 transition-colors shadow-md"
-              >
-                Get Started
-              </Link>
-            </div>
-          </motion.div>
+              <hr className="border-gray-100" />
+
+              <div className="flex flex-col gap-3">
+                <Link
+                  onClick={() => setIsMenuOpen(false)}
+                  href="/login"
+                  className="w-full py-3 border border-gray-200 text-center font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  onClick={() => setIsMenuOpen(false)}
+                  href="/signup"
+                  className="w-full py-3 bg-green-700 text-white text-center font-bold rounded-xl hover:bg-green-800 transition-colors shadow-md"
+                >
+                  Get Started
+                </Link>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
       {/* HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-6 pt-12 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <section className="max-w-7xl mx-auto px-6 pt-12 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
         {/* Left Side: Call to Action Details */}
         <motion.div
-          className="lg:col-span-5 space-y-6 text-center lg:text-left z-10"
+          className="lg:col-span-5 space-y-6 text-center lg:text-left"
           initial="initial"
           animate="animate"
           variants={fabricsContainer}

@@ -9,7 +9,7 @@ import Image from "next/image";
 import AuthInput from "@/components/auth/AuthInput";
 import OtpVerification from "@/components/auth/OtpVerification";
 import { SLIDER_DATA } from "@/constants/auth-slider";
-import AllergiesStep from "@/components/onboarding/AllergiesStep";
+// import AllergiesStep from "@/components/onboarding/AllergiesStep";
 import FoodSelectionStep from "@/components/onboarding/FoodSelectionStep";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 
@@ -176,6 +176,14 @@ if (onboardingStep === "success") {
             type="email"
             placeholder="Enter email address"
             Icon={FiMail}
+            required
+          />
+          <AuthInput
+            label="Phone Number"
+            type="tel"
+            pattern="[0-9+\-\s()]{7,20}"
+            placeholder="Enter phone number"
+            Icon={FiSmartphone}
             required
           />
           <AuthInput
