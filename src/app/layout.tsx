@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,11 +19,12 @@ export const metadata: Metadata = {
     default: "ChopBeta - Your Personal Meal Planner",
     template: "%s | ChopBeta",
   },
-  description: "Generate your personalized meal plan based on your budget in seconds.",
+  description:
+    "Generate your personalized meal plan based on your budget in seconds.",
 
   icons: {
     icon: "/chopbeta-favicon.png",
-  }
+  },
 };
 
 export default function RootLayout({
@@ -34,7 +37,22 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+
+        <ToastContainer
+          position="top-right"
+          autoClose={2500}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
+      </body>
     </html>
   );
 }
