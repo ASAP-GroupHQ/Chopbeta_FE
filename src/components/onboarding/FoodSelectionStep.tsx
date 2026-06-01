@@ -10,6 +10,7 @@ import {
   ALLERGY_OPTIONS,
   DISLIKE_OPTIONS,
 } from "@/constants/onboarding-slider";
+import LoadingState from "@/components/ui/LoadingState";
 
 interface FoodSelectionStepProps {
   type: "allergies" | "dislikes";
@@ -25,6 +26,7 @@ export default function FoodSelectionStep({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customText, setCustomText] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Determine dynamic data definitions based on type prop
   const isAllergies = type === "allergies";
@@ -38,7 +40,7 @@ export default function FoodSelectionStep({
 
   // Background Image Slider rotation
   useEffect(() => {
-    setCurrentSlide(0); // Reset slide on type step change
+    setCurrentSlide(0);
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 4500);
@@ -46,6 +48,7 @@ export default function FoodSelectionStep({
   }, [type, slides.length]);
 
   const toggleTag = (tag: string) => {
+    if (isLoading) return;
     const standardizedTag = tag.toLowerCase();
 
     if (standardizedTag === "none") {
@@ -65,6 +68,18 @@ export default function FoodSelectionStep({
     setSelectedTags(updated);
   };
 
+  const handleSubmit = () => {
+    setIsLoading(true);
+
+    setTimeout(() => {
+      onContinue({
+        selectedItems: selectedTags,
+        customText: isOthersSelected ? customText : "",
+      });
+      setIsLoading(false);
+    }, 1800);
+  };
+
   const isOthersSelected = selectedTags.some(
     (t) => t.toLowerCase() === "others",
   );
@@ -74,13 +89,13 @@ export default function FoodSelectionStep({
 
   return (
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white font-sans">
-      {/* LEFT AREA: FORMS & CHIPS SELECTION */}
+      {/* FORMS & CHIPS SELECTION */}
       <section className="flex flex-col px-6 py-8 md:px-12 lg:px-20 justify-between h-full max-w-2xl mx-auto w-full relative">
-        {/* Top Header Controls */}
         <div className="flex items-center justify-between w-full mb-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-500 hover:text-green-800 transition-colors cursor-pointer"
+            disabled={isLoading}
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-500 hover:text-green-800 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <FiArrowLeft /> Go Back
           </button>
@@ -96,7 +111,6 @@ export default function FoodSelectionStep({
           </div>
         </div>
 
-        {/* Content Body Container */}
         <div className="flex-1 flex flex-col justify-center my-auto space-y-6">
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold text-[#1A2E35] tracking-tight">
@@ -113,12 +127,13 @@ export default function FoodSelectionStep({
                 <button
                   key={tag}
                   type="button"
+                  disabled={isLoading}
                   onClick={() => toggleTag(tag)}
                   className={`px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-[0.98] ${
                     isSelected
                       ? "bg-[#1A2E35] border-[#1A2E35] text-white shadow-sm"
                       : "bg-gray-100 border-transparent text-gray-700 hover:bg-gray-200/80"
-                  }`}
+                  } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
                   {tag}
                 </button>
@@ -126,7 +141,6 @@ export default function FoodSelectionStep({
             })}
           </div>
 
-          {/* Dynamic input block for "Others" selection */}
           <AnimatePresence>
             {isOthersSelected && (
               <motion.div
@@ -140,41 +154,41 @@ export default function FoodSelectionStep({
                 </label>
                 <input
                   type="text"
+                  disabled={isLoading}
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
                   placeholder="Type any other items separated by commas, or type None"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-green-600 focus:ring-2 focus:ring-green-500/10 text-sm font-medium transition-all text-[#1A2E35]"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-green-600 focus:ring-2 focus:ring-green-500/10 text-sm font-medium transition-all text-[#1A2E35] disabled:opacity-60"
                 />
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Action Button Footer */}
-        <div className="pt-8">
-          <button
-            type="button"
-            disabled={!isFormValid}
-            onClick={() =>
-              onContinue({
-                selectedItems: selectedTags,
-                customText: isOthersSelected ? customText : "",
-              })
-            }
-            className={`w-full py-4 text-center text-base font-bold rounded-xl transition-all duration-300 shadow-md cursor-pointer ${
-              isFormValid
-                ? "bg-green-700 hover:bg-green-800 text-white active:scale-[0.99]"
-                : "bg-green-700/30 text-white cursor-not-allowed shadow-none"
-            }`}
-          >
-            Continue
-          </button>
+        <div className="pt-8 min-h-[96px] flex items-center justify-center">
+          {isLoading ? (
+            <div className="w-full flex justify-center py-2">
+              <LoadingState message="Saving your preferences..." />
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={!isFormValid}
+              onClick={handleSubmit}
+              className={`w-full py-4 text-center text-base font-bold rounded-xl transition-all duration-300 shadow-md cursor-pointer ${
+                isFormValid
+                  ? "bg-green-700 hover:bg-green-800 text-white active:scale-[0.99]"
+                  : "bg-green-700/30 text-white cursor-not-allowed shadow-none"
+              }`}
+            >
+              Continue
+            </button>
+          )}
         </div>
       </section>
 
-      {/* RIGHT AREA: AUTOMATED CAROUSEL CONTAINER */}
+      {/* AUTOMATED CAROUSEL CONTAINER */}
       <section className="hidden lg:block relative w-full h-full min-h-[500px] lg:h-screen p-6 sticky top-0">
-      {/* <section className="relative w-full h-screen p-6"> */}
         <div className="relative h-full w-full rounded-[40px] overflow-hidden bg-gray-900 shadow-2xl">
           <AnimatePresence mode="wait">
             <motion.div
@@ -191,7 +205,6 @@ export default function FoodSelectionStep({
                 fill
                 sizes="50vw"
                 className="object-cover scale-105"
-                // priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
             </motion.div>

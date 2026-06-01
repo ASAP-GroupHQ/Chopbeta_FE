@@ -29,8 +29,7 @@ export default function SuccessfulScreen({
 
   return (
     <main className="min-h-screen bg-white relative px-4 font-sans flex flex-col items-center justify-center">
-      {/* Top Left Branding Logo matching mock layout */}
-      <div className="absolute top-6 left-6 sm:top-10 sm:left-10">
+      {/* <div className="absolute top-6 left-6 sm:top-10 sm:left-10">
         <Image
           src="/chopbeta.png"
           alt="ChopBeta Logo"
@@ -39,7 +38,7 @@ export default function SuccessfulScreen({
           className="object-contain h-auto w-auto"
           priority
         />
-      </div>
+      </div> */}
 
       {/* Centered Success Floating Card Box */}
       <motion.div
