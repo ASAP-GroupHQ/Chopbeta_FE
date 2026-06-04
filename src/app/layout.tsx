@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ToastContainer } from "react-toastify";
+import { AuthProvider } from "@/context/AuthContext"; // Imported AuthProvider
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
@@ -21,7 +22,6 @@ export const metadata: Metadata = {
   },
   description:
     "Generate your personalized meal plan based on your budget in seconds.",
-
   icons: {
     icon: "/chopbeta-favicon.png",
   },
@@ -38,7 +38,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        {/* Wrapped children inside AuthProvider to distribute state globally */}
+        <AuthProvider>{children}</AuthProvider>
 
         <ToastContainer
           position="top-right"

@@ -6,126 +6,110 @@ import { FiUser, FiMail, FiLock, FiSmartphone } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import OtpVerification from "@/components/auth/OtpVerification";
 import { SLIDER_DATA } from "@/constants/auth-slider";
-// import AllergiesStep from "@/components/onboarding/AllergiesStep";
-import FoodSelectionStep from "@/components/onboarding/FoodSelectionStep";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
+import LoadingState from "@/components/ui/LoadingState";
+import { authService } from "@/services/auth";
 
 export default function SignUpPage() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isOtpStage, setIsOtpStage] = useState(false);
-  // const [isOnboardingStage, setIsOnboardingStage] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState<"none" | "allergies" | "dislikes" | "success">("none");
+  const [initialOtp, setInitialOtp] = useState("");
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isOtpStage) return; // Freeze slide intervals when the OTP form screen overrides the viewport
+    if (isOtpStage) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % SLIDER_DATA.length);
     }, 4000);
     return () => clearInterval(timer);
   }, [isOtpStage]);
 
-  // Dynamic state payload storage
-  const [userProfileData, setUserProfileData] = useState({
-    allergies: [] as string[],
-    customAllergyText: "",
-    dislikes: [] as string[],
-    customDislikeText: "",
-  });
+  const formatNigerianPhoneNumber = (rawNumber: string): string => {
+    let cleaned = rawNumber.replace(/[^\d+]/g, "").trim();
+    if (cleaned.startsWith("0")) {
+      cleaned = "+234" + cleaned.substring(1);
+    } else if (cleaned.startsWith("234") && !cleaned.startsWith("+")) {
+      cleaned = "+" + cleaned;
+    } else if (!cleaned.startsWith("+")) {
+      cleaned = "+234" + cleaned;
+    }
+    return cleaned;
+  };
 
-  // Handle Form Submission Redirect Simulation
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsOtpStage(true); // Jump directly into the local OTP prompt block
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match! Please check and try again.");
+      return;
+    }
+
+    setIsLoading(true);
+    const normalizedPhone = formatNigerianPhoneNumber(phoneNumber);
+
+    try {
+      const response = await authService.studentSignup({
+        fullName,
+        email,
+        phoneNumber: normalizedPhone,
+        password,
+      });
+
+      if (response?.data?.otp) {
+        setInitialOtp(String(response.data.otp));
+      }
+
+      toast.success("Account initialized! Please verify your email.");
+      setIsOtpStage(true);
+    } catch (error: any) {
+      toast.error(
+        error.message || "Failed to create account. Please try again.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleOtpCompletion = (code: string) => {
-    // Clear the OTP container stage and activate the Allergies view layout
+  const handleOtpCompletion = () => {
     setIsOtpStage(false);
-    // Verify OTP here first
-
-    // setIsOnboardingStage(true);
-    setOnboardingStep("allergies");
+    setIsCompleted(true); 
   };
 
-  // const handleOnboardingComplete = (data: {
-  //   selectedAllergies: string[];
-  //   customAllergyText: string;
-  // }) => {
-  //   console.log("Allergies submitted successfully:", data);
-  //   // redirect to dashboard
-  // };
-
-  const handleAllergiesComplete = (data: {
-    selectedItems: string[];
-    customText: string;
-  }) => {
-    setUserProfileData((prev) => ({
-      ...prev,
-      allergies: data.selectedItems,
-      customAllergyText: data.customText,
-    }));
-    setOnboardingStep("dislikes"); // Move to dislikes layout
-  };
-
-  // const handleDislikesComplete = (data: {
-  //   selectedItems: string[];
-  //   customText: string;
-  // }) => {
-  //   const completeProfile = {
-  //     ...userProfileData,
-  //     dislikes: data.selectedItems,
-  //     customDislikeText: data.customText,
-  //   };
-
-  //   console.log("Complete User Onboarding Data Captured:", completeProfile);
-
-  //   // Redirect to the dashboard after final step completion
-  //   window.location.href = "/dashboard";
-  // };
-
-  const handleDislikesComplete = (data: { selectedItems: string[]; customText: string }) => {
-  // Save data to state or hit a local storage variable here for now...
-  setOnboardingStep("success"); // Triggers the screen transition state instantly
-};
-
-if (onboardingStep === "success") {
-  return (
-    <SuccessfulScreen
-      message="Successful 🎉"
-      subMessage="You're now ready to explore ChopBeta!"
-      redirectTo="/dashboard"
-      delaySeconds={3.5}
-    />
-  );
-}
-
-  if (onboardingStep === "dislikes") {
+  if (isLoading) {
     return (
-      <FoodSelectionStep
-        type="dislikes"
-        onBack={() => setOnboardingStep("allergies")}
-        onContinue={handleDislikesComplete}
+      <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
+        <LoadingState message="Processing setup..." />
+      </div>
+    );
+  }
+
+  if (isCompleted) {
+    return (
+      <SuccessfulScreen
+        message="Verification Successful 🎉"
+        subMessage="Your account is verified. Please log in to complete your taste preferences setup!"
+        redirectTo="/login"
+        delaySeconds={3.5}
       />
     );
   }
 
-  if (onboardingStep === "allergies") {
-    return (
-      <FoodSelectionStep
-        type="allergies"
-        onBack={() => setOnboardingStep("none")}
-        onContinue={handleAllergiesComplete}
-      />
-    );
-  }
-
-  // If user hits submit, cleanly render the full screen responsive OTP overlay
   if (isOtpStage) {
     return (
       <OtpVerification
+        email={email}
+        initialOtp={initialOtp}
         onBackToSignup={() => setIsOtpStage(false)}
         onVerifySuccess={handleOtpCompletion}
       />
@@ -134,9 +118,7 @@ if (onboardingStep === "success") {
 
   return (
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white font-sans">
-      {/* Left Side: Form Container */}
       <section className="flex flex-col px-6 py-8 md:px-12 lg:px-20 justify-center h-full max-w-2xl mx-auto w-full">
-        {/* Branding - visible on all screens */}
         <div className="flex items-center gap-2 mb-10 self-start">
           <Link href="/" className="hover:opacity-90 transition-opacity">
             <Image
@@ -150,7 +132,6 @@ if (onboardingStep === "success") {
           </Link>
         </div>
 
-        {/* Header Section */}
         <div className="text-center mb-8">
           <div className="inline-flex p-3 bg-gray-50 rounded-full mb-3 border border-gray-100">
             <FiUser className="w-5 h-5 text-gray-400" />
@@ -163,27 +144,35 @@ if (onboardingStep === "success") {
           </p>
         </div>
 
-        {/* Form */}
         <form className="space-y-4 w-full" onSubmit={handleSignupSubmit}>
           <AuthInput
             label="Full Name"
-            placeholder="Enter full name"
+            placeholder="John Doe"
             Icon={FiUser}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            disabled={isLoading}
             required
           />
           <AuthInput
             label="Email Address"
             type="email"
-            placeholder="Enter email address"
+            placeholder="john.doe@example.com"
             Icon={FiMail}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
             required
           />
           <AuthInput
             label="Phone Number"
             type="tel"
-            pattern="[0-9+\-\s()]{7,20}"
-            placeholder="Enter phone number"
+            pattern="^\+?[0-9]{7,15}$"
+            placeholder="+2348101234567"
             Icon={FiSmartphone}
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            disabled={isLoading}
             required
           />
           <AuthInput
@@ -191,6 +180,9 @@ if (onboardingStep === "success") {
             type="password"
             placeholder="Enter new password"
             Icon={FiLock}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
             required
           />
           <AuthInput
@@ -198,6 +190,9 @@ if (onboardingStep === "success") {
             type="password"
             placeholder="Re-type your password to confirm"
             Icon={FiLock}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            disabled={isLoading}
             required
           />
 
@@ -206,6 +201,7 @@ if (onboardingStep === "success") {
               type="checkbox"
               className="w-4 h-4 rounded border-gray-300 accent-green-700 cursor-pointer"
               id="terms"
+              disabled={isLoading}
               required
             />
             <label htmlFor="terms" className="cursor-pointer select-none">
@@ -228,7 +224,8 @@ if (onboardingStep === "success") {
 
           <button
             type="submit"
-            className="w-full py-3.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-sm active:scale-[0.98] cursor-pointer"
+            disabled={isLoading}
+            className="w-full flex justify-center items-center py-3.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-sm active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Create Your Account
           </button>
@@ -243,17 +240,18 @@ if (onboardingStep === "success") {
           </div>
         </div>
 
-        {/* Social Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
-            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer"
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
           >
             <FiSmartphone className="text-gray-500" size={18} /> Phone number
           </button>
           <button
             type="button"
-            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer"
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
           >
             <FcGoogle size={18} /> Google
           </button>
@@ -270,7 +268,6 @@ if (onboardingStep === "success") {
         </p>
       </section>
 
-      {/* Right Side: Image Slider */}
       <section className="hidden lg:block relative p-6 max-h-screen sticky top-0">
         <div className="relative h-full w-full rounded-[40px] overflow-hidden bg-gray-100 shadow-2xl">
           <AnimatePresence mode="wait">
@@ -288,7 +285,6 @@ if (onboardingStep === "success") {
                 alt="ChopBeta Preview"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
               <div className="absolute bottom-20 left-12 right-12 text-white">
                 <motion.h2
                   initial={{ opacity: 0, y: 10 }}
@@ -306,8 +302,6 @@ if (onboardingStep === "success") {
                 >
                   {SLIDER_DATA[currentSlide].description}
                 </motion.p>
-
-                {/* Pagination Dots */}
                 <div className="flex gap-2 mt-8">
                   {SLIDER_DATA.map((_, index) => (
                     <button
