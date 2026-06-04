@@ -13,7 +13,6 @@ export default function DashboardSidebar() {
   const { logout } = useAuth();
 
   const handleLogout = async () => {
-    console.log("Logging user account out...");
     await logout(); 
   };
 
