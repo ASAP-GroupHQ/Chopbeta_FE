@@ -26,25 +26,21 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   },
   { label: "Track", href: "/track", icon: TrackIcon },
   { label: "History", href: "/history", icon: HistoryIcon },
-  { label: "Setting", href: "/settings", icon: SettingsIcon },
+  { label: "Setting", href: "/dashboard/setting", icon: SettingsIcon },
   { label: "Premium", href: "/premium", icon: PremiumIcon },
 ];
 
 export const MOBILE_BOTTOM_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: HomeIcon },
-  // { label: "Track", href: "/track", icon: TrackIcon },
-  {
-    label: "Explore",
-    href: "/explore",
-    icon: ExploreIcon,
-  },
+  { label: "Explore", href: "/explore", icon: ExploreIcon },
+
   {
     label: "Generate Meal",
     href: "/dashboard/generate",
     icon: GenerateMealIcon,
     isPrimaryAction: true,
   },
-  { label: "History", href: "/history", icon: HistoryIcon },
 
-  { label: "Premium", href: "/premium", icon: PremiumIcon },
+  { label: "Track", href: "/track", icon: TrackIcon },
+  { label: "Setting", href: "/dashboard/setting", icon: SettingsIcon },
 ];
