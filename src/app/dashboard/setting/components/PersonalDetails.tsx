@@ -1,6 +1,6 @@
 "use client";
 
-// import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import AuthInput from "@/components/auth/AuthInput";
 import {
@@ -12,8 +12,51 @@ import {
   FiCalendar,
   FiFileText,
 } from "react-icons/fi";
+import { useAuth } from "@/context/AuthContext";
 
 export default function PersonalDetails() {
+  const { user } = useAuth();
+
+  // Local state to manage the form fields
+  const [formData, setFormData] = useState({
+    fullName: "",
+    userName: "",
+    email: "",
+    phone: "",
+    address: "",
+    lga: "",
+    country: "",
+    dob: "",
+  });
+
+  // Sync state when user data is fetched/available from AuthContext
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.fullName || "",
+        userName: user.userName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        lga: user.lga || "",
+        country: user.country || "",
+        dob: user.dob || "",
+      });
+    }
+  }, [user]);
+
+  // Generate dynamic initials for the avatar placeholder
+  const getInitials = () => {
+    if (formData.fullName) {
+      const names = formData.fullName.trim().split(" ");
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[1][0]}`.toUpperCase();
+      }
+      return names[0].slice(0, 2).toUpperCase();
+    }
+    return "VO";
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -26,7 +69,9 @@ export default function PersonalDetails() {
         <div className="flex flex-col items-center sm:flex-row sm:items-start gap-4">
           <div className="relative group cursor-pointer">
             <div className="w-24 h-24 rounded-full bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-emerald-500">
-              <span className="text-gray-400 font-medium text-xl">VO</span>
+              <span className="text-gray-400 font-medium text-xl">
+                {getInitials()}
+              </span>
             </div>
             <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <span className="text-white text-xs font-semibold">Change</span>
@@ -44,80 +89,85 @@ export default function PersonalDetails() {
       {/* Grid Inputs Using AuthInput */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
         <AuthInput
-          label="First Name"
-          placeholder="First name"
+          label="Full Name"
+          placeholder="John Doe"
           Icon={FiUser}
-          // value={firstName}
-          // onChange={(e) =>
-          //   setFormData({ ...formData, firstName: e.target.value })
-          // }
+          value={formData.fullName}
+          onChange={(e) =>
+            setFormData({ ...formData, fullName: e.target.value })
+          }
+          disabled={!!user?.fullName}
         />
+
         <AuthInput
-          label="Middle Name"
-          placeholder="Middle name"
+          label="Username"
+          placeholder="username"
           Icon={FiUser}
-          // value={middleName}
-          // onChange={(e) =>
-          //   setFormData({ ...formData, middleName: e.target.value })
-          // }
+          value={formData.userName}
+          onChange={(e) =>
+            setFormData({ ...formData, userName: e.target.value })
+          }
+          disabled={!!user?.userName}
         />
-        <AuthInput
-          label="Last Name"
-          placeholder="Last name"
-          Icon={FiUser}
-          // value={lastName}
-          // onChange={(e) =>
-          //   setFormData({ ...formData, lastName: e.target.value })
-          // }
-        />
+
         <AuthInput
           label="Email Address"
           type="email"
           placeholder="example@domain.com"
           Icon={FiMail}
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           disabled={true}
-          // value={email}
-          // onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
+
         <AuthInput
           label="Phone Number"
           type="tel"
           placeholder="Phone number"
           Icon={FiPhone}
-          // value={phone}
-          // onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          disabled={!!user?.phoneNumber}
         />
+
         <AuthInput
           label="House Address"
-          placeholder="Physical address address"
+          placeholder="Physical address"
           Icon={FiMapPin}
-          // value={address}
-          // onChange={(e) =>
-          //   setFormData({ ...formData, address: e.target.value })
-          // }
+          value={formData.address}
+          onChange={(e) =>
+            setFormData({ ...formData, address: e.target.value })
+          }
+          disabled={!!user?.address}
         />
+
         <AuthInput
           label="LGA"
           placeholder="Local Government Area"
           Icon={FiFileText}
-          // value={lga}
-          // onChange={(e) => setFormData({ ...formData, lga: e.target.value })}
+          value={formData.lga}
+          onChange={(e) => setFormData({ ...formData, lga: e.target.value })}
+          disabled={!!user?.lga}
         />
+
         <AuthInput
           label="Country Of Residence"
           placeholder="Country"
           Icon={FiGlobe}
-          // value={country}
-          // onChange={(e) =>
-          //   setFormData({ ...formData, country: e.target.value })
-          // }
+          value={formData.country}
+          onChange={(e) =>
+            setFormData({ ...formData, country: e.target.value })
+          }
+          disabled={!!user?.country}
         />
+
         <AuthInput
           label="Date Of Birth"
           type="date"
           Icon={FiCalendar}
-          // value={dob}
-          // onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+          value={formData.dob}
+          onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+          disabled={!!user?.dob}
         />
       </div>
 
