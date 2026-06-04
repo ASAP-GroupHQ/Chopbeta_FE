@@ -7,6 +7,7 @@ import {
   ResetPasswordData,
   ApiResponse,
   LogoutResponse,
+  RegenerateTokenResponse,
 } from "@/types/auth";
 
 export const authService = {
@@ -34,21 +35,21 @@ export const authService = {
     return response.data;
   },
 
-  resendOtp: async (data: ResendOtpData) => {
-    const response = await apiClient.post<ApiResponse>(
-      "/auth/user/resend-otp",
-      data,
-    );
-    return response.data;
-  },
+  // resendOtp: async (data: ResendOtpData) => {
+  //   const response = await apiClient.post<ApiResponse>(
+  //     "/auth/user/resend-otp",
+  //     data,
+  //   );
+  //   return response.data;
+  // },
 
-  forgotPassword: async (data: ResendOtpData) => {
-    const response = await apiClient.post<ApiResponse>(
-      "/auth/user/forgot-password",
-      data,
-    );
-    return response.data;
-  },
+  // forgotPassword: async (data: ResendOtpData) => {
+  //   const response = await apiClient.post<ApiResponse>(
+  //     "/auth/user/forgot-password",
+  //     data,
+  //   );
+  //   return response.data;
+  // },
 
   resetPassword: async (data: ResetPasswordData) => {
     const response = await apiClient.post<ApiResponse>(
@@ -68,6 +69,15 @@ export const authService = {
     );
     return response.data;
   },
+
+  regenerateToken: async (refreshToken: string): Promise<RegenerateTokenResponse> => {
+    const response = await apiClient.post<RegenerateTokenResponse>(
+      "/auth/user/regenerate-token",
+      { refreshToken }
+    );
+    return response.data;
+  },
+};
 
   logoutUser: async (): Promise<LogoutResponse> => {
     const response = await apiClient.post<LogoutResponse>("/auth/user/logout");
