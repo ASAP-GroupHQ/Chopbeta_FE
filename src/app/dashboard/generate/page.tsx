@@ -128,25 +128,50 @@ export default function GeneratePage() {
             </div>
 
             {!hasGenerated && (
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-4 bg-green-700 text-white hover:bg-green-800 font-extrabold text-sm rounded-xl transition-all mt-4 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                <svg
-                  width="23"
-                  height="23"
-                  viewBox="0 0 23 23"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+              <>
+                <div className="flex items-center gap-1.5 select-none">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="flex-shrink-0 opacity-50"
+                  >
+                    <path
+                      d="M8.77778 11.1111H8V8H7.22222M8 4.88889H8.00778M15 8C15 8.91925 14.8189 9.82951 14.4672 10.6788C14.1154 11.5281 13.5998 12.2997 12.9497 12.9497C12.2997 13.5998 11.5281 14.1154 10.6788 14.4672C9.82951 14.8189 8.91925 15 8 15C7.08075 15 6.1705 14.8189 5.32122 14.4672C4.47194 14.1154 3.70026 13.5998 3.05025 12.9497C2.40024 12.2997 1.88463 11.5281 1.53284 10.6788C1.18106 9.82951 1 8.91925 1 8C1 6.14348 1.7375 4.36301 3.05025 3.05025C4.36301 1.7375 6.14348 1 8 1C9.85652 1 11.637 1.7375 12.9497 3.05025C14.2625 4.36301 15 6.14348 15 8Z"
+                      stroke="#1A1A2E"
+                      strokeOpacity="0.5"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+
+                  <span className="text-[11px] font-medium text-gray-400 tracking-tight">
+                    Prices may vary by location or market conditions
+                  </span>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-4 bg-green-700 text-white hover:bg-green-800 font-extrabold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <path
-                    d="M7.05995 3.90862L4.34563 5.42864L5.86564 2.71432L4.34563 0L7.05995 1.52002L9.77426 0L8.25425 2.71432L9.77426 5.42864L7.05995 3.90862ZM20.0887 14.5488L22.803 13.0287L21.283 15.7431L22.803 18.4574L20.0887 16.9374L17.3744 18.4574L18.8944 15.7431L17.3744 13.0287L20.0887 14.5488ZM22.803 0L21.283 2.71432L22.803 5.42864L20.0887 3.90862L17.3744 5.42864L18.8944 2.71432L17.3744 0L20.0887 1.52002L22.803 0ZM13.4006 11.7041L16.0498 9.05497L13.748 6.75323L11.0989 9.4024L13.4006 11.7041ZM14.5189 5.7435L17.0595 8.2841C17.4829 8.68582 17.4829 9.39155 17.0595 9.81498L4.38905 22.4854C3.96562 22.9089 3.2599 22.9089 2.85818 22.4854L0.317575 19.9448C-0.105858 19.5431 -0.105858 18.8374 0.317575 18.4139L12.988 5.7435C13.4115 5.32007 14.1172 5.32007 14.5189 5.7435Z"
-                    fill="white"
-                  />
-                </svg>
-                {isLoading ? "Analyzing..." : "Generate Meal"}{" "}
-              </button>
+                  <svg
+                    width="23"
+                    height="23"
+                    viewBox="0 0 23 23"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M7.05995 3.90862L4.34563 5.42864L5.86564 2.71432L4.34563 0L7.05995 1.52002L9.77426 0L8.25425 2.71432L9.77426 5.42864L7.05995 3.90862ZM20.0887 14.5488L22.803 13.0287L21.283 15.7431L22.803 18.4574L20.0887 16.9374L17.3744 18.4574L18.8944 15.7431L17.3744 13.0287L20.0887 14.5488ZM22.803 0L21.283 2.71432L22.803 5.42864L20.0887 3.90862L17.3744 5.42864L18.8944 2.71432L17.3744 0L20.0887 1.52002L22.803 0ZM13.4006 11.7041L16.0498 9.05497L13.748 6.75323L11.0989 9.4024L13.4006 11.7041ZM14.5189 5.7435L17.0595 8.2841C17.4829 8.68582 17.4829 9.39155 17.0595 9.81498L4.38905 22.4854C3.96562 22.9089 3.2599 22.9089 2.85818 22.4854L0.317575 19.9448C-0.105858 19.5431 -0.105858 18.8374 0.317575 18.4139L12.988 5.7435C13.4115 5.32007 14.1172 5.32007 14.5189 5.7435Z"
+                      fill="white"
+                    />
+                  </svg>
+                  {isLoading ? "Analyzing..." : "Generate Meal"}{" "}
+                </button>
+              </>
             )}
           </form>
         </div>
