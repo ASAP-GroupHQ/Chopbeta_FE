@@ -70,14 +70,15 @@ export const authService = {
     return response.data;
   },
 
-  regenerateToken: async (refreshToken: string): Promise<RegenerateTokenResponse> => {
+  regenerateToken: async (
+    refreshToken: string,
+  ): Promise<RegenerateTokenResponse> => {
     const response = await apiClient.post<RegenerateTokenResponse>(
       "/auth/user/regenerate-token",
-      { refreshToken }
+      { refreshToken },
     );
     return response.data;
   },
-};
 
   logoutUser: async (): Promise<LogoutResponse> => {
     const response = await apiClient.post<LogoutResponse>("/auth/user/logout");
