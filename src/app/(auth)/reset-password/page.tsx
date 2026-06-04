@@ -9,10 +9,12 @@ import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 import LoadingState from "@/components/ui/LoadingState";
+import { authService } from "@/services/auth";
 
 function ResetPasswordFormContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -20,9 +22,10 @@ function ResetPasswordFormContent() {
 
   useEffect(() => {
     setEmail(searchParams.get("email") || "");
+    setOtp(searchParams.get("otp") || "");
   }, [searchParams]);
 
-  const handleResetSubmit = (e: React.FormEvent) => {
+  const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!password || !confirmPassword) {
@@ -34,16 +37,33 @@ function ResetPasswordFormContent() {
       return;
     }
     if (password !== confirmPassword) {
-      toast.error("The passwords doesn't match. Please check them.");
+      toast.error("The passwords don't match. Please check them.");
+      return;
+    }
+    if (!otp) {
+      toast.error(
+        "Reset token verification context is missing. Try starting over.",
+      );
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      await authService.resetPassword({
+        email,
+        otp,
+        newPassword: password,
+      });
+
       toast.success("Your password has been changed successfully.");
       setShowSuccess(true);
-    }, 2000);
+    } catch (error: any) {
+      toast.error(
+        error.message || "Failed to alter authorization credentials.",
+      );
+      setIsLoading(false);
+    }
   };
 
   if (showSuccess) {
@@ -102,7 +122,8 @@ function ResetPasswordFormContent() {
 
               <button
                 type="submit"
-                className="w-full py-3.5 bg-green-800 hover:bg-green-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                disabled={isLoading}
+                className="w-full py-3.5 bg-green-800 hover:bg-green-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:bg-green-800/60"
               >
                 Reset Password
               </button>

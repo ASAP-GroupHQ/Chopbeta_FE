@@ -41,11 +41,27 @@ export interface RegenerateTokenResponse {
   };
 }
 
-// New: Reset Password Data
-export interface ResetPasswordData {
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: string;
+}
+
+export interface ResetPasswordRequest {
   email: string;
   otp: string;
   newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
 }
 
 export interface LogoutResponse {

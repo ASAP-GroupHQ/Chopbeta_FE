@@ -3,8 +3,10 @@ import {
   SignupData,
   LoginData,
   OtpVerificationData,
-  ResendOtpData,
-  ResetPasswordData,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+  ForgotPasswordResponse,
   ApiResponse,
   LogoutResponse,
   RegenerateTokenResponse,
@@ -35,24 +37,20 @@ export const authService = {
     return response.data;
   },
 
-  // resendOtp: async (data: ResendOtpData) => {
-  //   const response = await apiClient.post<ApiResponse>(
-  //     "/auth/user/resend-otp",
-  //     data,
-  //   );
-  //   return response.data;
-  // },
+  forgotPassword: async (
+    data: ForgotPasswordRequest,
+  ): Promise<ForgotPasswordResponse> => {
+    const response = await apiClient.post<ForgotPasswordResponse>(
+      "/auth/user/forgot-password",
+      data,
+    );
+    return response.data;
+  },
 
-  // forgotPassword: async (data: ResendOtpData) => {
-  //   const response = await apiClient.post<ApiResponse>(
-  //     "/auth/user/forgot-password",
-  //     data,
-  //   );
-  //   return response.data;
-  // },
-
-  resetPassword: async (data: ResetPasswordData) => {
-    const response = await apiClient.post<ApiResponse>(
+  resetPassword: async (
+    data: ResetPasswordRequest,
+  ): Promise<ResetPasswordResponse> => {
+    const response = await apiClient.post<ResetPasswordResponse>(
       "/auth/user/reset-password",
       data,
     );
