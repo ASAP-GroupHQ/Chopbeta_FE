@@ -86,7 +86,7 @@ export const authService = {
   },
 };
 
-// OAuth Configurations
-export const googleOAuthConfig = {
-  google: `${apiClient.defaults.baseURL}/auth/google`,
-};
+// // OAuth Configurations
+// export const googleOAuthConfig = {
+//   google: `${apiClient.defaults.baseURL}/auth/google`,
+// };
