@@ -37,6 +37,11 @@ export const authService = {
     return response.data;
   },
 
+  resendOtp: async (data: { email: string }) => {
+    const response = await apiClient.post("/auth/user/resend-otp", data);
+    return response.data;
+  },
+
   forgotPassword: async (
     data: ForgotPasswordRequest,
   ): Promise<ForgotPasswordResponse> => {
@@ -57,13 +62,19 @@ export const authService = {
     return response.data;
   },
 
-  addAllergiesAndDislikes: async (data: {
-    allergies: string[];
-    dislikes: string[];
-  }) => {
+  addAllergiesAndDislikes: async (
+    userId: string,
+    data: {
+      allergies: string[];
+      dislikes: string[];
+    },
+  ) => {
     const response = await apiClient.post<ApiResponse>(
-      "/auth/user/add-allergies",
-      data,
+      `/auth/user/add-allergies/${userId}`,
+      {
+        allergies: data.allergies,
+        disLikes: data.dislikes,
+      },
     );
     return response.data;
   },
