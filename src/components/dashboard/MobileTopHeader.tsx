@@ -4,7 +4,12 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiCheckSquare, FiInfo, FiTrendingDown, FiClock, FiSliders, FiLogOut } from "react-icons/fi";
+import { FiX, FiCheckSquare, FiInfo, FiTrendingDown } from "react-icons/fi";
+import {
+  HistoryIcon,
+  PremiumIcon,
+  LogoutIcon,
+} from "@/components/icons/NavIcons";
 import {
   MOCK_NOTIFICATIONS,
   NotificationItem,
@@ -13,8 +18,10 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function MobileTopHeader() {
   const { logout } = useAuth();
-  
-  const [activeSheet, setActiveSheet] = useState<"notifications" | "profile" | null>(null);
+
+  const [activeSheet, setActiveSheet] = useState<
+    "notifications" | "profile" | null
+  >(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notifications, setNotifications] =
     useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
@@ -28,7 +35,7 @@ export default function MobileTopHeader() {
 
   const handleToggleReadStatus = (id: string) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isUnread: !n.isUnread } : n))
+      prev.map((n) => (n.id === id ? { ...n, isUnread: !n.isUnread } : n)),
     );
   };
 
@@ -126,7 +133,7 @@ export default function MobileTopHeader() {
             )}
           </button>
 
-          {/* Profile Avatar Trigger Button */}
+          {/* Profile Avatar */}
           <button
             type="button"
             onClick={() => setActiveSheet("profile")}
@@ -154,7 +161,7 @@ export default function MobileTopHeader() {
               className="fixed inset-0 bg-black z-50 lg:hidden"
             />
 
-            {/* SHEET 1: NOTIFICATIONS SHEET */}
+            {/* NOTIFICATIONS */}
             {activeSheet === "notifications" && (
               <motion.div
                 initial={{ y: "100%" }}
@@ -195,7 +202,7 @@ export default function MobileTopHeader() {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto divide-y divide-gray-50 pb-8">
+                <div className="flex-1 overflow-y-auto divide-y divide-gray-50 pb-24">
                   {notifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-5 text-center">
                       <p className="text-gray-400 text-sm font-semibold">
@@ -246,7 +253,7 @@ export default function MobileTopHeader() {
               </motion.div>
             )}
 
-            {/* SHEET 2: USER PROFILE OPTIONS SHEET */}
+            {/* USER PROFILE OPTIONS */}
             {activeSheet === "profile" && (
               <motion.div
                 initial={{ y: "100%" }}
@@ -274,15 +281,14 @@ export default function MobileTopHeader() {
                   </button>
                 </div>
 
-                <div className="p-4 space-y-2 pb-8">
-                  {/* Updated link destination to history 🕒 */}
+                <div className="p-4 space-y-2 pb-24">
                   <Link
                     href="/dashboard/history"
                     onClick={() => setActiveSheet(null)}
                     className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left block border-0 outline-none decoration-none"
                   >
                     <div className="w-10 h-10 rounded-xl bg-white text-green-700 border border-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <FiClock size={18} className="stroke-[2.5]" />
+                      <HistoryIcon className="w-5 h-5 text-green-700" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-extrabold text-[#1A2E35]">
@@ -295,19 +301,19 @@ export default function MobileTopHeader() {
                   </Link>
 
                   <Link
-                    href="/dashboard/setting"
+                    href="/dashboard/premium"
                     onClick={() => setActiveSheet(null)}
                     className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left block border-0 outline-none decoration-none"
                   >
                     <div className="w-10 h-10 rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <FiSliders size={18} className="stroke-[2.5]" />
+                      <PremiumIcon className="w-5 h-5 text-gray-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-extrabold text-[#1A2E35]">
-                        Settings
+                        Premium
                       </p>
                       <p className="text-xs text-gray-400 font-medium truncate mt-0.5">
-                        Update configuration and layout preferences
+                        Upgrade your account and unlock exclusive food benefits
                       </p>
                     </div>
                   </Link>
@@ -320,7 +326,7 @@ export default function MobileTopHeader() {
                       className="w-full flex items-center gap-4 p-4 rounded-2xl bg-red-50/40 active:bg-red-50 text-red-500 transition-colors text-left border-0 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                        <FiLogOut size={18} className="stroke-[2.5]" />
+                        <LogoutIcon className="w-5 h-5 text-red-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-extrabold">
