@@ -2,18 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiUser, FiMail, FiLock, FiSmartphone, FiCheck } from "react-icons/fi";
+import { FiUser, FiMail, FiLock, FiSmartphone } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import OtpVerification from "@/components/auth/OtpVerification";
+import FoodSelectionStep from "@/components/onboarding/FoodSelectionStep";
 import { SLIDER_DATA } from "@/constants/auth-slider";
-import {
-  ALLERGY_OPTIONS,
-  DISLIKE_OPTIONS,
-} from "@/constants/onboarding-slider";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 import LoadingState from "@/components/ui/LoadingState";
 import { authService } from "@/services/auth";
@@ -32,13 +29,22 @@ export default function SignUpPage() {
   const [isOtpStage, setIsOtpStage] = useState(false);
   const [initialOtp, setInitialOtp] = useState("");
   const [isPreferencesStage, setIsPreferencesStage] = useState(false);
+
+  const [preferenceSubStep, setPreferenceSubStep] = useState<
+    "allergies" | "dislikes"
+  >("allergies");
+
+  const [finalPreferences, setFinalPreferences] = useState({
+    allergies: [] as string[],
+    allergyCustom: "",
+    dislikes: [] as string[],
+    dislikeCustom: "",
+  });
+
   const [isCompleted, setIsCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Preference management locally managed
-  const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
-  const [selectedDislikes, setSelectedDislikes] = useState<string[]>([]);
-
+  // Auto-slide effect for the initial authentication screen side banner
   useEffect(() => {
     if (isOtpStage || isPreferencesStage || isCompleted) return;
     const timer = setInterval(() => {
@@ -97,50 +103,58 @@ export default function SignUpPage() {
     if (response?.data) {
       updateUserData(response.data);
     }
-
     setIsOtpStage(false);
     setIsPreferencesStage(true);
+    setPreferenceSubStep("allergies");
   };
 
-  const handleTogglePreference = (
-    item: string,
-    state: string[],
-    setState: React.Dispatch<React.SetStateAction<string[]>>,
-  ) => {
-    if (item === "None") {
-      setState(["None"]);
-      return;
-    }
+  const handlePreferenceStepContinue = async (data: {
+    selectedItems: string[];
+    customText: string;
+  }) => {
+    if (preferenceSubStep === "allergies") {
+      setFinalPreferences((prev) => ({
+        ...prev,
+        allergies: data.selectedItems,
+        allergyCustom: data.customText,
+      }));
 
-    let updated = state.filter((i) => i !== "None");
-    if (updated.includes(item)) {
-      updated = updated.filter((i) => i !== item);
+      setPreferenceSubStep("dislikes");
     } else {
-      updated.push(item);
+      setIsLoading(true);
+      const fullPayload = {
+        ...finalPreferences,
+        dislikes: data.selectedItems,
+        dislikeCustom: data.customText,
+      };
+
+      try {
+        toast.success("Preferences successfully!");
+        setIsPreferencesStage(false);
+        setIsCompleted(true);
+      } catch (error: any) {
+        toast.error("Profile created! Redirecting to dashboard...");
+        setIsPreferencesStage(false);
+        setIsCompleted(true);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    setState(updated);
   };
 
-  const handlePreferencesSubmit = async () => {
-    setIsLoading(true);
-    try {
-      // Optional: integration save endpoint goes here
-      toast.success("Preferences updated successfully!");
+  const handlePreferenceStepBack = () => {
+    if (preferenceSubStep === "dislikes") {
+      setPreferenceSubStep("allergies");
+    } else {
       setIsPreferencesStage(false);
-      setIsCompleted(true);
-    } catch (error: any) {
-      toast.error("Failed to save preferences. Moving forward...");
-      setIsPreferencesStage(false);
-      setIsCompleted(true);
-    } finally {
-      setIsLoading(false);
+      setIsOtpStage(true);
     }
   };
 
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
-        <LoadingState message="Processing setup..." />
+        <LoadingState message="Creating account..." />
       </div>
     );
   }
@@ -158,118 +172,11 @@ export default function SignUpPage() {
 
   if (isPreferencesStage) {
     return (
-      <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white font-sans">
-        <section className="flex flex-col px-6 py-8 md:px-12 lg:px-20 justify-center h-full max-w-2xl mx-auto w-full">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-[#1A2E35]">
-              Customize Your Experience
-            </h1>
-            <p className="text-gray-500 text-sm mt-1.5">
-              Select your dietary restrictions and preferences so we can serve
-              you better.
-            </p>
-          </div>
-
-          <div className="space-y-6 w-full">
-            {/* Allergies Block */}
-            <div>
-              <h3 className="text-sm font-semibold text-[#1A2E35] mb-3">
-                Do you have any allergies?
-              </h3>
-              <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1">
-                {ALLERGY_OPTIONS.map((allergy) => {
-                  const isSelected = selectedAllergies.includes(allergy);
-                  return (
-                    <button
-                      key={allergy}
-                      type="button"
-                      onClick={() =>
-                        handleTogglePreference(
-                          allergy,
-                          selectedAllergies,
-                          setSelectedAllergies,
-                        )
-                      }
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 border cursor-pointer ${
-                        isSelected
-                          ? "bg-green-50 border-green-600 text-green-700"
-                          : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      {isSelected && <FiCheck size={12} />}
-                      {allergy}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Dislikes Block */}
-            <div>
-              <h3 className="text-sm font-semibold text-[#1A2E35] mb-3">
-                Any ingredients you dislike?
-              </h3>
-              <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1">
-                {DISLIKE_OPTIONS.map((dislike) => {
-                  const isSelected = selectedDislikes.includes(dislike);
-                  return (
-                    <button
-                      key={dislike}
-                      type="button"
-                      onClick={() =>
-                        handleTogglePreference(
-                          dislike,
-                          selectedDislikes,
-                          setSelectedDislikes,
-                        )
-                      }
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 border cursor-pointer ${
-                        isSelected
-                          ? "bg-green-50 border-green-600 text-green-700"
-                          : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      {isSelected && <FiCheck size={12} />}
-                      {dislike}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handlePreferencesSubmit}
-              className="w-full flex justify-center items-center py-3.5 mt-8 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-sm active:scale-[0.98] cursor-pointer"
-            >
-              Finish & Complete Setup
-            </button>
-          </div>
-        </section>
-
-        {/* Right continuity sidebar layout */}
-        <section className="hidden lg:block relative p-6 max-h-screen sticky top-0">
-          <div className="relative h-full w-full rounded-[40px] overflow-hidden bg-gray-100 shadow-2xl">
-            <div className="absolute inset-0">
-              <img
-                src="/images/onboarding/allergy-1.jpg"
-                className="w-full h-full object-cover"
-                alt="ChopBeta Setup Preview"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-20 left-12 right-12 text-white">
-                <h2 className="text-4xl font-bold mb-4 leading-tight">
-                  Almost there!
-                </h2>
-                <p className="text-gray-200 text-lg font-light leading-relaxed">
-                  We customize meal schedules based directly on what keeps your
-                  body at peak performance.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+      <FoodSelectionStep
+        type={preferenceSubStep}
+        onBack={handlePreferenceStepBack}
+        onContinue={handlePreferenceStepContinue}
+      />
     );
   }
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiArrowLeft } from "react-icons/fi";
+// import { FiArrowLeft } from "react-icons/fi";
 import {
   ALLERGIES_SLIDES,
   DISLIKES_SLIDES,
@@ -13,13 +13,13 @@ import {
 
 interface FoodSelectionStepProps {
   type: "allergies" | "dislikes";
-  onBack: () => void;
+  // onBack: () => void;
   onContinue: (data: { selectedItems: string[]; customText: string }) => void;
 }
 
 export default function FoodSelectionStep({
   type,
-  onBack,
+  // onBack,
   onContinue,
 }: FoodSelectionStepProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -78,6 +78,7 @@ export default function FoodSelectionStep({
   const isOthersSelected = selectedTags.some(
     (t) => t.toLowerCase() === "others",
   );
+
   const isFormValid =
     selectedTags.length > 0 &&
     (!isOthersSelected || customText.trim().length > 0);
@@ -86,12 +87,12 @@ export default function FoodSelectionStep({
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white font-sans">
       <section className="flex flex-col px-6 py-8 md:px-12 lg:px-20 justify-between h-full max-w-2xl mx-auto w-full relative">
         <div className="flex items-center justify-between w-full mb-8">
-          <button
+          {/* <button
             onClick={onBack}
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-500 hover:text-green-800 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-500 hover:text-green-800 transition-colors cursor-pointer bg-transparent border-none outline-none"
           >
             <FiArrowLeft /> Go Back
-          </button>
+          </button> */}
 
           <div className="relative w-24 h-8 md:hidden">
             <Image
@@ -120,9 +121,9 @@ export default function FoodSelectionStep({
                   key={tag}
                   type="button"
                   onClick={() => toggleTag(tag)}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-[0.98] ${
+                  className={`px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-[0.98] cursor-pointer ${
                     isSelected
-                      ? "bg-[#1A2E35] border-[#1A2E35] text-white shadow-sm"
+                      ? "bg-green-700 border-green-700 text-white shadow-sm animate-none"
                       : "bg-gray-100 border-transparent text-gray-700 hover:bg-gray-200/80"
                   }`}
                 >
@@ -138,6 +139,7 @@ export default function FoodSelectionStep({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
                 className="overflow-hidden pt-2"
               >
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 mb-1.5">
