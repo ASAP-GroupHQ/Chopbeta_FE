@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiCheckSquare, FiInfo, FiTrendingDown } from "react-icons/fi";
 import {
   HistoryIcon,
-  PremiumIcon,
+  SettingsIcon,
   LogoutIcon,
 } from "@/components/icons/NavIcons";
 import {
@@ -306,14 +306,14 @@ export default function MobileTopHeader() {
                     className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left block border-0 outline-none decoration-none"
                   >
                     <div className="w-10 h-10 rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <PremiumIcon className="w-5 h-5 text-gray-500" />
+                      <SettingsIcon className="w-5 h-5 text-gray-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-extrabold text-[#1A2E35]">
-                        Premium
+                        Settings
                       </p>
                       <p className="text-xs text-gray-400 font-medium truncate mt-0.5">
-                        Upgrade your account and unlock exclusive food benefits
+                        Update configuration and layout preferences
                       </p>
                     </div>
                   </Link>

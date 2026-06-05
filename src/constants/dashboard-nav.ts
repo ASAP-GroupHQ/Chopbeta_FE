@@ -42,5 +42,5 @@ export const MOBILE_BOTTOM_ITEMS: NavItem[] = [
   },
 
   { label: "Track", href: "/track", icon: TrackIcon },
-  { label: "Setting", href: "/dashboard/setting", icon: SettingsIcon },
+  { label: "Premium", href: "/premium", icon: PremiumIcon },
 ];

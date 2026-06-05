@@ -1,4 +1,4 @@
-import { HistoryIcon, PremiumIcon } from "@/components/icons/NavIcons";
+import { HistoryIcon, SettingsIcon } from "@/components/icons/NavIcons";
 
 export interface ProfileMenuItem {
   label: string;
@@ -15,9 +15,9 @@ export const PROFILE_MENU_ITEMS: ProfileMenuItem[] = [
     icon: HistoryIcon,
   },
   {
-    label: "Premium",
-    href: "/dashboard/premium",
-    icon: PremiumIcon,
-    description: "Upgrade your account and unlock exclusive food benefits",
+    label: "Settings",
+    href: "/dashboard/setting",
+    icon: SettingsIcon,
+    description: "Manage your account and food preferences",
   },
 ];
