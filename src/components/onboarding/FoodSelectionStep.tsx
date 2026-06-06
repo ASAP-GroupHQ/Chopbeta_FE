@@ -13,13 +13,13 @@ import {
 
 interface FoodSelectionStepProps {
   type: "allergies" | "dislikes";
-  // onBack: () => void;
+  onBack: () => void;
   onContinue: (data: { selectedItems: string[]; customText: string }) => void;
 }
 
 export default function FoodSelectionStep({
   type,
-  // onBack,
+  onBack,
   onContinue,
 }: FoodSelectionStepProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -87,12 +87,12 @@ export default function FoodSelectionStep({
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white font-sans">
       <section className="flex flex-col px-6 py-8 md:px-12 lg:px-20 justify-between h-full max-w-2xl mx-auto w-full relative">
         <div className="flex items-center justify-between w-full mb-8">
-          {/* <button
+          <button
             onClick={onBack}
             className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-500 hover:text-green-800 transition-colors cursor-pointer bg-transparent border-none outline-none"
           >
-            <FiArrowLeft /> Go Back
-          </button> */}
+            {/* <FiArrowLeft /> Go Back */}
+          </button>
 
           <div className="relative w-24 h-8 md:hidden">
             <Image
