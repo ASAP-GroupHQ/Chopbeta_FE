@@ -301,7 +301,7 @@ export default function MobileTopHeader() {
                   </Link>
 
                   <Link
-                    href="/dashboard/premium"
+                    href="/dashboard/setting"
                     onClick={() => setActiveSheet(null)}
                     className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left block border-0 outline-none decoration-none"
                   >
