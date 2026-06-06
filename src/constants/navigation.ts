@@ -3,7 +3,7 @@ import { HistoryIcon, SettingsIcon } from "@/components/icons/NavIcons";
 export interface ProfileMenuItem {
   label: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
   description: string;
 }
 
