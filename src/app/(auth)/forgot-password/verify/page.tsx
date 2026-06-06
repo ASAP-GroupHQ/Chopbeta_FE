@@ -2,21 +2,30 @@
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import Image from "next/image";
-import { FiMail, FiArrowLeft } from "react-icons/fi";
+import { FiMail, FiArrowLeft, FiKey } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import LoadingState from "@/components/ui/LoadingState";
+import { authService } from "@/services/auth";
 
 function OtpVerificationFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "your email";
+  const email = searchParams.get("email") || "";
+  const initialOtp = searchParams.get("otp") || null;
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const [fetchedOtp, setFetchedOtp] = useState<string | null>(initialOtp);
   const [timeLeft, setTimeLeft] = useState<number>(59);
   const [isVerifying, setIsVerifying] = useState(false);
   const inputRefs = useRef<HTMLInputElement[]>([]);
+
+  useEffect(() => {
+    if (initialOtp) {
+      setFetchedOtp(initialOtp);
+    }
+  }, [initialOtp]);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -26,35 +35,54 @@ function OtpVerificationFormContent() {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  const handleResend = () => {
+  useEffect(() => {
+    if (inputRefs.current[0]) inputRefs.current[0].focus();
+  }, []);
+
+  const handleResend = async () => {
     if (timeLeft === 0) {
-      setTimeLeft(59);
-      setOtp(["", "", "", "", "", ""]);
-      toast.success("A new code has been sent to your email!");
-      if (inputRefs.current[0]) inputRefs.current[0].focus();
+      try {
+        const response = await authService.forgotPassword({ email });
+        setFetchedOtp(response.data);
+        setTimeLeft(59);
+        setOtp(["", "", "", "", "", ""]);
+        if (inputRefs.current[0]) inputRefs.current[0].focus();
+        toast.success("A new code has been generated!");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to resend code.");
+      }
     }
   };
 
-  const handleChange = (value: string, index: number) => {
+  const handleChange = async (value: string, index: number) => {
     if (isNaN(Number(value))) return;
 
     const newOtp = [...otp];
     newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
 
+    // Focus next box if filled
     if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1].focus();
     }
 
     const finalCode = newOtp.join("");
-    // Trigger automatically when the 6th box gets its value
-    if (finalCode.length === 5 && value) {
+
+    if (finalCode.length === 6) {
       setIsVerifying(true);
-      setTimeout(() => {
+      try {
+        await authService.verifyOtp({ email, otp: finalCode });
+
+        toast.success("OTP Code Verified!");
+        router.push(
+          `/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(finalCode)}`,
+        );
+      } catch (error: any) {
+        toast.error(error?.response?.data?.message || "Invalid OTP");
+        setOtp(["", "", "", "", "", ""]);
         setIsVerifying(false);
-        toast.success("Awesome! Your code matches perfectly.");
-        router.push(`/reset-password?email=${encodeURIComponent(email)}`);
-      }, 2000);
+        if (inputRefs.current[0]) inputRefs.current[0].focus();
+      }
     }
   };
 
@@ -74,11 +102,29 @@ function OtpVerificationFormContent() {
 
   return (
     <main className="min-h-screen bg-white relative px-4 sm:px-6 lg:px-8 font-sans flex flex-col items-center justify-center">
+      {fetchedOtp && (
+        <div className="absolute top-10 sm:top-24 left-1/2 -translate-x-1/2 w-full max-w-sm mx-auto px-4 z-20">
+          <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-900 shadow-sm transition-all">
+            <div className="p-2 bg-green-600 text-white rounded-xl shadow-inner">
+              <FiKey className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-[10px] uppercase tracking-wider text-green-700 font-bold leading-none mb-1">
+                Staging Auto-Fetch Code
+              </span>
+              <span className="text-xl font-black tracking-[4px] text-green-900 leading-none">
+                {fetchedOtp}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="absolute top-6 left-6 sm:top-10 sm:left-10 z-10">
         <Link href="/" className="hover:opacity-90 transition-opacity">
           <Image
             src="/chopbeta.png"
-            alt="ChopBeta Logo"
+            alt="Logo"
             width={140}
             height={45}
             className="object-contain"
@@ -97,7 +143,7 @@ function OtpVerificationFormContent() {
 
       <div className="w-full max-w-md text-center space-y-6">
         {isVerifying ? (
-          <LoadingState message="Checking your code... hold on a second." />
+          <LoadingState message="Verifying code security with server..." />
         ) : (
           <>
             <div className="inline-flex p-3 bg-gray-50 rounded-full border border-gray-100 shadow-sm mx-auto">
@@ -105,11 +151,11 @@ function OtpVerificationFormContent() {
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold text-[#1A2E35] tracking-tight sm:text-3xl">
+              <h1 className="text-2xl font-bold text-[#1A2E35]">
                 Check Your Email
               </h1>
-              <p className="text-gray-500 text-sm mt-1.5 max-w-[340px] mx-auto">
-                We just sent an OTP code to{" "}
+              <p className="text-gray-500 text-sm mt-1.5">
+                OTP sent to{" "}
                 <span className="font-semibold text-gray-700 break-all">
                   {email}
                 </span>
@@ -124,6 +170,7 @@ function OtpVerificationFormContent() {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={1}
+                  disabled={isVerifying}
                   ref={(el) => {
                     if (el) inputRefs.current[index] = el;
                   }}
@@ -133,7 +180,7 @@ function OtpVerificationFormContent() {
                   className={`w-11 h-11 sm:w-14 sm:h-14 text-center text-xl font-bold rounded-xl border outline-none transition-all duration-200 ${
                     digit
                       ? "bg-[#D1E7DD] border-green-700 text-green-900 shadow-sm"
-                      : "bg-gray-50 border-gray-200 text-[#1A2E35] focus:border-green-700 focus:bg-white focus:ring-4 focus:ring-green-800/5"
+                      : "bg-gray-50 border-gray-200 text-[#1A2E35] focus:border-green-700 focus:bg-white"
                   }`}
                 />
               ))}
@@ -142,13 +189,13 @@ function OtpVerificationFormContent() {
             <div className="text-sm font-medium">
               {timeLeft > 0 ? (
                 <p className="text-green-800">
-                  Resend code in <span className="font-bold">{timeLeft}s</span>
+                  Resend in <b>{timeLeft}s</b>
                 </p>
               ) : (
                 <button
-                  type="button"
                   onClick={handleResend}
-                  className="text-orange-500 hover:text-orange-600 font-bold underline transition-colors cursor-pointer bg-transparent border-none"
+                  type="button"
+                  className="text-orange-500 font-bold underline cursor-pointer bg-transparent border-none"
                 >
                   Resend code
                 </button>
@@ -166,7 +213,7 @@ export default function OtpVerificationPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-white flex items-center justify-center">
-          <LoadingState message="Setting things up..." />
+          <LoadingState message="Loading..." />
         </div>
       }
     >

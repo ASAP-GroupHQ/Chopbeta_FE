@@ -8,15 +8,18 @@ import Image from "next/image";
 import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import LoadingState from "@/components/ui/LoadingState";
+import { authService } from "@/services/auth";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleForgotSubmit = (e: React.FormEvent) => {
+  const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
+
+    const formattedEmail = email.trim();
+    if (!formattedEmail) {
       toast.error(
         "Please enter your email address so we can find your account.",
       );
@@ -25,11 +28,26 @@ export default function ForgotPasswordPage() {
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("We've sent a reset code to your email inbox!");
-      router.push(`/forgot-password/verify?email=${encodeURIComponent(email)}`);
-    }, 2000); 
+    try {
+      const response = await authService.forgotPassword({
+        email: formattedEmail,
+      });
+
+      toast.success(
+        response.message || "We've sent a reset code to your email inbox!",
+      );
+
+      router.push(
+        `/forgot-password/verify?email=${encodeURIComponent(formattedEmail)}&otp=${encodeURIComponent(response.data || "")}`,
+      );
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Could not look up your email account. Please try again.",
+      );
+      setIsLoading(false); 
+    }
   };
 
   return (
@@ -50,7 +68,7 @@ export default function ForgotPasswordPage() {
       <div className="flex flex-col items-center justify-center w-full pt-16">
         <section className="flex flex-col items-center w-full max-w-md space-y-6">
           {isLoading ? (
-            <LoadingState message="Looking up your account details..." />
+            <LoadingState message="Requesting your OTP verification code..." />
           ) : (
             <>
               <div className="inline-flex p-3 bg-gray-50 rounded-full mb-2 border border-gray-100 shadow-sm">
@@ -62,8 +80,8 @@ export default function ForgotPasswordPage() {
                   Forgot Password?
                 </h1>
                 <p className="text-gray-500 text-sm mt-1.5 max-w-[320px] mx-auto">
-                  No worries! Just enter your email below and we&apos;ll
-                  help you get right back in.
+                  No worries! Just enter your email below and we&apos;ll help
+                  you get right back in.
                 </p>
               </div>
 
@@ -80,7 +98,8 @@ export default function ForgotPasswordPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-green-800 hover:bg-green-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                  disabled={isLoading}
+                  className="w-full py-3.5 bg-green-800 hover:bg-green-900 disabled:bg-green-800/60 text-white font-semibold rounded-xl transition-all duration-300 shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
                 >
                   Send Verification Code
                 </button>

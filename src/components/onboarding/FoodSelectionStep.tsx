@@ -3,14 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiArrowLeft } from "react-icons/fi";
+// import { FiArrowLeft } from "react-icons/fi";
 import {
   ALLERGIES_SLIDES,
   DISLIKES_SLIDES,
   ALLERGY_OPTIONS,
   DISLIKE_OPTIONS,
 } from "@/constants/onboarding-slider";
-import LoadingState from "@/components/ui/LoadingState";
 
 interface FoodSelectionStepProps {
   type: "allergies" | "dislikes";
@@ -26,9 +25,7 @@ export default function FoodSelectionStep({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customText, setCustomText] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Determine dynamic data definitions based on type prop
   const isAllergies = type === "allergies";
   const titleText = isAllergies ? "Any allergies?" : "How about dislikes?";
   const subText = isAllergies
@@ -38,17 +35,20 @@ export default function FoodSelectionStep({
   const options = isAllergies ? ALLERGY_OPTIONS : DISLIKE_OPTIONS;
   const slides = isAllergies ? ALLERGIES_SLIDES : DISLIKES_SLIDES;
 
-  // Background Image Slider rotation
   useEffect(() => {
+    setSelectedTags([]);
+    setCustomText("");
     setCurrentSlide(0);
+  }, [type]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 4500);
     return () => clearInterval(timer);
-  }, [type, slides.length]);
+  }, [slides.length]);
 
   const toggleTag = (tag: string) => {
-    if (isLoading) return;
     const standardizedTag = tag.toLowerCase();
 
     if (standardizedTag === "none") {
@@ -69,35 +69,29 @@ export default function FoodSelectionStep({
   };
 
   const handleSubmit = () => {
-    setIsLoading(true);
-
-    setTimeout(() => {
-      onContinue({
-        selectedItems: selectedTags,
-        customText: isOthersSelected ? customText : "",
-      });
-      setIsLoading(false);
-    }, 1800);
+    onContinue({
+      selectedItems: selectedTags,
+      customText: isOthersSelected ? customText : "",
+    });
   };
 
   const isOthersSelected = selectedTags.some(
     (t) => t.toLowerCase() === "others",
   );
+
   const isFormValid =
     selectedTags.length > 0 &&
     (!isOthersSelected || customText.trim().length > 0);
 
   return (
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white font-sans">
-      {/* FORMS & CHIPS SELECTION */}
       <section className="flex flex-col px-6 py-8 md:px-12 lg:px-20 justify-between h-full max-w-2xl mx-auto w-full relative">
         <div className="flex items-center justify-between w-full mb-8">
           <button
             onClick={onBack}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-500 hover:text-green-800 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-500 hover:text-green-800 transition-colors cursor-pointer bg-transparent border-none outline-none"
           >
-            <FiArrowLeft /> Go Back
+            {/* <FiArrowLeft /> Go Back */}
           </button>
 
           <div className="relative w-24 h-8 md:hidden">
@@ -119,7 +113,6 @@ export default function FoodSelectionStep({
             <p className="text-sm text-gray-500">{subText}</p>
           </div>
 
-          {/* Render Selection Grid */}
           <div className="flex flex-wrap gap-2.5 pt-2">
             {options.map((tag) => {
               const isSelected = selectedTags.includes(tag);
@@ -127,13 +120,12 @@ export default function FoodSelectionStep({
                 <button
                   key={tag}
                   type="button"
-                  disabled={isLoading}
                   onClick={() => toggleTag(tag)}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-[0.98] ${
+                  className={`px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-[0.98] cursor-pointer ${
                     isSelected
-                      ? "bg-[#1A2E35] border-[#1A2E35] text-white shadow-sm"
+                      ? "bg-green-700 border-green-700 text-white shadow-sm animate-none"
                       : "bg-gray-100 border-transparent text-gray-700 hover:bg-gray-200/80"
-                  } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
+                  }`}
                 >
                   {tag}
                 </button>
@@ -147,6 +139,7 @@ export default function FoodSelectionStep({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
                 className="overflow-hidden pt-2"
               >
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 mb-1.5">
@@ -154,11 +147,10 @@ export default function FoodSelectionStep({
                 </label>
                 <input
                   type="text"
-                  disabled={isLoading}
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
                   placeholder="Type any other items separated by commas, or type None"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-green-600 focus:ring-2 focus:ring-green-500/10 text-sm font-medium transition-all text-[#1A2E35] disabled:opacity-60"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-green-600 focus:ring-2 focus:ring-green-500/10 text-sm font-medium transition-all text-[#1A2E35]"
                 />
               </motion.div>
             )}
@@ -166,28 +158,21 @@ export default function FoodSelectionStep({
         </div>
 
         <div className="pt-8 min-h-[96px] flex items-center justify-center">
-          {isLoading ? (
-            <div className="w-full flex justify-center py-2">
-              <LoadingState message="Saving your preferences..." />
-            </div>
-          ) : (
-            <button
-              type="button"
-              disabled={!isFormValid}
-              onClick={handleSubmit}
-              className={`w-full py-4 text-center text-base font-bold rounded-xl transition-all duration-300 shadow-md cursor-pointer ${
-                isFormValid
-                  ? "bg-green-700 hover:bg-green-800 text-white active:scale-[0.99]"
-                  : "bg-green-700/30 text-white cursor-not-allowed shadow-none"
-              }`}
-            >
-              Continue
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={!isFormValid}
+            onClick={handleSubmit}
+            className={`w-full py-4 text-center text-base font-bold rounded-xl transition-all duration-300 shadow-md cursor-pointer ${
+              isFormValid
+                ? "bg-green-700 hover:bg-green-800 text-white active:scale-[0.99]"
+                : "bg-green-700/30 text-white cursor-not-allowed shadow-none"
+            }`}
+          >
+            Continue
+          </button>
         </div>
       </section>
 
-      {/* AUTOMATED CAROUSEL CONTAINER */}
       <section className="hidden lg:block relative w-full h-full min-h-[500px] lg:h-screen p-6 sticky top-0">
         <div className="relative h-full w-full rounded-[40px] overflow-hidden bg-gray-900 shadow-2xl">
           <AnimatePresence mode="wait">

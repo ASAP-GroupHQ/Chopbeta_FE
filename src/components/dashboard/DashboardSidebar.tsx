@@ -5,14 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SIDEBAR_ITEMS } from "@/constants/dashboard-nav";
-import { LogoutIcon } from "@/components/icons/NavIcons"; 
+import { LogoutIcon } from "@/components/icons/NavIcons";
+import { useAuth } from "@/context/AuthContext"; 
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    // logout integration
-    console.log("Logging user account out...");
+  const handleLogout = async () => {
+    await logout(); 
   };
 
   return (
@@ -27,7 +28,6 @@ export default function DashboardSidebar() {
         />
       </div>
 
-      {/* Interactive Menu List */}
       <nav className="space-y-1.5">
         {SIDEBAR_ITEMS.map((item) => {
           const isActive = pathname === item.href;
@@ -52,7 +52,6 @@ export default function DashboardSidebar() {
                 <span>{item.label}</span>
               </div>
 
-              {/* Sidebar Active Line Indicator Bar */}
               {isActive && (
                 <span className="w-1 h-5 bg-[#E85D26] rounded-full" />
               )}
@@ -65,7 +64,7 @@ export default function DashboardSidebar() {
       <button
         type="button"
         onClick={handleLogout}
-        className="mt-auto flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-bold text-[#EF4444] hover:bg-red-50/50 transition-all group cursor-pointer"
+        className="mt-auto flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-bold text-[#EF4444] hover:bg-red-50/50 transition-all group cursor-pointer w-full text-left"
       >
         <LogoutIcon className="w-5 h-5 text-[#EF4444] group-hover:scale-105 transition-transform" />
         <span>Logout</span>
