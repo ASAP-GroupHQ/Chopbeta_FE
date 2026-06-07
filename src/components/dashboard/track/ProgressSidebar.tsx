@@ -77,11 +77,6 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
             </p>
           </div>
         </div>
-        {/* <div className="h-[50px] w-full bg-gradient-to-r from-orange-50 to-orange-100/50 opacity-60 relative">
-          <div className="absolute right-2 bottom-0 text-3xl opacity-20 select-none">
-            🍲
-          </div>
-        </div> */}
       </div>
 
       {/* Nutritional Balance Horizontal Progress Indicators */}
