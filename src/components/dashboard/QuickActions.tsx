@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 const ACTIONS = [
   {
     label: "Explore",
     desc: "Discover meals",
+    href: "/dashboard/explore",
     icon: (className: string) => (
       <svg
         width="20"
@@ -31,6 +33,7 @@ const ACTIONS = [
   {
     label: "Track Meal",
     desc: "Log your meals",
+    href: "/dashboard/track",
     icon: (className: string) => (
       <svg
         width="20"
@@ -49,6 +52,7 @@ const ACTIONS = [
   {
     label: "History",
     desc: "View past plans",
+    href: "/dashboard/history",
     icon: (className: string) => (
       <svg
         width="20"
@@ -72,9 +76,10 @@ export default function QuickActions() {
       <h3 className="text-sm font-black text-[#1A2E35]">Quick Actions</h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {ACTIONS.map((action) => (
-          <button
+          <Link
             key={action.label}
-            className="flex items-center gap-3 p-3.5 border border-gray-100 rounded-xl hover:border-green-800/20 hover:bg-gray-50/50 transition-all text-left group cursor-pointer"
+            href={action.href}
+            className="flex items-center gap-3 p-3.5 border border-gray-100 rounded-xl hover:border-green-800/20 hover:bg-gray-50/50 transition-all text-left group"
           >
             <div className="w-10 h-10 shrink-0 flex items-center justify-center bg-green-800/10 rounded-full text-[#1E6B3C] group-hover:bg-[#1E6B3C] group-hover:text-white transition-all">
               {action.icon("w-5 h-5")}
@@ -85,7 +90,7 @@ export default function QuickActions() {
                 {action.desc}
               </p>
             </div>
-          </button>
+          </Link>
         ))}
       </div>
     </div>
