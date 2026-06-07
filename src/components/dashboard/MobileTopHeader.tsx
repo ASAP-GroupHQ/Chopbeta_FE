@@ -300,7 +300,6 @@ export default function MobileTopHeader() {
                     </div>
                   </Link>
 
-                  {/* Settings */}
                   <Link
                     href="/dashboard/setting"
                     onClick={() => setActiveSheet(null)}
