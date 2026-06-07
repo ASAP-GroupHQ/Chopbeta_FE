@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import {
   MealEatenIcon,
@@ -52,6 +52,7 @@ export default function TrackMealPage() {
   const [activeTab, setActiveTab] = useState<"planned" | "eaten">("planned");
   const [waterGlasses, setWaterGlasses] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentDate, setCurrentDate] = useState<string>("");
 
   const eatenCount = meals.filter((m) => m.eaten).length;
   const totalCount = meals.length;
@@ -78,6 +79,18 @@ export default function TrackMealPage() {
     setWaterGlasses((prev) => (prev < 6 ? prev + 1 : 0)); // Resets if full for demo interaction
   };
 
+  useEffect(() => {
+    // Format options: "Jun 7, 2026"
+    const options: Intl.DateTimeFormatOptions = {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    };
+
+    // Set the live current date
+    setCurrentDate(new Date().toLocaleDateString("en-US", options));
+  }, []);
+
   const displayedMeals =
     activeTab === "planned" ? meals : meals.filter((m) => m.eaten);
 
@@ -101,12 +114,14 @@ export default function TrackMealPage() {
 
           <div className="flex items-center self-end sm:self-auto gap-4">
             <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold text-gray-700 select-none">
-              <button className="hover:text-black">‹</button>
-              <span className="px-1">Jun 1, 2026</span>
-              <button className="hover:text-black">›</button>
+              <button className="hover:text-black transition-colors">‹</button>
+
+              <span className="px-1 min-w-[70px] text-center">
+                {currentDate || "Loading..."}
+              </span>
+              <button className="hover:text-black transition-colors">›</button>
             </div>
 
-            {/* HeaderActions Placeholder icons mimicking the prototype layout */}
             <HeaderActions />
           </div>
         </div>
