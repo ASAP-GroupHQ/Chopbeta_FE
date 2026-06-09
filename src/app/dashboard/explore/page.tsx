@@ -82,7 +82,7 @@ const MEALS: Meal[] = [
 
 export default function ExplorePage() {
   return (
-    <main className="flex-1 p-8">
+    <main className="flex-1 p-2">
       <ExploreHeader />
       <FilterTags />
 
