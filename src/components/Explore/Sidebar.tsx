@@ -22,7 +22,7 @@ export default function Sidebar() {
         {NAV_ITEMS.map((item) => (
           <button
             key={item.label}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-gray-500 hover:bg-gray-50 hover:text-gray-800`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-gray-800 hover:bg-green-900 text-white-800`}
           >
             <item.icon className="w-5 h-5" />
             {item.label}
