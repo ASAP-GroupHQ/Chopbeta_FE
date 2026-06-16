@@ -5,10 +5,10 @@ import Image from "next/image";
 import { FiChevronDown } from "react-icons/fi";
 
 const MEALS = [
-  { id: 1, name: "Rice & chips", price: "₦1000" },
-  { id: 2, name: "Rice & chips", price: "₦1000" },
-  { id: 3, name: "Rice & chips", price: "₦1000" },
-  { id: 4, name: "Rice & chips", price: "₦1000" },
+  { id: 1, name: "Rice & beans", price: "₦1000" },
+  { id: 2, name: "Cassava flake & Floating berries", price: "₦600" },
+  { id: 3, name: "Spaghetti & turkey", price: "₦3000" },
+  { id: 4, name: "Indomie & egg", price: "₦1500" },
 ];
 
 export default function QuickMeals() {
