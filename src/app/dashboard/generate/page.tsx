@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { FiRefreshCw, FiHelpCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
 // import LayoutWrapper from "@/components/dashboard/LayoutWrapper";
-import HeroSlider from "./components/HeroSlider";
-import MealCard from "./components/MealCard";
-import InstructionModal from "./components/InstructionModal";
+import HeroSlider from "@/components/dashboard/generate/HeroSlider";
+import MealCard from "@/components/dashboard/generate/MealCard";
+import InstructionModal from "@/components/dashboard/generate/InstructionModal";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 
 const MOCK_GENERATED_MEALS = [
