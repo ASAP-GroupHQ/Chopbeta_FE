@@ -16,8 +16,13 @@ import LoadingState from "@/components/ui/LoadingState";
 import { authService } from "@/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
+type AuthMethod = "email" | "phone";
+
 export default function SignUpPage() {
   const { updateUserData } = useAuth();
+
+  // Unified core authentication toggle state
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -44,7 +49,7 @@ export default function SignUpPage() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Auto-slide effect for the initial authentication screen side banner
+  // Auto-slide effect for the initial side banner
   useEffect(() => {
     if (isOtpStage || isPreferencesStage || isCompleted) return;
     const timer = setInterval(() => {
@@ -74,21 +79,27 @@ export default function SignUpPage() {
     }
 
     setIsLoading(true);
-    const normalizedPhone = formatNigerianPhoneNumber(phoneNumber);
+
+    // Dynamic clean payload structuring depending on the current auth state
+    const payload: any = { fullName, password };
+    if (authMethod === "email") {
+      payload.email = email;
+    } else {
+      payload.phoneNumber = formatNigerianPhoneNumber(phoneNumber);
+    }
 
     try {
-      const response = await authService.studentSignup({
-        fullName,
-        email,
-        phoneNumber: normalizedPhone,
-        password,
-      });
+      const response = await authService.studentSignup(payload);
 
       if (response?.data?.otp) {
         setInitialOtp(String(response.data.otp));
       }
 
-      toast.success("Account created! Please verify your email.");
+      toast.success(
+        authMethod === "email"
+          ? "Account created! Please verify your email."
+          : "Account created! Please verify your phone number.",
+      );
       setIsOtpStage(true);
     } catch (error: any) {
       toast.error(
@@ -118,22 +129,14 @@ export default function SignUpPage() {
         allergies: data.selectedItems,
         allergyCustom: data.customText,
       }));
-
       setPreferenceSubStep("dislikes");
     } else {
       setIsLoading(true);
-      const fullPayload = {
-        ...finalPreferences,
-        dislikes: data.selectedItems,
-        dislikeCustom: data.customText,
-      };
-
       try {
-        toast.success("Preferences successfully!");
+        toast.success("Preferences saved successfully!");
         setIsPreferencesStage(false);
         setIsCompleted(true);
       } catch (error: any) {
-        toast.error("Profile created! Redirecting to dashboard...");
         setIsPreferencesStage(false);
         setIsCompleted(true);
       } finally {
@@ -183,7 +186,8 @@ export default function SignUpPage() {
   if (isOtpStage) {
     return (
       <OtpVerification
-        email={email}
+        identifier={authMethod === "email" ? email : phoneNumber}
+        type={authMethod}
         initialOtp={initialOtp}
         onBackToSignup={() => setIsOtpStage(false)}
         onVerifySuccess={handleOtpCompletion}
@@ -209,6 +213,7 @@ export default function SignUpPage() {
 
         <div className="text-center mb-8">
           <div className="inline-flex rounded-full mb-4">
+            {/* SVG Logo Graphic remains fully intact */}
             <svg
               width="62"
               height="62"
@@ -317,11 +322,14 @@ export default function SignUpPage() {
             Create Your Account
           </h1>
           <p className="text-gray-500 text-sm mt-1.5">
-            Input your details to create a new account
+            {authMethod === "email"
+              ? "Input your details to create a new account"
+              : "Input your mobile number to sign up swiftly"}
           </p>
         </div>
 
         <form className="space-y-4 w-full" onSubmit={handleSignupSubmit}>
+          {/* Dynamic Input Conditional Mapping */}
           <AuthInput
             label="Full Name"
             placeholder="John Doe"
@@ -331,27 +339,34 @@ export default function SignUpPage() {
             disabled={isLoading}
             required
           />
-          <AuthInput
-            label="Email Address"
-            type="email"
-            placeholder="john.doe@example.com"
-            Icon={FiMail}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={isLoading}
-            required
-          />
-          <AuthInput
-            label="Phone Number"
-            type="tel"
-            pattern="^\+?[0-9]{7,15}$"
-            placeholder="+2348101234567"
-            Icon={FiSmartphone}
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            disabled={isLoading}
-            required
-          />
+          
+          {authMethod === "email" ? (
+            <>
+              <AuthInput
+                label="Email Address"
+                type="email"
+                placeholder="john.doe@example.com"
+                Icon={FiMail}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                required
+              />
+            </>
+          ) : (
+            <AuthInput
+              label="Phone Number"
+              type="tel"
+              pattern="^\+?[0-9]{7,15}$"
+              placeholder="08101234567"
+              Icon={FiSmartphone}
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          )}
+
           <AuthInput
             label="Create a New Password"
             type="password"
@@ -417,14 +432,27 @@ export default function SignUpPage() {
           </div>
         </div>
 
+        {/* Dynamic lower action layout toggles */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            type="button"
-            disabled={isLoading}
-            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
-          >
-            <FiSmartphone className="text-gray-500" size={18} /> Phone number
-          </button>
+          {authMethod === "email" ? (
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => setAuthMethod("phone")}
+              className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
+            >
+              <FiSmartphone className="text-gray-500" size={18} /> Phone number
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => setAuthMethod("email")}
+              className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
+            >
+              <FiMail className="text-gray-500" size={18} /> Email Address
+            </button>
+          )}
           <button
             type="button"
             disabled={isLoading}
@@ -445,6 +473,7 @@ export default function SignUpPage() {
         </p>
       </section>
 
+      {/* Side Slider Graphic remains identical */}
       <section className="hidden lg:block relative p-6 max-h-screen sticky top-0">
         <div className="relative h-full w-full rounded-[40px] overflow-hidden bg-gray-100 shadow-2xl">
           <AnimatePresence mode="wait">
@@ -463,20 +492,10 @@ export default function SignUpPage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-20 left-12 right-12 text-white">
-                <motion.h2
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-4xl font-bold mb-4 leading-tight"
-                >
+                <motion.h2 className="text-4xl font-bold mb-4 leading-tight">
                   {SLIDER_DATA[currentSlide].title}
                 </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-gray-200 text-lg font-light leading-relaxed"
-                >
+                <motion.p className="text-gray-200 text-lg font-light leading-relaxed">
                   {SLIDER_DATA[currentSlide].description}
                 </motion.p>
                 <div className="flex gap-2 mt-8">

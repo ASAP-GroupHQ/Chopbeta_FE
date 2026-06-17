@@ -2,21 +2,23 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { FiMail, FiArrowLeft, FiKey } from "react-icons/fi";
+import { FiMail, FiArrowLeft, FiKey, FiSmartphone } from "react-icons/fi";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import LoadingState from "@/components/ui/LoadingState";
 import { authService } from "@/services/auth";
 
 interface OtpVerificationProps {
-  email: string;
+  identifier: string; // Accepts email or phone
+  type: "email" | "phoneNumber"; // Pass method context
   initialOtp?: string;
   onBackToSignup: () => void;
   onVerifySuccess: (response: any) => void;
 }
 
 const OtpVerification: React.FC<OtpVerificationProps> = ({
-  email,
+  identifier,
+  type,
   initialOtp = "",
   onBackToSignup,
   onVerifySuccess,
@@ -42,19 +44,17 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // Handle Resend OTP Request
   const handleResend = async () => {
     if (timeLeft !== 0) return;
 
     setIsVerifying(true);
     try {
-      const response = await authService.resendOtp({ email });
+      // Pass unified value depending on your endpoint specification requirements
+      const response = await authService.resendOtp({
+        [type === "email" ? "email" : "phoneNumber"]: identifier,
+      } as any);
 
-      // Update with the newly generated token code directly from response.data
       if (response?.data) {
-        setFetchedOtp(String(response.data));
-      } else if (response?.data) {
-        // Fallback case just in case the interceptor strips the wrapper
         setFetchedOtp(String(response.data));
       }
 
@@ -76,7 +76,6 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
 
-    // Auto-advance focus to the next input field
     if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1].focus();
     }
@@ -87,13 +86,13 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
       setIsVerifying(true);
 
       try {
-        const response = await authService.verifyOtp({
-          email,
-          otp: finalCode,
-        });
+        const payload =
+          type === "email"
+            ? { email: identifier, otp: finalCode }
+            : { phoneNumber: identifier, otp: finalCode };
 
-        toast.success("Email verified successfully!");
-
+        const response = await authService.verifyOtp(payload as any);
+        toast.success("Account verified successfully!");
         onVerifySuccess(response);
       } catch (error: any) {
         toast.error(
@@ -125,14 +124,14 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   if (isVerifying) {
     return (
       <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
-        <LoadingState message="Creating account..." />
+        <LoadingState message="Verifying code..." />
       </div>
     );
   }
 
   return (
     <main className="min-h-screen bg-white relative px-4 sm:px-6 lg:px-8 font-sans flex flex-col items-center justify-center">
-      {/* Real-time Dynamic Display of Intercepted Backend OTP Code */}
+      {/* Auto-Fetch Staging Bar stays fully intact */}
       {fetchedOtp && (
         <div className="absolute top-24 left-1/2 -translate-x-1/2 w-full max-w-sm mx-auto px-4 z-20">
           <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-900 shadow-sm">
@@ -151,7 +150,6 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
         </div>
       )}
 
-      {/* Top Left Branding Logo */}
       <div className="absolute top-6 left-6 sm:top-10 sm:left-10 z-10">
         <Link href="/" className="hover:opacity-90 transition-opacity">
           <Image
@@ -172,10 +170,13 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
         <FiArrowLeft /> Go Back
       </button>
 
-      {/* OTP Container box */}
       <div className="w-full max-w-md text-center space-y-6 pt-16">
         <div className="inline-flex p-3 bg-gray-50 rounded-full border border-gray-100 shadow-sm mx-auto">
-          <FiMail className="w-6 h-6 text-gray-400" />
+          {type === "email" ? (
+            <FiMail className="w-6 h-6 text-gray-400" />
+          ) : (
+            <FiSmartphone className="w-6 h-6 text-gray-400" />
+          )}
         </div>
 
         <div>
@@ -183,9 +184,13 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
             Verification Code Sent!
           </h1>
           <p className="text-gray-500 text-sm mt-1.5 max-w-xs mx-auto leading-relaxed">
-            We just sent an OTP code to{" "}
+            We just sent an OTP code to your{" "}
+            <span className="font-semibold">
+              {type === "email" ? "email address" : "phone number"}
+            </span>{" "}
+            at{" "}
             <span className="font-semibold text-gray-800 break-all">
-              {email}
+              {identifier}
             </span>
           </p>
         </div>
