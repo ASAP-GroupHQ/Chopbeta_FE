@@ -20,7 +20,7 @@ const MEALS: Meal[] = [
     desc: "Classic party-style jollof",
     price: 800,
     calories: 420,
-    img: "/images/meals/jollof.jpg",
+    img: "/images/meals/quick-meal.png",
   },
   {
     id: 2,
@@ -28,7 +28,7 @@ const MEALS: Meal[] = [
     desc: "Thick melon seed soup with eba",
     price: 950,
     calories: 510,
-    img: "/images/meals/egusi.jpg",
+    img: "/images/meals/Egusi_soup.jpg",
   },
   {
     id: 3,
@@ -36,7 +36,7 @@ const MEALS: Meal[] = [
     desc: "Honey beans with fried plantain",
     price: 650,
     calories: 380,
-    img: "/images/meals/beans.jpg",
+    img: "/images/meals/beans and plantain.png",
   },
   {
     id: 4,
@@ -44,7 +44,7 @@ const MEALS: Meal[] = [
     desc: "Nigerian-style fried rice",
     price: 900,
     calories: 450,
-    img: "/images/meals/fried-rice.jpg",
+    img: "/images/meals/Fried-Rice.png",
   },
   {
     id: 5,
@@ -52,7 +52,7 @@ const MEALS: Meal[] = [
     desc: "Spicy goat meat pepper soup",
     price: 1100,
     calories: 290,
-    img: "/images/meals/pepper-soup.jpg",
+    img: "/images/meals/Peppersoup.png",
   },
   {
     id: 6,
@@ -60,7 +60,7 @@ const MEALS: Meal[] = [
     desc: "Golden fried dough balls",
     price: 200,
     calories: 180,
-    img: "/images/meals/puff-puff.jpg",
+    img: "/images/meals/Puff-puff.jpg",
   },
   {
     id: 7,
@@ -68,7 +68,7 @@ const MEALS: Meal[] = [
     desc: "Local Ofada rice with designer stew",
     price: 1000,
     calories: 480,
-    img: "/images/meals/ofada.jpg",
+    img: "/images/meals/Ofada_rice.png",
   },
   {
     id: 8,
@@ -76,7 +76,7 @@ const MEALS: Meal[] = [
     desc: "Efo riro with assorted protein",
     price: 850,
     calories: 320,
-    img: "/images/meals/vegetable.jpg",
+    img: "/images/meals/vegetable-soup.png",
   },
 ];
 
