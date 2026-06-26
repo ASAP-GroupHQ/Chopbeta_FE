@@ -1,15 +1,12 @@
 // Signup Data
-// Updated Signup Data to cleanly accept either identifier method
 export interface SignupData {
   fullName: string;
-  email?: string;
-  phoneNumber?: string;
+  email: string;
   password?: string;
 }
 
 export interface OtpVerificationProps {
-  identifier: string; // Dynamic field accepting either email or phone number
-  type: "email" | "phoneNumber";
+  identifier: string; // Accepts email or phone
   initialOtp?: string;
   onBackToSignup: () => void;
   onVerifySuccess: (response: any) => void;
@@ -21,12 +18,6 @@ export interface LoginData {
   password: string;
 }
 
-// OTP Verification Data
-// export interface OtpVerificationData {
-//   email: string;
-//   otp: string;
-// }
-
 // Resend OTP Data
 export interface ResendOtpData {
   email: string;
@@ -37,6 +28,7 @@ export interface AddAllergiesData {
   allergies: string[];
   dislikes: string[];
 }
+
 export interface RegenerateTokenRequest {
   refreshToken: string;
 }

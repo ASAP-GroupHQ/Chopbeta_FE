@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiUser, FiMail, FiLock, FiSmartphone } from "react-icons/fi";
+import { FiUser, FiMail, FiLock } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,17 +16,11 @@ import LoadingState from "@/components/ui/LoadingState";
 import { authService } from "@/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
-type AuthMethod = "email" | "phone";
-
 export default function SignUpPage() {
   const { updateUserData } = useAuth();
 
-  // Unified core authentication toggle state
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
-
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -58,18 +52,6 @@ export default function SignUpPage() {
     return () => clearInterval(timer);
   }, [isOtpStage, isPreferencesStage, isCompleted]);
 
-  const formatNigerianPhoneNumber = (rawNumber: string): string => {
-    let cleaned = rawNumber.replace(/[^\d+]/g, "").trim();
-    if (cleaned.startsWith("0")) {
-      cleaned = "+234" + cleaned.substring(1);
-    } else if (cleaned.startsWith("234") && !cleaned.startsWith("+")) {
-      cleaned = "+" + cleaned;
-    } else if (!cleaned.startsWith("+")) {
-      cleaned = "+234" + cleaned;
-    }
-    return cleaned;
-  };
-
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -80,13 +62,7 @@ export default function SignUpPage() {
 
     setIsLoading(true);
 
-    // Dynamic clean payload structuring depending on the current auth state
-    const payload: any = { fullName, password };
-    if (authMethod === "email") {
-      payload.email = email;
-    } else {
-      payload.phoneNumber = formatNigerianPhoneNumber(phoneNumber);
-    }
+    const payload = { fullName, email, password };
 
     try {
       const response = await authService.studentSignup(payload);
@@ -95,11 +71,7 @@ export default function SignUpPage() {
         setInitialOtp(String(response.data.otp));
       }
 
-      toast.success(
-        authMethod === "email"
-          ? "Account created! Please verify your email."
-          : "Account created! Please verify your phone number.",
-      );
+      toast.success("Account created! Please verify your email.");
       setIsOtpStage(true);
     } catch (error: any) {
       toast.error(
@@ -186,8 +158,7 @@ export default function SignUpPage() {
   if (isOtpStage) {
     return (
       <OtpVerification
-        identifier={authMethod === "email" ? email : phoneNumber}
-        type={authMethod}
+        identifier={email}
         initialOtp={initialOtp}
         onBackToSignup={() => setIsOtpStage(false)}
         onVerifySuccess={handleOtpCompletion}
@@ -213,7 +184,6 @@ export default function SignUpPage() {
 
         <div className="text-center mb-8">
           <div className="inline-flex rounded-full mb-4">
-            {/* SVG Logo Graphic remains fully intact */}
             <svg
               width="62"
               height="62"
@@ -322,14 +292,11 @@ export default function SignUpPage() {
             Create Your Account
           </h1>
           <p className="text-gray-500 text-sm mt-1.5">
-            {authMethod === "email"
-              ? "Input your details to create a new account"
-              : "Input your mobile number to sign up swiftly"}
+            Input your details to create a new account
           </p>
         </div>
 
         <form className="space-y-4 w-full" onSubmit={handleSignupSubmit}>
-          {/* Dynamic Input Conditional Mapping */}
           <AuthInput
             label="Full Name"
             placeholder="John Doe"
@@ -339,33 +306,17 @@ export default function SignUpPage() {
             disabled={isLoading}
             required
           />
-          
-          {authMethod === "email" ? (
-            <>
-              <AuthInput
-                label="Email Address"
-                type="email"
-                placeholder="john.doe@example.com"
-                Icon={FiMail}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                required
-              />
-            </>
-          ) : (
-            <AuthInput
-              label="Phone Number"
-              type="tel"
-              pattern="^\+?[0-9]{7,15}$"
-              placeholder="08101234567"
-              Icon={FiSmartphone}
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          )}
+
+          <AuthInput
+            label="Email Address"
+            type="email"
+            placeholder="john.doe@example.com"
+            Icon={FiMail}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
+            required
+          />
 
           <AuthInput
             label="Create a New Password"
@@ -432,31 +383,11 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        {/* Dynamic lower action layout toggles */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {authMethod === "email" ? (
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() => setAuthMethod("phone")}
-              className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
-            >
-              <FiSmartphone className="text-gray-500" size={18} /> Phone number
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() => setAuthMethod("email")}
-              className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
-            >
-              <FiMail className="text-gray-500" size={18} /> Email Address
-            </button>
-          )}
+        <div className="grid grid-cols-1 gap-3">
           <button
             type="button"
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
+            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50 w-full"
           >
             <FcGoogle size={18} /> Google
           </button>
