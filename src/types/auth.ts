@@ -22,10 +22,11 @@ export interface LoginData {
 }
 
 // OTP Verification Data
-// export interface OtpVerificationData {
-//   email: string;
-//   otp: string;
-// }
+export interface OtpVerificationData {
+  email?: string;
+  phoneNumber?: string;
+  otp: string;
+}
 
 // Resend OTP Data
 export interface ResendOtpData {

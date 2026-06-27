@@ -2,8 +2,7 @@ import { apiClient } from "./api-client";
 import {
   SignupData,
   LoginData,
-  // OtpVerificationData,
-  OtpVerificationProps,
+  OtpVerificationData,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ResetPasswordResponse,
@@ -30,7 +29,7 @@ export const authService = {
     return response.data;
   },
 
-  verifyOtp: async (data: OtpVerificationProps) => {
+  verifyOtp: async (data: OtpVerificationData) => {
     const response = await apiClient.post<ApiResponse>(
       "/auth/user/verify-otp",
       data,

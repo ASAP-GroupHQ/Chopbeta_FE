@@ -10,7 +10,7 @@ import { authService } from "@/services/auth";
 
 interface OtpVerificationProps {
   identifier: string; // Accepts email or phone
-  type: "email" | "phoneNumber"; // Pass method context
+  type: "email" | "phone"; // Pass method context
   initialOtp?: string;
   onBackToSignup: () => void;
   onVerifySuccess: (response: any) => void;
@@ -198,6 +198,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
         <div className="flex justify-center items-center gap-2 sm:gap-4 my-8">
           {otp.map((digit, index) => (
             <input
+            placeholder="0" 
               key={index}
               type="text"
               inputMode="numeric"
