@@ -514,5 +514,5 @@ export default function SignUpPage() {
         </div>
       </section>
     </main>
-  );
-}
+  )
+};
