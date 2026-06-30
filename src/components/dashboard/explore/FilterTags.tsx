@@ -2,27 +2,36 @@
 
 import React from "react";
 
-const TAGS = [
-  "All",
-  "Rice",
-  "Soup",
-  "Swallow",
-  "Snacks",
-  "Protein",
-  "Vegetarian",
-];
+interface FilterTagsProps {
+  tags: string[];
+  activeTag: string;
+  onSelectTag: (tag: string) => void;
+}
 
-export default function FilterTags() {
+export default function FilterTags({
+  tags,
+  activeTag,
+  onSelectTag,
+}: FilterTagsProps) {
   return (
-    <div className="flex gap-2 mt-4 flex-wrap">
-      {TAGS.map((tag, idx) => (
-        <button
-          key={tag}
-          className={`px-4 py-1.5 rounded-lg text-xs font-medium border transition-colors ${idx === 0 ? "bg-[#1E5E3A] border-[#1E5E3A] text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-        >
-          {tag}
-        </button>
-      ))}
+    <div className="mt-4 flex flex-wrap gap-2">
+      {tags.map((tag) => {
+        const isActive = tag === activeTag;
+
+        return (
+          <button
+            key={tag}
+            onClick={() => onSelectTag(tag)}
+            className={`rounded-lg border px-4 py-1.5 text-xs font-medium transition-colors ${
+              isActive
+                ? "border-[#1E5E3A] bg-[#1E5E3A] text-white"
+                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            {tag}
+          </button>
+        );
+      })}
     </div>
   );
 }
