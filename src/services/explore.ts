@@ -112,6 +112,33 @@ const ENDPOINTS = [
   "/menu",
 ];
 
+type ExploreQueryParams = {
+  tag?: string;
+  category?: string;
+  search?: string;
+};
+
+function isMealLike(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.title === "string" ||
+    typeof candidate.name === "string" ||
+    typeof candidate.mealName === "string" ||
+    typeof candidate.description === "string" ||
+    typeof candidate.desc === "string" ||
+    typeof candidate.summary === "string" ||
+    typeof candidate.price !== "undefined" ||
+    typeof candidate.calories !== "undefined" ||
+    typeof candidate.image === "string" ||
+    typeof candidate.img === "string"
+  );
+}
+
 function normalizeMeal(item: Record<string, unknown>, index: number): ExploreMeal {
   const title =
     (item.title as string) ||
@@ -151,21 +178,34 @@ function normalizeMeal(item: Record<string, unknown>, index: number): ExploreMea
 
 function extractMeals(payload: unknown): ExploreMeal[] {
   if (Array.isArray(payload)) {
-    return payload.map((item, index) => normalizeMeal(item as Record<string, unknown>, index));
+    return payload
+      .filter(isMealLike)
+      .map((item, index) => normalizeMeal(item as Record<string, unknown>, index));
   }
 
   if (payload && typeof payload === "object") {
     const candidate = payload as Record<string, unknown>;
-    const items = candidate.meals ?? candidate.items ?? candidate.results ?? candidate.data;
+    const candidates: unknown[] = [];
 
-    if (Array.isArray(items)) {
-      return items.map((item, index) => normalizeMeal(item as Record<string, unknown>, index));
+    for (const key of ["meals", "items", "results", "data", "foods", "menu", "response", "payload", "content"]) {
+      const value = candidate[key];
+      if (Array.isArray(value)) {
+        candidates.push(value);
+      } else if (value && typeof value === "object") {
+        const nested = value as Record<string, unknown>;
+        const nestedItems = nested.items ?? nested.meals ?? nested.results ?? nested.data;
+        if (Array.isArray(nestedItems)) {
+          candidates.push(nestedItems);
+        }
+      }
     }
 
-    if (items && typeof items === "object") {
-      const nestedItems = (items as Record<string, unknown>).items;
-      if (Array.isArray(nestedItems)) {
-        return nestedItems.map((item, index) => normalizeMeal(item as Record<string, unknown>, index));
+    for (const items of candidates) {
+      if (Array.isArray(items)) {
+        const meals = items.filter(isMealLike).map((item, index) => normalizeMeal(item as Record<string, unknown>, index));
+        if (meals.length) {
+          return meals;
+        }
       }
     }
   }
@@ -173,9 +213,25 @@ function extractMeals(payload: unknown): ExploreMeal[] {
   return [];
 }
 
+function buildQuery(params?: ExploreQueryParams) {
+  const normalizedTag = params?.tag && params.tag !== "All" ? params.tag : undefined;
+  const query: Record<string, string> = {};
+
+  if (normalizedTag) {
+    query.tag = normalizedTag;
+    query.category = normalizedTag;
+  }
+
+  if (params?.search) {
+    query.search = params.search;
+  }
+
+  return Object.keys(query).length ? query : undefined;
+}
+
 export const exploreService = {
-  getMeals: async (params?: { tag?: string }) => {
-    const query = params?.tag && params.tag !== "All" ? { category: params.tag } : undefined;
+  getMeals: async (params?: ExploreQueryParams) => {
+    const query = buildQuery(params);
 
     for (const endpoint of ENDPOINTS) {
       try {
