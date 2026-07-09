@@ -70,7 +70,7 @@ export default function ExplorePage() {
 
       {isLoading ? (
         <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <LoadingState message="Fetching meals from the API..." />
+          <LoadingState message="Fetching meals....." />
         </div>
       ) : error ? (
         <div className="mt-8 rounded-2xl border border-red-100 bg-red-50 p-6 text-sm text-red-600">
