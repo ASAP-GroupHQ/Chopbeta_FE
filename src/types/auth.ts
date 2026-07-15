@@ -17,8 +17,12 @@ export interface LoginData {
   email: string;
   password: string;
 }
-
-// Resend OTP Data
+// OTP Verification Data
+export interface OtpVerificationData {
+  email?: string;
+  phoneNumber?: string;
+  otp: string;
+}
 export interface ResendOtpData {
   email: string;
 }

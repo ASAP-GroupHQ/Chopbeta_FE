@@ -185,6 +185,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
         <div className="flex justify-center items-center gap-2 sm:gap-4 my-8">
           {otp.map((digit, index) => (
             <input
+            placeholder="0" 
               key={index}
               type="text"
               inputMode="numeric"
