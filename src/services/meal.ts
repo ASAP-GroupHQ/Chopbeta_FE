@@ -4,7 +4,7 @@ import { apiClient } from "./api-client";
 export interface MealItem {
   _id: string;
   mealTitle: string;
-  category: "morning" | "afternoon" | "evening" | "lunch" | string; 
+  category: "morning" | "afternoon" | "evening" | "lunch" | string;
   estimatedPrice: {
     $numberDecimal: string;
   };
@@ -28,10 +28,46 @@ export interface GenerateMealsResponse {
   data: MealItem[];
 }
 
+export interface QuickMealItem {
+  _id: string;
+  mealTitle: string;
+  category: string;
+  estimatedPrice: {
+    $numberDecimal: string;
+  };
+  averageNutritionalInfo?: {
+    estimatedCalories?: string;
+    estimatedMacronutrients?: {
+      carbohydrates?: string;
+      proteins?: string;
+      fats?: string;
+    };
+  };
+}
+
+export interface QuickMealsResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    meals: QuickMealItem[];
+    count: number;
+  };
+}
+
 export const mealService = {
-  generateMeals: async (price: number | string): Promise<GenerateMealsResponse> => {
+  generateMeals: async (
+    price: number | string,
+  ): Promise<GenerateMealsResponse> => {
     const response = await apiClient.get<GenerateMealsResponse>(
-      `/meals/generate-meals?price=${price}`
+      `/meals/generate-meals?price=${price}`,
+    );
+    return response.data;
+  },
+
+  getQuickMeals: async (filter: string): Promise<QuickMealsResponse> => {
+    const response = await apiClient.get<QuickMealsResponse>(
+      `/meals/quick-meals?filter=${filter}`,
     );
     return response.data;
   },
