@@ -29,11 +29,7 @@ export const authService = {
     return response.data;
   },
 
-<<<<<<< HEAD
   verifyOtp: async (data: { email: string; otp: string }) => {
-=======
-  verifyOtp: async (data: OtpVerificationData) => {
->>>>>>> 10f6d5935e61ce14a89220000f6da38a7598c211
     const response = await apiClient.post<ApiResponse>(
       "/auth/user/verify-otp",
       data,
@@ -41,16 +37,12 @@ export const authService = {
     return response.data;
   },
 
-<<<<<<< HEAD
   resendOtp: async (data: ResendOtpData) => {
     const response = await apiClient.post<ApiResponse>(
       "/auth/user/resend-otp",
       data,
     );
-=======
-  resendOtp: async (data: { email?: string; phoneNumber?: string }) => {
-    const response = await apiClient.post("/auth/user/resend-otp", data);
->>>>>>> 10f6d5935e61ce14a89220000f6da38a7598c211
+
     return response.data;
   },
 
