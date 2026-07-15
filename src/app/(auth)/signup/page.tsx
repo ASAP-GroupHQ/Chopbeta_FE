@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiUser, FiMail, FiLock, FiSmartphone } from "react-icons/fi";
+import { FiUser, FiMail, FiLock } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
@@ -21,7 +21,6 @@ export default function SignUpPage() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -44,7 +43,7 @@ export default function SignUpPage() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Auto-slide effect for the initial authentication screen side banner
+  // Auto-slide effect for the initial side banner
   useEffect(() => {
     if (isOtpStage || isPreferencesStage || isCompleted) return;
     const timer = setInterval(() => {
@@ -52,18 +51,6 @@ export default function SignUpPage() {
     }, 4000);
     return () => clearInterval(timer);
   }, [isOtpStage, isPreferencesStage, isCompleted]);
-
-  const formatNigerianPhoneNumber = (rawNumber: string): string => {
-    let cleaned = rawNumber.replace(/[^\d+]/g, "").trim();
-    if (cleaned.startsWith("0")) {
-      cleaned = "+234" + cleaned.substring(1);
-    } else if (cleaned.startsWith("234") && !cleaned.startsWith("+")) {
-      cleaned = "+" + cleaned;
-    } else if (!cleaned.startsWith("+")) {
-      cleaned = "+234" + cleaned;
-    }
-    return cleaned;
-  };
 
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,15 +61,11 @@ export default function SignUpPage() {
     }
 
     setIsLoading(true);
-    const normalizedPhone = formatNigerianPhoneNumber(phoneNumber);
+
+    const payload = { fullName, email, password };
 
     try {
-      const response = await authService.studentSignup({
-        fullName,
-        email,
-        phoneNumber: normalizedPhone,
-        password,
-      });
+      const response = await authService.studentSignup(payload);
 
       if (response?.data?.otp) {
         setInitialOtp(String(response.data.otp));
@@ -118,22 +101,14 @@ export default function SignUpPage() {
         allergies: data.selectedItems,
         allergyCustom: data.customText,
       }));
-
       setPreferenceSubStep("dislikes");
     } else {
       setIsLoading(true);
-      const fullPayload = {
-        ...finalPreferences,
-        dislikes: data.selectedItems,
-        dislikeCustom: data.customText,
-      };
-
       try {
-        toast.success("Preferences successfully!");
+        toast.success("Preferences saved successfully!");
         setIsPreferencesStage(false);
         setIsCompleted(true);
       } catch (error: any) {
-        toast.error("Profile created! Redirecting to dashboard...");
         setIsPreferencesStage(false);
         setIsCompleted(true);
       } finally {
@@ -183,7 +158,7 @@ export default function SignUpPage() {
   if (isOtpStage) {
     return (
       <OtpVerification
-        email={email}
+        identifier={email}
         initialOtp={initialOtp}
         onBackToSignup={() => setIsOtpStage(false)}
         onVerifySuccess={handleOtpCompletion}
@@ -331,6 +306,7 @@ export default function SignUpPage() {
             disabled={isLoading}
             required
           />
+
           <AuthInput
             label="Email Address"
             type="email"
@@ -341,17 +317,7 @@ export default function SignUpPage() {
             disabled={isLoading}
             required
           />
-          <AuthInput
-            label="Phone Number"
-            type="tel"
-            pattern="^\+?[0-9]{7,15}$"
-            placeholder="+2348101234567"
-            Icon={FiSmartphone}
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            disabled={isLoading}
-            required
-          />
+
           <AuthInput
             label="Create a New Password"
             type="password"
@@ -417,18 +383,11 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <button
             type="button"
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
-          >
-            <FiSmartphone className="text-gray-500" size={18} /> Phone number
-          </button>
-          <button
-            type="button"
-            disabled={isLoading}
-            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50"
+            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50 w-full"
           >
             <FcGoogle size={18} /> Google
           </button>
@@ -445,6 +404,7 @@ export default function SignUpPage() {
         </p>
       </section>
 
+      {/* Side Slider Graphic remains identical */}
       <section className="hidden lg:block relative p-6 max-h-screen sticky top-0">
         <div className="relative h-full w-full rounded-[40px] overflow-hidden bg-gray-100 shadow-2xl">
           <AnimatePresence mode="wait">
@@ -463,20 +423,10 @@ export default function SignUpPage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-20 left-12 right-12 text-white">
-                <motion.h2
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-4xl font-bold mb-4 leading-tight"
-                >
+                <motion.h2 className="text-4xl font-bold mb-4 leading-tight">
                   {SLIDER_DATA[currentSlide].title}
                 </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-gray-200 text-lg font-light leading-relaxed"
-                >
+                <motion.p className="text-gray-200 text-lg font-light leading-relaxed">
                   {SLIDER_DATA[currentSlide].description}
                 </motion.p>
                 <div className="flex gap-2 mt-8">
@@ -495,5 +445,5 @@ export default function SignUpPage() {
         </div>
       </section>
     </main>
-  );
-}
+  )
+};

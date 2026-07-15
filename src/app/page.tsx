@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+// import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +10,7 @@ import { CORE_FEATURES, SAMPLE_MEALS } from "@/constants/landing-data";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // const router = useRouter();
 
   // Motion Presets
   const fadeInUp = {
@@ -20,6 +22,15 @@ export default function Home() {
   const fabricsContainer = {
     animate: { transition: { staggerChildren: 0.1 } },
   };
+
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const hasVisited = localStorage.getItem("chopbeta_onboarded");
+  //     if (!hasVisited) {
+  //       router.push("/welcome");
+  //     }
+  //   }
+  // }, [router]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#F4FAF6] via-white to-white text-[#1A2E35] font-sans overflow-x-hidden relative">

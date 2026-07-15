@@ -37,9 +37,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authService.studentLogin(credentials);
 
+      // response is ApiResponse with { status, message, data?, token? }
       const extractedToken =
-        response?.data?.accessToken || response?.data?.token;
-      const userData = response?.data;
+        response?.token || (response?.data as any)?.accessToken;
+      const userData = response?.data || response;
 
       if (!extractedToken) {
         throw new Error("Authorization token was not issued by the server.");
@@ -47,8 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Storing locally for persistent client context
       localStorage.setItem("token", extractedToken);
-      if (response?.data?.refreshToken) {
-        localStorage.setItem("refreshToken", response.data.refreshToken);
+      if ((response?.data as any)?.refreshToken) {
+        localStorage.setItem("refreshToken", (response.data as any).refreshToken);
       }
       if (userData) {
         localStorage.setItem("user", JSON.stringify(userData));

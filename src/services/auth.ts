@@ -2,7 +2,7 @@ import { apiClient } from "./api-client";
 import {
   SignupData,
   LoginData,
-  OtpVerificationData,
+  ResendOtpData,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ResetPasswordResponse,
@@ -29,7 +29,7 @@ export const authService = {
     return response.data;
   },
 
-  verifyOtp: async (data: OtpVerificationData) => {
+  verifyOtp: async (data: { email: string; otp: string }) => {
     const response = await apiClient.post<ApiResponse>(
       "/auth/user/verify-otp",
       data,
@@ -37,8 +37,12 @@ export const authService = {
     return response.data;
   },
 
-  resendOtp: async (data: { email: string }) => {
-    const response = await apiClient.post("/auth/user/resend-otp", data);
+  resendOtp: async (data: ResendOtpData) => {
+    const response = await apiClient.post<ApiResponse>(
+      "/auth/user/resend-otp",
+      data,
+    );
+
     return response.data;
   },
 
@@ -94,8 +98,3 @@ export const authService = {
     return response.data;
   },
 };
-
-// // OAuth Configurations
-// export const googleOAuthConfig = {
-//   google: `${apiClient.defaults.baseURL}/auth/google`,
-// };

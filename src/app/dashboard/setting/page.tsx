@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import PersonalDetails from "@/app/dashboard/setting/components/PersonalDetails";
-import { SettingsIcons } from "@/components/dashboard/SettingsIcons";
+import PersonalDetails from "@/components/dashboard/setting/PersonalDetails";
+import { SettingsIcons } from "@/components/dashboard/setting/SettingsIcons";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 
 type TabId =

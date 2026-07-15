@@ -141,6 +141,24 @@ export function SettingsIcon({ className = "w-5 h-5" }: SVGIconProps) {
   );
 }
 
+export function SearchIcon({ className = "w-5 h-5" }: SVGIconProps) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M12.9 14.32a6.5 6.5 0 1 1 1.414-1.414l4.387 4.387-1.414 1.414-4.387-4.387zM8.5 14a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 export function PremiumIcon({ className = "w-5 h-5" }: SVGIconProps) {
   return (
     <svg

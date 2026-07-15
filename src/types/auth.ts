@@ -2,8 +2,14 @@
 export interface SignupData {
   fullName: string;
   email: string;
-  phoneNumber: string;
-  password: string;
+  password?: string;
+}
+
+export interface OtpVerificationProps {
+  identifier: string; // Accepts email or phone
+  initialOtp?: string;
+  onBackToSignup: () => void;
+  onVerifySuccess: (response: any) => void;
 }
 
 // Login Data
@@ -11,14 +17,12 @@ export interface LoginData {
   email: string;
   password: string;
 }
-
 // OTP Verification Data
 export interface OtpVerificationData {
-  email: string;
+  email?: string;
+  phoneNumber?: string;
   otp: string;
 }
-
-// Resend OTP Data
 export interface ResendOtpData {
   email: string;
 }
@@ -28,6 +32,7 @@ export interface AddAllergiesData {
   allergies: string[];
   dislikes: string[];
 }
+
 export interface RegenerateTokenRequest {
   refreshToken: string;
 }

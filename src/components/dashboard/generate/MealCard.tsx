@@ -3,33 +3,76 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiHeart, FiActivity, FiX } from "react-icons/fi";
+import { MealItem } from "@/services/meal";
 
 interface MealCardProps {
-  meal: {
-    _id: string;
-    mealTitle: string;
-    estimatedPrice: { $numberDecimal: string };
-    averageNutritionalInfo: {
-      estimatedCalories: number;
-      macronutrients: { carbohydrates: number; proteins: number; fats: number };
-    };
-  };
+  meal: MealItem;
 }
 
 export default function MealCard({ meal }: MealCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
 
-  // Fallback image asset assignment based on string pattern lookups
+  // Extract nutrition properties safely matching the backend payload
+  const nutrition = meal.averageNutritionalInfo || {};
+
+  // Safe cast to support both 'estimatedMacronutrients' and legacy 'macronutrients'
+  const macros =
+    (nutrition as any).estimatedMacronutrients ||
+    (nutrition as any).macronutrients ||
+    {};
+
+  const calories = nutrition.estimatedCalories || "-- kcal";
+  const carbs = macros.carbohydrates || "-- g";
+  const proteins = macros.proteins || "-- g";
+  const fats = macros.fats || "-- g";
+
+  // Enhanced fallback imagery matching typical ChopBeta meal options
   const getImagePlaceholder = (title: string) => {
-    if (title.toLowerCase().includes("rice"))
+    const lowerTitle = title.toLowerCase();
+
+    if (
+      lowerTitle.includes("rice") ||
+      lowerTitle.includes("jollof") ||
+      lowerTitle.includes("fried rice")
+    )
       return "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=500";
     if (
-      title.toLowerCase().includes("egg") ||
-      title.toLowerCase().includes("bread")
+      lowerTitle.includes("egg") ||
+      lowerTitle.includes("bread") ||
+      lowerTitle.includes("tea") ||
+      lowerTitle.includes("pap") ||
+      lowerTitle.includes("akara")
     )
       return "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500";
-    return "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=500";
+    if (
+      lowerTitle.includes("swallow") ||
+      lowerTitle.includes("egusi") ||
+      lowerTitle.includes("fufu") ||
+      lowerTitle.includes("amala")
+    )
+      return "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=500";
+    if (
+      lowerTitle.includes("beans") ||
+      lowerTitle.includes("dodo") ||
+      lowerTitle.includes("plantain")
+    )
+      return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500";
+    if (
+      lowerTitle.includes("yam") ||
+      lowerTitle.includes("potatoes") ||
+      lowerTitle.includes("fries")
+    )
+      return "https://images.unsplash.com/photo-1518013431117-eb1465fa5752?q=80&w=500";
+    if (
+      lowerTitle.includes("spaghetti") ||
+      lowerTitle.includes("pasta") ||
+      lowerTitle.includes("indomie") ||
+      lowerTitle.includes("noodles")
+    )
+      return "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=500";
+
+    return "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
   };
 
   return (
@@ -54,13 +97,13 @@ export default function MealCard({ meal }: MealCardProps) {
             <button
               type="button"
               onClick={() => setIsFavorite(!isFavorite)}
-              className="absolute top-2 right-2 p-2 rounded-xl bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all text-gray-400 cursor-pointer"
+              className="absolute top-2 right-2 p-2 rounded-xl bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all text-gray-400 cursor-pointer z-10"
             >
               <FiHeart
                 size={16}
                 className={`transition-colors ${
                   isFavorite
-                    ? "fill-[#F59E0B] text-[#F59E0B]"
+                    ? "fill-amber-500 text-amber-500"
                     : "text-gray-400 hover:text-red-500"
                 }`}
               />
@@ -130,7 +173,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Calories
                   </span>
                   <span className="text-base font-black text-[#1A2E35]">
-                    {meal.averageNutritionalInfo.estimatedCalories} kcal
+                    {calories}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -138,7 +181,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Carbs
                   </span>
                   <span className="text-base font-black text-blue-600">
-                    {meal.averageNutritionalInfo.macronutrients.carbohydrates}g
+                    {carbs}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -146,7 +189,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Proteins
                   </span>
                   <span className="text-base font-black text-emerald-600">
-                    {meal.averageNutritionalInfo.macronutrients.proteins}g
+                    {proteins}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -154,7 +197,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Fats
                   </span>
                   <span className="text-base font-black text-amber-500">
-                    {meal.averageNutritionalInfo.macronutrients.fats}g
+                    {fats}
                   </span>
                 </div>
               </div>
