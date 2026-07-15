@@ -4,21 +4,20 @@ import { apiClient } from "./api-client";
 export interface MealItem {
   _id: string;
   mealTitle: string;
-  category: "morning" | "afternoon" | "evening" | "lunch" | string;
+  category: string;
   estimatedPrice: {
     $numberDecimal: string;
   };
-  averageNutritionalInfo: {
-    estimatedCalories: number;
-    macronutrients: {
-      carbohydrates: number;
-      proteins: number;
-      fats: number;
+  description?: string;
+  type?: string;
+  averageNutritionalInfo?: {
+    estimatedCalories?: string;
+    estimatedMacronutrients?: {
+      carbohydrates?: string;
+      proteins?: string;
+      fats?: string;
     };
   };
-  description?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface GenerateMealsResponse {

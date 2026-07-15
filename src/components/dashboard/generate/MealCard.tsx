@@ -15,7 +15,12 @@ export default function MealCard({ meal }: MealCardProps) {
 
   // Extract nutrition properties safely matching the backend payload
   const nutrition = meal.averageNutritionalInfo || {};
-  const macros = nutrition.estimatedMacronutrients || {};
+
+  // Safe cast to support both 'estimatedMacronutrients' and legacy 'macronutrients'
+  const macros =
+    (nutrition as any).estimatedMacronutrients ||
+    (nutrition as any).macronutrients ||
+    {};
 
   const calories = nutrition.estimatedCalories || "-- kcal";
   const carbs = macros.carbohydrates || "-- g";
@@ -46,7 +51,7 @@ export default function MealCard({ meal }: MealCardProps) {
       lowerTitle.includes("fufu") ||
       lowerTitle.includes("amala")
     )
-      return "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=500"; 
+      return "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=500";
     if (
       lowerTitle.includes("beans") ||
       lowerTitle.includes("dodo") ||
@@ -67,7 +72,7 @@ export default function MealCard({ meal }: MealCardProps) {
     )
       return "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=500";
 
-    return "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500"; 
+    return "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
   };
 
   return (
