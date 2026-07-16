@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { FiChevronDown, FiActivity } from "react-icons/fi";
-import { mealService, QuickMealItem } from "@/services/meal";
+import { QuickMealItem } from "@/types/meal";
+import { mealService } from "@/services/meal";
 
 const TIME_OPTIONS = [
   {

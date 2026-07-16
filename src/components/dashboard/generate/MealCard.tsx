@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiHeart, FiActivity, FiX } from "react-icons/fi";
-import { MealItem } from "@/services/meal";
+import { MealItem } from "@/types/meal";
 
 interface MealCardProps {
   meal: MealItem;

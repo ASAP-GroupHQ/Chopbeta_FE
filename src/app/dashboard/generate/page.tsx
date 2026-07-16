@@ -8,7 +8,8 @@ import HeroSlider from "@/components/dashboard/generate/HeroSlider";
 import MealCard from "@/components/dashboard/generate/MealCard";
 import InstructionModal from "@/components/dashboard/generate/InstructionModal";
 import HeaderActions from "@/components/dashboard/HeaderActions";
-import { mealService, MealItem } from "@/services/meal"; 
+import { MealItem } from "@/types/meal";
+import { mealService } from "@/services/meal"; 
 
 export default function GeneratePage() {
   const [budget, setBudget] = useState("");
