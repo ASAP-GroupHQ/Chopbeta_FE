@@ -1,251 +1,122 @@
-import axios from "axios";
+import { mealService, type QuickMealItem } from "./meal";
 
-export type ExploreMeal = {
+export enum ExploreCategory {
+  All = "All",
+  Rice = "Rice",
+  Swallow = "Swallow",
+  Soups = "Soups",
+  Snacks = "Snacks",
+  Others = "Others",
+}
+
+export interface ExploreMeal {
   id: number;
   title: string;
   desc: string;
   price: number;
   calories: number;
   img: string;
-  category?: string;
   tags?: string[];
-};
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9700/api/v1";
-
-const axiosClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const FALLBACK_MEALS: ExploreMeal[] = [
-  {
-    id: 1,
-    title: "Jollof Rice",
-    desc: "Classic party-style jollof",
-    price: 800,
-    calories: 420,
-    img: "/images/meals/quick-meal.png",
-    category: "Rice",
-    tags: ["Rice", "Lunch"],
-  },
-  {
-    id: 2,
-    title: "Egusi Soup + Eba",
-    desc: "Thick melon seed soup with eba",
-    price: 950,
-    calories: 510,
-    img: "/images/meals/Egusi_soup.jpg",
-    category: "Soup",
-    tags: ["Soup", "Swallow"],
-  },
-  {
-    id: 3,
-    title: "Beans & Plantain",
-    desc: "Honey beans with fried plantain",
-    price: 650,
-    calories: 380,
-    img: "/images/meals/beans and plantain.png",
-    category: "Protein",
-    tags: ["Protein", "Breakfast"],
-  },
-  {
-    id: 4,
-    title: "Fried Rice",
-    desc: "Nigerian-style fried rice",
-    price: 900,
-    calories: 450,
-    img: "/images/meals/Fried-Rice.png",
-    category: "Rice",
-    tags: ["Rice", "Dinner"],
-  },
-  {
-    id: 5,
-    title: "Pepper Soup",
-    desc: "Spicy goat meat pepper soup",
-    price: 1100,
-    calories: 290,
-    img: "/images/meals/Peppersoup.png",
-    category: "Soup",
-    tags: ["Soup", "Protein"],
-  },
-  {
-    id: 6,
-    title: "Puff Puff",
-    desc: "Golden fried dough balls",
-    price: 200,
-    calories: 180,
-    img: "/images/meals/Puff-puff.jpg",
-    category: "Snacks",
-    tags: ["Snacks", "Breakfast"],
-  },
-  {
-    id: 7,
-    title: "Ofada Rice + Stew",
-    desc: "Local Ofada rice with designer stew",
-    price: 1000,
-    calories: 480,
-    img: "/images/meals/Ofada_rice.png",
-    category: "Rice",
-    tags: ["Rice", "Lunch"],
-  },
-  {
-    id: 8,
-    title: "Vegetable Soup",
-    desc: "Efo riro with assorted protein",
-    price: 850,
-    calories: 320,
-    img: "/images/meals/vegetable-soup.png",
-    category: "Vegetarian",
-    tags: ["Vegetarian", "Soup"],
-  },
-];
-
-const ENDPOINTS = [
-  "/meals",
-  "/meal",
-  "/food-items",
-  "/foods",
-  "/discover/meals",
-  "/menu",
-];
-
-type ExploreQueryParams = {
-  tag?: string;
   category?: string;
-  search?: string;
-};
-
-function isMealLike(value: unknown): value is Record<string, unknown> {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-
-  return (
-    typeof candidate.title === "string" ||
-    typeof candidate.name === "string" ||
-    typeof candidate.mealName === "string" ||
-    typeof candidate.description === "string" ||
-    typeof candidate.desc === "string" ||
-    typeof candidate.summary === "string" ||
-    typeof candidate.price !== "undefined" ||
-    typeof candidate.calories !== "undefined" ||
-    typeof candidate.image === "string" ||
-    typeof candidate.img === "string"
-  );
 }
 
-function normalizeMeal(item: Record<string, unknown>, index: number): ExploreMeal {
-  const title =
-    (item.title as string) ||
-    (item.name as string) ||
-    (item.mealName as string) ||
-    `Meal ${index + 1}`;
+const CATEGORY_HINTS: Record<string, string> = {
+  rice: ExploreCategory.Rice,
+  swallow: ExploreCategory.Swallow,
+  soup: ExploreCategory.Soups,
+  soups: ExploreCategory.Soups,
+  snack: ExploreCategory.Snacks,
+  snacks: ExploreCategory.Snacks,
+  other: ExploreCategory.Others,
+  others: ExploreCategory.Others,
+};
 
-  const desc =
-    (item.description as string) ||
-    (item.desc as string) ||
-    (item.summary as string) ||
-    "A delicious meal option";
+const inferCategory = (mealTitle: string, fallbackCategory?: string) => {
+  const lowerTitle = `${mealTitle} ${fallbackCategory ?? ""}`.toLowerCase();
 
-  const price = Number(item.price ?? item.amount ?? 0);
-  const calories = Number(item.calories ?? item.kcal ?? 0);
-  const img =
-    (item.image as string) ||
-    (item.img as string) ||
-    (item.imageUrl as string) ||
-    "/images/meals/quick-meal.png";
+  if (lowerTitle.includes("rice") || lowerTitle.includes("jollof")) {
+    return ExploreCategory.Rice;
+  }
+
+  if (
+    lowerTitle.includes("swallow") ||
+    lowerTitle.includes("amala") ||
+    lowerTitle.includes("eba") ||
+    lowerTitle.includes("fufu") ||
+    lowerTitle.includes("pounded")
+  ) {
+    return ExploreCategory.Swallow;
+  }
+
+  if (
+    lowerTitle.includes("soup") ||
+    lowerTitle.includes("egusi") ||
+    lowerTitle.includes("ewedu") ||
+    lowerTitle.includes("ogbono")
+  ) {
+    return ExploreCategory.Soups;
+  }
+
+  if (
+    lowerTitle.includes("snack") ||
+    lowerTitle.includes("pie") ||
+    lowerTitle.includes("chip") ||
+    lowerTitle.includes("shawarma")
+  ) {
+    return ExploreCategory.Snacks;
+  }
+
+  return fallbackCategory
+    ? CATEGORY_HINTS[fallbackCategory.toLowerCase()] ?? ExploreCategory.Others
+    : ExploreCategory.Others;
+};
+
+const toExploreMeal = (meal: QuickMealItem, fallbackCategory?: string): ExploreMeal => {
+  const category = inferCategory(meal.mealTitle, fallbackCategory ?? meal.category);
+  const parsedPrice = Number.parseFloat(meal.estimatedPrice?.$numberDecimal ?? "0");
+  const caloriesValue = Number.parseFloat(
+    meal.averageNutritionalInfo?.estimatedCalories ?? "0",
+  );
 
   return {
-    id: Number(item.id ?? item._id ?? index + 1),
-    title,
-    desc,
-    price: Number.isNaN(price) ? 0 : price,
-    calories: Number.isNaN(calories) ? 0 : calories,
-    img,
-    category: (item.category as string) || (item.tag as string) || undefined,
-    tags: Array.isArray(item.tags)
-      ? (item.tags as string[])
-      : item.tag
-        ? [item.tag as string]
-        : undefined,
+    id: Number(meal._id) || Math.random(),
+    title: meal.mealTitle,
+    desc: `${category} meal option`,
+    price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
+    calories: Number.isFinite(caloriesValue) ? caloriesValue : 0,
+    img: "/images/meals/placeholder.jpg",
+    tags: [category],
+    category,
   };
-}
-
-function extractMeals(payload: unknown): ExploreMeal[] {
-  if (Array.isArray(payload)) {
-    return payload
-      .filter(isMealLike)
-      .map((item, index) => normalizeMeal(item as Record<string, unknown>, index));
-  }
-
-  if (payload && typeof payload === "object") {
-    const candidate = payload as Record<string, unknown>;
-    const candidates: unknown[] = [];
-
-    for (const key of ["meals", "items", "results", "data", "foods", "menu", "response", "payload", "content"]) {
-      const value = candidate[key];
-      if (Array.isArray(value)) {
-        candidates.push(value);
-      } else if (value && typeof value === "object") {
-        const nested = value as Record<string, unknown>;
-        const nestedItems = nested.items ?? nested.meals ?? nested.results ?? nested.data;
-        if (Array.isArray(nestedItems)) {
-          candidates.push(nestedItems);
-        }
-      }
-    }
-
-    for (const items of candidates) {
-      if (Array.isArray(items)) {
-        const meals = items.filter(isMealLike).map((item, index) => normalizeMeal(item as Record<string, unknown>, index));
-        if (meals.length) {
-          return meals;
-        }
-      }
-    }
-  }
-
-  return [];
-}
-
-function buildQuery(params?: ExploreQueryParams) {
-  const normalizedTag = params?.tag && params.tag !== "All" ? params.tag : undefined;
-  const query: Record<string, string> = {};
-
-  if (normalizedTag) {
-    query.tag = normalizedTag;
-    query.category = normalizedTag;
-  }
-
-  if (params?.search) {
-    query.search = params.search;
-  }
-
-  return Object.keys(query).length ? query : undefined;
-}
+};
 
 export const exploreService = {
-  getMeals: async (params?: ExploreQueryParams) => {
-    const query = buildQuery(params);
+  getMeals: async (params?: { tag?: string; search?: string }): Promise<ExploreMeal[]> => {
+    const normalizedTag = params?.tag?.trim();
+    const searchTerm = params?.search?.trim().toLowerCase() ?? "";
 
-    for (const endpoint of ENDPOINTS) {
-      try {
-        const response = await axiosClient.get(endpoint, { params: query });
-        const meals = extractMeals(response.data);
+    const filters =
+      normalizedTag && normalizedTag !== ExploreCategory.All
+        ? [normalizedTag.toLowerCase()]
+        : ["breakfast", "lunch", "dinner", "snacks"];
 
-        if (meals.length) {
-          return meals;
-        }
-      } catch (error) {
-        console.warn(`Explore endpoint ${endpoint} failed`, error);
-      }
-    }
+    const responses = await Promise.all(filters.map((filter) => mealService.getQuickMeals(filter)));
+    const meals = responses.flatMap((response, index) =>
+      (response?.data?.meals ?? []).map((meal) => toExploreMeal(meal, filters[index])),
+    );
 
-    return FALLBACK_MEALS;
+    return meals.filter((meal) => {
+      const searchableText = [meal.title, meal.desc, meal.category, ...(meal.tags ?? [])]
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = !searchTerm || searchableText.includes(searchTerm);
+      const matchesCategory =
+        !normalizedTag ||
+        normalizedTag === ExploreCategory.All ||
+        meal.category?.toLowerCase() === normalizedTag.toLowerCase() ||
+        (meal.tags ?? []).some((tag) => tag.toLowerCase() === normalizedTag.toLowerCase());
+
+      return matchesSearch && matchesCategory;
+    });
   },
 };

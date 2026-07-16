@@ -1,17 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import ExploreHeader from "@/components/dashboard/explore/ExploreHeader";
 import FilterTags from "@/components/dashboard/explore/FilterTags";
 import MealCard from "@/components/dashboard/explore/MealCard";
 import LoadingState from "@/components/ui/LoadingState";
-import { exploreService, type ExploreMeal } from "@/services/explore";
+import { ExploreCategory, exploreService, type ExploreMeal } from "@/services/explore";
 
-const TAGS = ["All", "Rice", "Soup", "Swallow", "Snacks", "Protein", "Vegetarian"];
+const TAGS = [
+  ExploreCategory.All,
+  ExploreCategory.Rice,
+  ExploreCategory.Soups,
+  ExploreCategory.Swallow,
+  ExploreCategory.Snacks,
+  ExploreCategory.Others,
+];
 
 export default function ExplorePage() {
   const [meals, setMeals] = useState<ExploreMeal[]>([]);
-  const [activeTag, setActiveTag] = useState("All");
+  const [activeTag, setActiveTag] = useState<string>(ExploreCategory.All);
+  const [searchValue, setSearchValue] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +31,7 @@ export default function ExplorePage() {
       setError(null);
 
       try {
-        const response = await exploreService.getMeals({ tag: activeTag });
+        const response = await exploreService.getMeals({ tag: activeTag, search: searchValue });
         if (active) {
           setMeals(response);
         }
@@ -44,24 +52,13 @@ export default function ExplorePage() {
     return () => {
       active = false;
     };
-  }, [activeTag]);
+  }, [activeTag, searchValue]);
 
-  const visibleMeals = useMemo(() => {
-    if (!activeTag || activeTag === "All") {
-      return meals;
-    }
-
-    return meals.filter((meal) => {
-      const tags = meal.tags ?? [];
-      const category = meal.category?.toLowerCase();
-      return tags.some((tag) => tag.toLowerCase() === activeTag.toLowerCase()) ||
-        category === activeTag.toLowerCase();
-    });
-  }, [activeTag, meals]);
+  const visibleMeals = meals;
 
   return (
     <main className="flex-1 p-2">
-      <ExploreHeader />
+      <ExploreHeader searchValue={searchValue} onSearchChange={setSearchValue} />
       <FilterTags tags={TAGS} activeTag={activeTag} onSelectTag={setActiveTag} />
 
       <div className="mt-6 text-sm font-medium text-gray-500">

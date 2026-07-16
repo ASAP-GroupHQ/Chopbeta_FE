@@ -39,3 +39,4 @@ export default function MealCard({ title, desc, price, calories, img }: Props) {
     </div>
   );
 }
+ 
