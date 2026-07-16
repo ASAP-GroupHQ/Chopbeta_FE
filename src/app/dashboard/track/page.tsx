@@ -13,6 +13,8 @@ import { StatCard } from "@/components/dashboard/track/StatCard";
 import { MealLogCard } from "@/components/dashboard/track/MealLogCard";
 import { ProgressSidebar } from "@/components/dashboard/track/ProgressSidebar";
 import HeaderActions from "@/components/dashboard/HeaderActions";
+import { trackService } from "@/services/track";
+import { StreakData } from "@/types/track";
 
 const INITIAL_MEALS = [
   {
@@ -54,6 +56,10 @@ export default function TrackMealPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState<string>("");
 
+  // Streak system state integration
+  const [streak, setStreak] = useState<StreakData | null>(null);
+  const [streakLoading, setStreakLoading] = useState<boolean>(true);
+
   const eatenCount = meals.filter((m) => m.eaten).length;
   const totalCount = meals.length;
 
@@ -89,6 +95,23 @@ export default function TrackMealPage() {
 
     // Set the live current date
     setCurrentDate(new Date().toLocaleDateString("en-US", options));
+
+    // Fetch streak stats from track API
+    const fetchStreak = async () => {
+      try {
+        setStreakLoading(true);
+        const response = await trackService.getStreak();
+        if (response.success && response.data) {
+          setStreak(response.data);
+        }
+      } catch (error) {
+        console.error("Error retrieving streak data:", error);
+      } finally {
+        setStreakLoading(false);
+      }
+    };
+
+    fetchStreak();
   }, []);
 
   const displayedMeals =
@@ -153,12 +176,17 @@ export default function TrackMealPage() {
           <StatCard
             icon={<StreakIcon />}
             label="Streak"
-            value="4 days"
+            value={
+              streak
+                ? `${streak.currentStreak} ${streak.currentStreak === 1 ? "day" : "days"}`
+                : "0 days"
+            }
             subtext={
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 justify-center">
                 You&apos;re on fire! <FireIcon />
               </span>
             }
+            isLoading={streakLoading}
           />
         </div>
 

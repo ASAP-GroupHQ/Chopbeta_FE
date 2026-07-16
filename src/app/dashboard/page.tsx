@@ -8,6 +8,8 @@ import QuickActions from "@/components/dashboard/QuickActions";
 import QuickMeals from "@/components/dashboard/QuickMeals";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { useAuth } from "@/context/AuthContext";
+import { trackService } from "@/services/track";
+import { StreakData } from "@/types/track";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -24,6 +26,10 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [greeting, setGreeting] = useState("Hello");
   const [currentDay, setCurrentDay] = useState("Monday");
+
+  // Streak system state integration
+  const [streak, setStreak] = useState<StreakData | null>(null);
+  const [streakLoading, setStreakLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const currentHour = new Date().getHours();
@@ -42,6 +48,23 @@ export default function DashboardPage() {
     ];
     const todayIndex = new Date().getDay();
     setCurrentDay(days[todayIndex]);
+
+    // Fetch live streak data from track service
+    const fetchStreakData = async () => {
+      try {
+        setStreakLoading(true);
+        const response = await trackService.getStreak();
+        if (response.success && response.data) {
+          setStreak(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to retrieve dashboard streak:", error);
+      } finally {
+        setStreakLoading(false);
+      }
+    };
+
+    fetchStreakData();
   }, []);
 
   return (
@@ -165,20 +188,37 @@ export default function DashboardPage() {
                 <p className="text-xs font-black text-[#1A2E35]">₦ 2000</p>
               </div>
 
+              {/* STREAK SECTION WITH PULSING SKELETON LOADER */}
               <div className="space-y-2">
-                <div className="w-9 h-9 mx-auto rounded-full bg-orange-50 flex items-center justify-center text-[#E85D26]">
-                  <div className="relative w-5 h-5">
-                    <Image
-                      src="/images/meals/fire.png"
-                      alt="Streak Fire Icon"
-                      fill
-                      sizes="20px"
-                      className="object-contain"
-                    />
+                {streakLoading ? (
+                  <div className="animate-pulse space-y-2">
+                    <div className="w-9 h-9 mx-auto rounded-full bg-gray-200" />
+                    <div className="h-2 bg-gray-200 rounded w-12 mx-auto" />
+                    <div className="h-3 bg-gray-200 rounded w-14 mx-auto" />
                   </div>
-                </div>
-                <p className="text-[10px] font-medium text-gray-400">Streak</p>
-                <p className="text-xs font-black text-[#1A2E35]">6 Days</p>
+                ) : (
+                  <>
+                    <div className="w-9 h-9 mx-auto rounded-full bg-orange-50 flex items-center justify-center text-[#E85D26]">
+                      <div className="relative w-5 h-5">
+                        <Image
+                          src="/images/meals/fire.png"
+                          alt="Streak Fire Icon"
+                          fill
+                          sizes="20px"
+                          className="object-contain"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[10px] font-medium text-gray-400">
+                      Streak
+                    </p>
+                    <p className="text-xs font-black text-[#1A2E35]">
+                      {streak
+                        ? `${streak.currentStreak} ${streak.currentStreak === 1 ? "Day" : "Days"}`
+                        : "0 Days"}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
