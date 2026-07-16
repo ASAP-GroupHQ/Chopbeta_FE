@@ -56,12 +56,25 @@ export default function TrackMealPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState<string>("");
 
-  // Streak system state integration
+  // System integrations
   const [streak, setStreak] = useState<StreakData | null>(null);
   const [streakLoading, setStreakLoading] = useState<boolean>(true);
 
+  const [totalBudget, setTotalBudget] = useState<number>(0);
+  const [budgetLoading, setBudgetLoading] = useState<boolean>(true);
+
+  // Derive eating metrics
   const eatenCount = meals.filter((m) => m.eaten).length;
   const totalCount = meals.length;
+
+  // Calculate dynamic spent amount from eaten meals
+  const totalSpent = meals
+    .filter((m) => m.eaten)
+    .reduce((sum, current) => sum + current.price, 0);
+
+  // Safe percentage calculation for the spent progress bar
+  const spentPercentage =
+    totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
   const handleToggleEaten = (id: string) => {
     setMeals((prev) =>
@@ -71,7 +84,6 @@ export default function TrackMealPage() {
 
   const handleMarkNextMealAsEaten = () => {
     setIsLoading(true);
-    // loading transition behavior
     setTimeout(() => {
       const firstUnchecked = meals.find((m) => !m.eaten);
       if (firstUnchecked) {
@@ -82,36 +94,48 @@ export default function TrackMealPage() {
   };
 
   const incrementWater = () => {
-    setWaterGlasses((prev) => (prev < 6 ? prev + 1 : 0)); // Resets if full for demo interaction
+    setWaterGlasses((prev) => (prev < 6 ? prev + 1 : 0));
   };
 
   useEffect(() => {
-    // Format options: "Jun 7, 2026"
     const options: Intl.DateTimeFormatOptions = {
       month: "short",
       day: "numeric",
       year: "numeric",
     };
 
-    // Set the live current date
     setCurrentDate(new Date().toLocaleDateString("en-US", options));
 
-    // Fetch streak stats from track API
-    const fetchStreak = async () => {
+    // Async data fetching orchestration
+    const fetchTrackerData = async () => {
+      // 1. Fetch Streak
       try {
         setStreakLoading(true);
-        const response = await trackService.getStreak();
-        if (response.success && response.data) {
-          setStreak(response.data);
+        const streakRes = await trackService.getStreak();
+        if (streakRes.success && streakRes.data) {
+          setStreak(streakRes.data);
         }
       } catch (error) {
         console.error("Error retrieving streak data:", error);
       } finally {
         setStreakLoading(false);
       }
+
+      // 2. Fetch Daily Budget
+      try {
+        setBudgetLoading(true);
+        const budgetRes = await trackService.getDailyBudget();
+        if (budgetRes.success && budgetRes.data) {
+          setTotalBudget(budgetRes.data.totalBudget);
+        }
+      } catch (error) {
+        console.error("Error retrieving daily budget data:", error);
+      } finally {
+        setBudgetLoading(false);
+      }
     };
 
-    fetchStreak();
+    fetchTrackerData();
   }, []);
 
   const displayedMeals =
@@ -138,7 +162,6 @@ export default function TrackMealPage() {
           <div className="flex items-center self-end sm:self-auto gap-4">
             <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold text-gray-700 select-none">
               <button className="hover:text-black transition-colors">‹</button>
-
               <span className="px-1 min-w-[70px] text-center">
                 {currentDate || "Loading..."}
               </span>
@@ -159,20 +182,29 @@ export default function TrackMealPage() {
             progressColor="#1E6B3C"
             progressWidth={`${(eatenCount / totalCount) * 100}%`}
           />
+
           <StatCard
             icon={<BudgetIcon />}
             label="Budget"
-            value="₦ 2,000"
+            value={`₦ ${totalBudget.toLocaleString()}`}
             subtext="Today's budget"
+            isLoading={budgetLoading}
           />
+
           <StatCard
             icon={<SpentIcon />}
             label="Spent"
-            value="₦ 2,000"
-            subtext="Keep it up!"
-            progressColor="#E85D26"
-            progressWidth="75%"
+            value={`₦ ${totalSpent.toLocaleString()}`}
+            subtext={
+              totalBudget > 0
+                ? `${spentPercentage.toFixed(0)}% of limit`
+                : "Budget unset"
+            }
+            progressColor={spentPercentage > 100 ? "#DC2626" : "#E85D26"}
+            progressWidth={`${spentPercentage}%`}
+            isLoading={budgetLoading} // Wait for limit calculations
           />
+
           <StatCard
             icon={<StreakIcon />}
             label="Streak"
