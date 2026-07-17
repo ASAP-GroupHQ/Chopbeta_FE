@@ -81,3 +81,19 @@ export interface DailySpentResponse {
     totalMoneySpent: number;
   };
 }
+
+export interface PlannedMealData {
+  _id: string;
+  isEaten: boolean;
+  plannedAt: string;
+  mealId: MealItem; 
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PlannedMealsResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: PlannedMealData[];
+}

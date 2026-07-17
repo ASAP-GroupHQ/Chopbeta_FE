@@ -22,17 +22,48 @@ export const MealLogCard: React.FC<MealLogCardProps> = ({
   onToggleEaten,
 }) => {
   return (
-    <div className="flex items-center gap-4 md:gap-8 group">
-      <div className="flex items-center gap-4 w-[110px] flex-shrink-0">
-        <span className="text-sm font-bold text-[#1E6B3C] tracking-wide">
-          {meal.time}
-        </span>
+    <div className="w-full bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md">
+      {/* Left section: Image and Text info */}
+      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+        <img
+          src={meal.image}
+          alt={meal.name}
+          className="w-[85px] h-[65px] sm:w-[100px] sm:h-[75px] rounded-xl object-cover flex-shrink-0"
+        />
+        <div className="space-y-1 min-w-0 flex-1">
+          <h4 className="font-semibold text-gray-800 text-sm md:text-base truncate">
+            {meal.name}
+          </h4>
+          <span className="text-[10px] sm:text-xs font-medium text-[#1E6B3C] bg-[#1E6B3C]/5 px-2 py-0.5 rounded-md block w-fit">
+            {meal.tag}
+          </span>
+          <span className="text-sm font-bold text-gray-700 block">
+            ₦{meal.price.toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      {/* Right section: Interactive single toggle button and status */}
+      <div className="flex items-center gap-4 pl-2 flex-shrink-0">
+        {/* Status Text label (Hidden on small mobile screens to save layout real estate) */}
+        <div className="hidden sm:block">
+          {meal.eaten ? (
+            <div className="flex items-center gap-1.5 text-[#1E6B3C] font-semibold text-xs bg-[#1E6B3C]/5 px-2.5 py-1 rounded-full">
+              <span>Eaten</span>
+            </div>
+          ) : (
+            <span className="text-gray-300 font-medium text-xs">Not Eaten</span>
+          )}
+        </div>
+
+        {/* Clean, primary toggle button handle */}
         <button
           onClick={() => onToggleEaten(meal.id)}
-          className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none border-2 ${
+          aria-label="Toggle meal eaten status"
+          className={`w-7 h-7 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none border-2 cursor-pointer ${
             meal.eaten
               ? "bg-[#1E6B3C] border-[#1E6B3C] text-white scale-100"
-              : "border-gray-300 hover:border-[#1E6B3C] bg-white"
+              : "border-gray-300 hover:border-[#1E6B3C] bg-gray-50/50"
           }`}
         >
           {meal.eaten && (
@@ -42,64 +73,18 @@ export const MealLogCard: React.FC<MealLogCardProps> = ({
               viewBox="0 0 12 9"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="w-3 h-2.5"
             >
               <path
                 d="M1 4.5L4.33333 8L11 1"
                 stroke="white"
-                strokeWidth="2"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
           )}
         </button>
-      </div>
-
-
-      <div className="flex-1 bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md">
-        <div className="flex items-center gap-4">
-          <img
-            src={meal.image}
-            alt={meal.name}
-            className="w-[100px] h-[75px] rounded-xl object-cover"
-          />
-          <div className="space-y-1">
-            <h4 className="font-semibold text-gray-800 text-sm md:text-base">
-              {meal.name}
-            </h4>
-            <span className="text-xs font-medium text-[#1E6B3C] bg-[#1E6B3C]/5 px-2 py-0.5 rounded-md block w-fit">
-              {meal.tag}
-            </span>
-            <span className="text-sm font-bold text-gray-700 block">
-              ₦{meal.price}
-            </span>
-          </div>
-        </div>
-
-        <div className="pr-4 hidden sm:block">
-          {meal.eaten ? (
-            <div className="flex items-center gap-1.5 text-[#1E6B3C] font-semibold text-xs bg-[#1E6B3C]/5 px-2.5 py-1 rounded-full">
-              <span>Eaten</span>
-              <svg
-                width="12"
-                height="9"
-                viewBox="0 0 12 9"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M1 4.5L4.33333 8L11 1"
-                  stroke="#1E6B3C"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          ) : (
-            <span className="text-gray-300 font-medium text-xs">Not Eaten</span>
-          )}
-        </div>
       </div>
     </div>
   );

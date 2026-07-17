@@ -4,6 +4,7 @@ import {
   QuickMealsResponse,
   AddToPlannedResponse,
   DailySpentResponse,
+  PlannedMealsResponse, // Imported new response interface
 } from "@/types/meal";
 
 export const mealService = {
@@ -35,4 +36,13 @@ export const mealService = {
       await apiClient.get<DailySpentResponse>("/track/daily-spent");
     return response.data;
   },
+
+  getPlannedMeals: async (): Promise<PlannedMealsResponse> => {
+    const response = await apiClient.get<PlannedMealsResponse>(
+      "/track/planned-meals",
+    );
+    return response.data;
+  },
+
+  
 };
