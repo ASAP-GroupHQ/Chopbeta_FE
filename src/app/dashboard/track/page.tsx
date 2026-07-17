@@ -63,14 +63,12 @@ export default function TrackMealPage() {
   const [totalBudget, setTotalBudget] = useState<number>(0);
   const [budgetLoading, setBudgetLoading] = useState<boolean>(true);
 
+  const [totalSpent, setTotalSpent] = useState<number>(0);
+  const [spentLoading, setSpentLoading] = useState<boolean>(true);
+
   // Derive eating metrics
   const eatenCount = meals.filter((m) => m.eaten).length;
   const totalCount = meals.length;
-
-  // Calculate dynamic spent amount from eaten meals
-  const totalSpent = meals
-    .filter((m) => m.eaten)
-    .reduce((sum, current) => sum + current.price, 0);
 
   // Safe percentage calculation for the spent progress bar
   const spentPercentage =
@@ -106,9 +104,8 @@ export default function TrackMealPage() {
 
     setCurrentDate(new Date().toLocaleDateString("en-US", options));
 
-    // Async data fetching orchestration
     const fetchTrackerData = async () => {
-      // 1. Fetch Streak
+      // Fetch Streak
       try {
         setStreakLoading(true);
         const streakRes = await trackService.getStreak();
@@ -121,7 +118,7 @@ export default function TrackMealPage() {
         setStreakLoading(false);
       }
 
-      // 2. Fetch Daily Budget
+      // Fetch Daily Budget
       try {
         setBudgetLoading(true);
         const budgetRes = await trackService.getDailyBudget();
@@ -132,6 +129,19 @@ export default function TrackMealPage() {
         console.error("Error retrieving daily budget data:", error);
       } finally {
         setBudgetLoading(false);
+      }
+
+      // Fetch Daily Spent Money
+      try {
+        setSpentLoading(true);
+        const spentRes = await trackService.getDailySpent();
+        if (spentRes.success && spentRes.data) {
+          setTotalSpent(spentRes.data.totalMoneySpent);
+        }
+      } catch (error) {
+        console.error("Error retrieving daily spent data:", error);
+      } finally {
+        setSpentLoading(false);
       }
     };
 
@@ -202,7 +212,7 @@ export default function TrackMealPage() {
             }
             progressColor={spentPercentage > 100 ? "#DC2626" : "#E85D26"}
             progressWidth={`${spentPercentage}%`}
-            isLoading={budgetLoading} // Wait for limit calculations
+            isLoading={spentLoading || budgetLoading}
           />
 
           <StatCard

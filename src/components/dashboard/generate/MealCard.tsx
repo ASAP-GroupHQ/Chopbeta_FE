@@ -2,18 +2,21 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiHeart, FiActivity, FiX } from "react-icons/fi";
+import { FiActivity, FiX, FiPlus } from "react-icons/fi";
+import { toast } from "react-toastify";
 import { MealItem } from "@/types/meal";
+import { mealService } from "@/services/meal";
 
 interface MealCardProps {
   meal: MealItem;
 }
 
 export default function MealCard({ meal }: MealCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
 
-  // Extract nutrition properties safely matching the backend payload
+  // Extract nutrition properties safely matching the type definition structure
   const nutrition = meal.averageNutritionalInfo || {};
 
   // Safe cast to support both 'estimatedMacronutrients' and legacy 'macronutrients'
@@ -22,10 +25,35 @@ export default function MealCard({ meal }: MealCardProps) {
     (nutrition as any).macronutrients ||
     {};
 
-  const calories = nutrition.estimatedCalories || "-- kcal";
-  const carbs = macros.carbohydrates || "-- g";
-  const proteins = macros.proteins || "-- g";
-  const fats = macros.fats || "-- g";
+  const calories = nutrition.estimatedCalories || "0";
+  const carbs = macros.carbohydrates || "0";
+  const proteins = macros.proteins || "0";
+  const fats = macros.fats || "0";
+
+  // Handle live tracking API submission to add the meal to the user's planner
+  const handleAddMealPlan = async () => {
+    if (isAdding) return;
+
+    setIsAdding(true);
+
+    try {
+      // Hit the correct tracker endpoint using the meal database _id
+      const response = await mealService.addToPlanned(meal._id);
+
+      if (response.success) {
+        setIsAdded(true);
+        toast.success(`${meal.mealTitle} added to your plan successfully! 🍽️`);
+      } else {
+        toast.error(response.message || "Failed to add meal to planner.");
+      }
+    } catch (error: any) {
+      toast.error(
+        error.message || "Error adding meal to planner. Please try again.",
+      );
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   // Enhanced fallback imagery matching typical ChopBeta meal options
   const getImagePlaceholder = (title: string) => {
@@ -93,20 +121,30 @@ export default function MealCard({ meal }: MealCardProps) {
               alt={meal.mealTitle}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            {/* Contextual Favorite Toggles */}
+
+            {/* Dynamic Add Toggle Button */}
             <button
               type="button"
-              onClick={() => setIsFavorite(!isFavorite)}
-              className="absolute top-2 right-2 p-2 rounded-xl bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all text-gray-400 cursor-pointer z-10"
+              onClick={handleAddMealPlan}
+              disabled={isAdding}
+              className={`absolute top-2 right-2 p-2 rounded-xl shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer z-10 ${
+                isAdded
+                  ? "bg-green-700 text-white"
+                  : "bg-white/90 backdrop-blur-sm text-[#1A2E35] hover:bg-green-50 hover:text-green-700"
+              } ${isAdding ? "opacity-75 pointer-events-none" : ""}`}
             >
-              <FiHeart
-                size={16}
-                className={`transition-colors ${
-                  isFavorite
-                    ? "fill-amber-500 text-amber-500"
-                    : "text-gray-400 hover:text-red-500"
-                }`}
-              />
+              {isAdding ? (
+                <div className="w-4 h-4 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FiPlus
+                  size={16}
+                  className={`stroke-[3] transition-colors ${
+                    isAdded
+                      ? "text-white"
+                      : "text-[#1A2E35] group-hover:text-green-700"
+                  }`}
+                />
+              )}
             </button>
           </div>
 
@@ -173,7 +211,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Calories
                   </span>
                   <span className="text-base font-black text-[#1A2E35]">
-                    {calories}
+                    {calories} kcal
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -181,7 +219,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Carbs
                   </span>
                   <span className="text-base font-black text-blue-600">
-                    {carbs}
+                    {carbs} g
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -189,7 +227,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Proteins
                   </span>
                   <span className="text-base font-black text-emerald-600">
-                    {proteins}
+                    {proteins} g
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -197,7 +235,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Fats
                   </span>
                   <span className="text-base font-black text-amber-500">
-                    {fats}
+                    {fats} g
                   </span>
                 </div>
               </div>
@@ -208,3 +246,4 @@ export default function MealCard({ meal }: MealCardProps) {
     </>
   );
 }
+0

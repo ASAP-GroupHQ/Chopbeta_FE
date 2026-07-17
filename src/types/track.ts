@@ -27,3 +27,25 @@ export interface DailyBudgetResponse {
     totalBudget: number;
   };
 }
+
+export interface SpentMealEntry {
+  mealId: {
+    _id: string;
+    mealTitle: string;
+    estimatedPrice: {
+      $numberDecimal: string;
+    };
+  };
+  eatenAt: string;
+  _id: string;
+}
+
+export interface DailySpentResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    meals: SpentMealEntry[];
+    totalMoneySpent: number;
+  };
+}
