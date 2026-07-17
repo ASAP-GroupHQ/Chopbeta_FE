@@ -15,7 +15,7 @@ export interface ExploreMeal {
   desc: string;
   price: number;
   calories: number;
-  img: string;
+  imageUrl: string;
   tags?: string[];
   category?: string;
 }
@@ -77,6 +77,7 @@ const toExploreMeal = (meal: QuickMealItem, fallbackCategory?: string): ExploreM
   const caloriesValue = Number.parseFloat(
     meal.averageNutritionalInfo?.estimatedCalories ?? "0",
   );
+  const imageUrl = meal.imageUrl ?? meal.img ?? meal.image ?? "";
 
   return {
     id: Number(meal._id) || Math.random(),
@@ -84,7 +85,7 @@ const toExploreMeal = (meal: QuickMealItem, fallbackCategory?: string): ExploreM
     desc: `${category} meal option`,
     price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
     calories: Number.isFinite(caloriesValue) ? caloriesValue : 0,
-    img: "/images/meals/placeholder.jpg",
+    imageUrl,
     tags: [category],
     category,
   };

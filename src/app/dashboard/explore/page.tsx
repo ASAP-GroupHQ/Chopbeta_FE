@@ -87,7 +87,7 @@ export default function ExplorePage() {
               desc={meal.desc}
               price={meal.price}
               calories={meal.calories}
-              img={meal.img}
+              imageUrl={meal.imageUrl}
             />
           ))}
         </div>

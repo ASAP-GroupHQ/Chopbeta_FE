@@ -34,6 +34,9 @@ export interface QuickMealItem {
   estimatedPrice: {
     $numberDecimal: string;
   };
+  imageUrl?: string;
+  img?: string;
+  image?: string;
   averageNutritionalInfo?: {
     estimatedCalories?: string;
     estimatedMacronutrients?: {
