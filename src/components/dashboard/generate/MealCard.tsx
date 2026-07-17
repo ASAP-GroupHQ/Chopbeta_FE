@@ -11,6 +11,10 @@ interface MealCardProps {
   meal: MealItem;
 }
 
+// Global default fallback asset if database returns an empty url
+const DEFAULT_MEAL_IMAGE =
+  "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
+
 export default function MealCard({ meal }: MealCardProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
@@ -37,7 +41,6 @@ export default function MealCard({ meal }: MealCardProps) {
     setIsAdding(true);
 
     try {
-      // Hit the correct tracker endpoint using the meal database _id
       const response = await mealService.addToPlanned(meal._id);
 
       if (response.success) {
@@ -55,54 +58,6 @@ export default function MealCard({ meal }: MealCardProps) {
     }
   };
 
-  // Enhanced fallback imagery matching typical ChopBeta meal options
-  const getImagePlaceholder = (title: string) => {
-    const lowerTitle = title.toLowerCase();
-
-    if (
-      lowerTitle.includes("rice") ||
-      lowerTitle.includes("jollof") ||
-      lowerTitle.includes("fried rice")
-    )
-      return "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=500";
-    if (
-      lowerTitle.includes("egg") ||
-      lowerTitle.includes("bread") ||
-      lowerTitle.includes("tea") ||
-      lowerTitle.includes("pap") ||
-      lowerTitle.includes("akara")
-    )
-      return "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500";
-    if (
-      lowerTitle.includes("swallow") ||
-      lowerTitle.includes("egusi") ||
-      lowerTitle.includes("fufu") ||
-      lowerTitle.includes("amala")
-    )
-      return "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=500";
-    if (
-      lowerTitle.includes("beans") ||
-      lowerTitle.includes("dodo") ||
-      lowerTitle.includes("plantain")
-    )
-      return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500";
-    if (
-      lowerTitle.includes("yam") ||
-      lowerTitle.includes("potatoes") ||
-      lowerTitle.includes("fries")
-    )
-      return "https://images.unsplash.com/photo-1518013431117-eb1465fa5752?q=80&w=500";
-    if (
-      lowerTitle.includes("spaghetti") ||
-      lowerTitle.includes("pasta") ||
-      lowerTitle.includes("indomie") ||
-      lowerTitle.includes("noodles")
-    )
-      return "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=500";
-
-    return "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
-  };
-
   return (
     <>
       <motion.div
@@ -117,9 +72,13 @@ export default function MealCard({ meal }: MealCardProps) {
           {/* Card Image Area Frame */}
           <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-50">
             <img
-              src={getImagePlaceholder(meal.mealTitle)}
+              src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
               alt={meal.mealTitle}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => {
+                // Inline broken link safety net handler
+                (e.target as HTMLImageElement).src = DEFAULT_MEAL_IMAGE;
+              }}
             />
 
             {/* Dynamic Add Toggle Button */}
@@ -211,7 +170,9 @@ export default function MealCard({ meal }: MealCardProps) {
                     Calories
                   </span>
                   <span className="text-base font-black text-[#1A2E35]">
-                    {calories} kcal
+                    {calories.toString().includes("kcal")
+                      ? calories
+                      : `${calories} kcal`}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -219,7 +180,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Carbs
                   </span>
                   <span className="text-base font-black text-blue-600">
-                    {carbs} g
+                    {carbs.toString().includes("g") ? carbs : `${carbs} g`}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -227,7 +188,9 @@ export default function MealCard({ meal }: MealCardProps) {
                     Proteins
                   </span>
                   <span className="text-base font-black text-emerald-600">
-                    {proteins} g
+                    {proteins.toString().includes("g")
+                      ? proteins
+                      : `${proteins} g`}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -235,7 +198,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Fats
                   </span>
                   <span className="text-base font-black text-amber-500">
-                    {fats} g
+                    {fats.toString().includes("g") ? fats : `${fats} g`}
                   </span>
                 </div>
               </div>
@@ -246,4 +209,3 @@ export default function MealCard({ meal }: MealCardProps) {
     </>
   );
 }
-0

@@ -1,69 +1,13 @@
-// src/types/meal.ts
-
-// the precise meal layout shape matching the backend response
-export interface MealItem {
-  _id: string;
-  mealTitle: string;
-  category: string;
-  estimatedPrice: {
-    $numberDecimal: string;
-  };
-  description?: string;
-  type?: string;
-  averageNutritionalInfo?: {
-    estimatedCalories?: string;
-    estimatedMacronutrients?: {
-      carbohydrates?: string;
-      proteins?: string;
-      fats?: string;
-    };
-  };
-}
-
-export interface GenerateMealsResponse {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: MealItem[];
-}
-
-export interface QuickMealItem {
-  _id: string;
-  mealTitle: string;
-  category: string;
-  estimatedPrice: {
-    $numberDecimal: string;
-  };
-  averageNutritionalInfo?: {
-    estimatedCalories?: string;
-    estimatedMacronutrients?: {
-      carbohydrates?: string;
-      proteins?: string;
-      fats?: string;
-    };
-  };
-}
-
-export interface QuickMealsResponse {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: {
-    meals: QuickMealItem[];
-    count: number;
-  };
-}
-
 export interface Macronutrients {
-  carbohydrates?: number;
-  proteins?: number;
-  fats?: number;
+  carbohydrates?: number | string;
+  proteins?: number | string;
+  fats?: number | string;
 }
 
 export interface AverageNutritionalInfo {
-  estimatedCalories?: number;
+  estimatedCalories?: number | string;
   macronutrients?: Macronutrients;
-  estimatedMacronutrients?: Macronutrients; // safety fallback
+  estimatedMacronutrients?: Macronutrients;
 }
 
 export interface MealItem {
@@ -76,6 +20,7 @@ export interface MealItem {
   };
   description?: string;
   type?: string;
+  imageUrl?: string; 
   createdAt?: string;
   updatedAt?: string;
 }
@@ -88,6 +33,7 @@ export interface QuickMealItem {
     $numberDecimal: string;
   };
   averageNutritionalInfo?: AverageNutritionalInfo;
+  imageUrl?: string; // Added field from database payload
 }
 
 export interface QuickMealsResponse {
@@ -107,7 +53,6 @@ export interface GenerateMealsResponse {
   data: MealItem[];
 }
 
-// Added for the tracking/planning endpoint response
 export interface AddToPlannedResponse {
   success: boolean;
   statusCode: number;
