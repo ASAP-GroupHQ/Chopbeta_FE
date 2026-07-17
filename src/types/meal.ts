@@ -20,7 +20,7 @@ export interface MealItem {
   };
   description?: string;
   type?: string;
-  imageUrl?: string; 
+  imageUrl?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -57,5 +57,27 @@ export interface AddToPlannedResponse {
   success: boolean;
   statusCode: number;
   message: string;
-  data?: any; 
+  data?: any;
+}
+
+export interface DailySpentMeal {
+  _id: string;
+  eatenAt: string;
+  mealId: {
+    _id: string;
+    mealTitle: string;
+    estimatedPrice: {
+      $numberDecimal: string;
+    };
+  };
+}
+
+export interface DailySpentResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    meals: DailySpentMeal[];
+    totalMoneySpent: number;
+  };
 }
