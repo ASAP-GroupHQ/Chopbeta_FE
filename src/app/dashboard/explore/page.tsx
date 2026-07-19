@@ -107,7 +107,7 @@ export default function ExplorePage() {
               onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
               className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
             >
-              Previous
+              1
             </button>
             <button
               type="button"
@@ -115,7 +115,7 @@ export default function ExplorePage() {
               onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
               className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
             >
-              Next
+              2
             </button>
           </div>
         </div>
