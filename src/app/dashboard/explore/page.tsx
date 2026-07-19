@@ -108,14 +108,6 @@ export default function ExplorePage() {
             Page {currentPage} of {totalPages}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
-            >
-              Prev
-            </button>
             {pageNumbers.map((page) => (
               <button
                 key={page}
@@ -130,14 +122,7 @@ export default function ExplorePage() {
                 {page}
               </button>
             ))}
-            <button
-              type="button"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
-            >
-              Next
-            </button>
+          
           </div>
         </div>
       )}
