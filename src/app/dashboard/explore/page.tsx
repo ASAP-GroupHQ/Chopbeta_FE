@@ -20,8 +20,10 @@ export default function ExplorePage() {
   const [meals, setMeals] = useState<ExploreMeal[]>([]);
   const [activeTag, setActiveTag] = useState<string>(ExploreCategory.All);
   const [searchValue, setSearchValue] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     let active = true;
@@ -29,6 +31,8 @@ export default function ExplorePage() {
     const loadMeals = async () => {
       setIsLoading(true);
       setError(null);
+
+      setCurrentPage(1);
 
       try {
         const response = await exploreService.getMeals({ tag: activeTag, search: searchValue });
@@ -54,7 +58,8 @@ export default function ExplorePage() {
     };
   }, [activeTag, searchValue]);
 
-  const visibleMeals = meals;
+  const totalPages = Math.max(1, Math.ceil(meals.length / itemsPerPage));
+  const visibleMeals = meals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <main className="flex-1 p-2">
@@ -62,7 +67,7 @@ export default function ExplorePage() {
       <FilterTags tags={TAGS} activeTag={activeTag} onSelectTag={setActiveTag} />
 
       <div className="mt-6 text-sm font-medium text-gray-500">
-        {isLoading ? "Loading meals..." : `${visibleMeals.length} meals found`}
+        {isLoading ? "Loading meals..." : `${visibleMeals.length} of ${meals.length} meals found`}
       </div>
 
       {isLoading ? (
@@ -90,6 +95,29 @@ export default function ExplorePage() {
               imageUrl={meal.imageUrl}
             />
           ))}
+        </div>
+      )}
+      {!isLoading && !error && meals.length > 0 && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
+          <div>Page {currentPage} of {totalPages}</div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </main>
