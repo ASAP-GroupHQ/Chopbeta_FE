@@ -59,7 +59,12 @@ export default function ExplorePage() {
   }, [activeTag, searchValue]);
 
   const totalPages = Math.max(1, Math.ceil(meals.length / itemsPerPage));
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
   const visibleMeals = meals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   return (
     <main className="flex-1 p-2">
@@ -99,23 +104,39 @@ export default function ExplorePage() {
       )}
       {!isLoading && !error && meals.length > 0 && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
-          <div>Page {currentPage} of {totalPages}</div>
-          <div className="flex items-center gap-2">
+          <div>
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
               className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
             >
-              1
+              Prev
             </button>
+            {pageNumbers.map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => setCurrentPage(page)}
+                className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                  currentPage === page
+                    ? "border-orange-500 bg-orange-500 text-white"
+                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
             <button
               type="button"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
               className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
             >
-              2
+              Next
             </button>
           </div>
         </div>
