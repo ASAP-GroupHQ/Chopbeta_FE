@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { apiClient } from "@/services/api-client";
 import {
   GenerateMealsResponse,
@@ -6,6 +7,66 @@ import {
   DailySpentResponse,
   PlannedMealsResponse, // Imported new response interface
 } from "@/types/meal";
+=======
+import { apiClient } from "./api-client";
+
+// the precise meal layout shape matching the backend response
+export interface MealItem {
+  _id: string;
+  mealTitle: string;
+  category: string;
+  estimatedPrice: {
+    $numberDecimal: string;
+  };
+  description?: string;
+  type?: string;
+  averageNutritionalInfo?: {
+    estimatedCalories?: string;
+    estimatedMacronutrients?: {
+      carbohydrates?: string;
+      proteins?: string;
+      fats?: string;
+    };
+  };
+}
+
+export interface GenerateMealsResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: MealItem[];
+}
+
+export interface QuickMealItem {
+  _id: string;
+  mealTitle: string;
+  category: string;
+  estimatedPrice: {
+    $numberDecimal: string;
+  };
+  imageUrl?: string;
+  img?: string;
+  image?: string;
+  averageNutritionalInfo?: {
+    estimatedCalories?: string;
+    estimatedMacronutrients?: {
+      carbohydrates?: string;
+      proteins?: string;
+      fats?: string;
+    };
+  };
+}
+
+export interface QuickMealsResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    meals: QuickMealItem[];
+    count: number;
+  };
+}
+>>>>>>> 94e4339909ac628acbda3ec6382f591fd355a993
 
 export const mealService = {
   generateMeals: async (

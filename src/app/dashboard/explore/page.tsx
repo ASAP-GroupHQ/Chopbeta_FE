@@ -1,19 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import ExploreHeader from "@/components/dashboard/explore/ExploreHeader";
 import FilterTags from "@/components/dashboard/explore/FilterTags";
 import MealCard from "@/components/dashboard/explore/MealCard";
 import LoadingState from "@/components/ui/LoadingState";
-import { exploreService, type ExploreMeal } from "@/services/explore";
+import { ExploreCategory, exploreService, type ExploreMeal } from "@/services/explore";
 
-const TAGS = ["All", "Rice", "Soup", "Swallow", "Snacks", "Protein", "Vegetarian"];
+const TAGS = [
+  ExploreCategory.All,
+  ExploreCategory.Rice,
+  ExploreCategory.Soups,
+  ExploreCategory.Swallow,
+  ExploreCategory.Snacks,
+  ExploreCategory.Others,
+];
 
 export default function ExplorePage() {
   const [meals, setMeals] = useState<ExploreMeal[]>([]);
-  const [activeTag, setActiveTag] = useState("All");
+  const [activeTag, setActiveTag] = useState<string>(ExploreCategory.All);
+  const [searchValue, setSearchValue] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     let active = true;
@@ -22,8 +32,10 @@ export default function ExplorePage() {
       setIsLoading(true);
       setError(null);
 
+      setCurrentPage(1);
+
       try {
-        const response = await exploreService.getMeals({ tag: activeTag });
+        const response = await exploreService.getMeals({ tag: activeTag, search: searchValue });
         if (active) {
           setMeals(response);
         }
@@ -44,28 +56,23 @@ export default function ExplorePage() {
     return () => {
       active = false;
     };
-  }, [activeTag]);
+  }, [activeTag, searchValue]);
 
-  const visibleMeals = useMemo(() => {
-    if (!activeTag || activeTag === "All") {
-      return meals;
-    }
+  const totalPages = Math.max(1, Math.ceil(meals.length / itemsPerPage));
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const visibleMeals = meals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    return meals.filter((meal) => {
-      const tags = meal.tags ?? [];
-      const category = meal.category?.toLowerCase();
-      return tags.some((tag) => tag.toLowerCase() === activeTag.toLowerCase()) ||
-        category === activeTag.toLowerCase();
-    });
-  }, [activeTag, meals]);
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   return (
     <main className="flex-1 p-2">
-      <ExploreHeader />
+      <ExploreHeader searchValue={searchValue} onSearchChange={setSearchValue} />
       <FilterTags tags={TAGS} activeTag={activeTag} onSelectTag={setActiveTag} />
 
       <div className="mt-6 text-sm font-medium text-gray-500">
-        {isLoading ? "Loading meals..." : `${visibleMeals.length} meals found`}
+        {isLoading ? "Loading meals..." : `${visibleMeals.length} of ${meals.length} meals found`}
       </div>
 
       {isLoading ? (
@@ -90,9 +97,48 @@ export default function ExplorePage() {
               desc={meal.desc}
               price={meal.price}
               calories={meal.calories}
-              img={meal.img}
+              imageUrl={meal.imageUrl}
             />
           ))}
+        </div>
+      )}
+      {!isLoading && !error && meals.length > 0 && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
+          <div>
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
+            >
+              Prev
+            </button>
+            {pageNumbers.map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => setCurrentPage(page)}
+                className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                  currentPage === page
+                    ? "border-orange-500 bg-orange-500 text-white"
+                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </main>

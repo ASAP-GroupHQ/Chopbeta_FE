@@ -121,7 +121,7 @@ export default function QuickMeals() {
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
-              className="min-w-[140px] sm:min-w-0 bg-white border border-gray-50 rounded-2xl p-2.5 space-y-3 animate-pulse"
+              className="min-w-35 sm:min-w-0 bg-white border border-gray-50 rounded-2xl p-2.5 space-y-3 animate-pulse"
             >
               <div className="relative w-full aspect-square rounded-xl bg-gray-100" />
               <div className="space-y-2">
@@ -144,7 +144,7 @@ export default function QuickMeals() {
           {meals.map((meal) => (
             <div
               key={meal._id}
-              className="min-w-[140px] sm:min-w-0 bg-white border border-gray-50 rounded-2xl p-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:shadow-md hover:border-gray-100 transition-all snap-start"
+              className="min-w-35 sm:min-w-0 bg-white border border-gray-50 rounded-2xl p-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:shadow-md hover:border-gray-100 transition-all snap-start"
             >
               <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3">
                 <Image
