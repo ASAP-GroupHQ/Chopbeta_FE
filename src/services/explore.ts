@@ -1,4 +1,5 @@
-import { mealService, type QuickMealItem } from "./meal";
+import { mealService } from "./meal";
+import type { QuickMealItem } from "@/types/meal";
 
 export enum ExploreCategory {
   All = "All",
@@ -67,17 +68,28 @@ const inferCategory = (mealTitle: string, fallbackCategory?: string) => {
   }
 
   return fallbackCategory
-    ? CATEGORY_HINTS[fallbackCategory.toLowerCase()] ?? ExploreCategory.Others
+    ? (CATEGORY_HINTS[fallbackCategory.toLowerCase()] ?? ExploreCategory.Others)
     : ExploreCategory.Others;
 };
 
-const toExploreMeal = (meal: QuickMealItem, fallbackCategory?: string): ExploreMeal => {
-  const category = inferCategory(meal.mealTitle, fallbackCategory ?? meal.category);
-  const parsedPrice = Number.parseFloat(meal.estimatedPrice?.$numberDecimal ?? "0");
-  const caloriesValue = Number.parseFloat(
-    meal.averageNutritionalInfo?.estimatedCalories ?? "0",
+const toExploreMeal = (
+  meal: QuickMealItem,
+  fallbackCategory?: string,
+): ExploreMeal => {
+  const category = inferCategory(
+    meal.mealTitle,
+    fallbackCategory ?? meal.category,
   );
-  const imageUrl = meal.imageUrl ?? meal.img ?? meal.image ?? "";
+  const parsedPrice = Number.parseFloat(
+    meal.estimatedPrice?.$numberDecimal ?? "0",
+  );
+  const caloriesValue = Number.parseFloat(
+    String(meal.averageNutritionalInfo?.estimatedCalories ?? "0"),
+  );
+
+  // Safe fallback access
+  const rawMeal = meal as QuickMealItem & { img?: string; image?: string };
+  const imageUrl = rawMeal.imageUrl ?? rawMeal.img ?? rawMeal.image ?? "";
 
   return {
     id: Number(meal._id) || Math.random(),
@@ -92,7 +104,10 @@ const toExploreMeal = (meal: QuickMealItem, fallbackCategory?: string): ExploreM
 };
 
 export const exploreService = {
-  getMeals: async (params?: { tag?: string; search?: string }): Promise<ExploreMeal[]> => {
+  getMeals: async (params?: {
+    tag?: string;
+    search?: string;
+  }): Promise<ExploreMeal[]> => {
     const normalizedTag = params?.tag?.trim();
     const searchTerm = params?.search?.trim().toLowerCase() ?? "";
 
@@ -101,13 +116,22 @@ export const exploreService = {
         ? [normalizedTag.toLowerCase()]
         : ["breakfast", "lunch", "dinner", "snacks"];
 
-    const responses = await Promise.all(filters.map((filter) => mealService.getQuickMeals(filter)));
+    const responses = await Promise.all(
+      filters.map((filter) => mealService.getQuickMeals(filter)),
+    );
     const meals = responses.flatMap((response, index) =>
-      (response?.data?.meals ?? []).map((meal) => toExploreMeal(meal, filters[index])),
+      (response?.data?.meals ?? []).map((meal) =>
+        toExploreMeal(meal, filters[index]),
+      ),
     );
 
     return meals.filter((meal) => {
-      const searchableText = [meal.title, meal.desc, meal.category, ...(meal.tags ?? [])]
+      const searchableText = [
+        meal.title,
+        meal.desc,
+        meal.category,
+        ...(meal.tags ?? []),
+      ]
         .join(" ")
         .toLowerCase();
       const matchesSearch = !searchTerm || searchableText.includes(searchTerm);
@@ -115,7 +139,9 @@ export const exploreService = {
         !normalizedTag ||
         normalizedTag === ExploreCategory.All ||
         meal.category?.toLowerCase() === normalizedTag.toLowerCase() ||
-        (meal.tags ?? []).some((tag) => tag.toLowerCase() === normalizedTag.toLowerCase());
+        (meal.tags ?? []).some(
+          (tag) => tag.toLowerCase() === normalizedTag.toLowerCase(),
+        );
 
       return matchesSearch && matchesCategory;
     });
