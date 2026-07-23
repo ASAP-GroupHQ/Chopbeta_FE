@@ -1,6 +1,6 @@
 export interface StreakData {
   currentStreak: number;
-  lastActiveAt: string; // ISO date string
+  lastActiveAt: string;
 }
 
 export interface StreakResponse {
@@ -47,5 +47,20 @@ export interface DailySpentResponse {
   data: {
     meals: SpentMealEntry[];
     totalMoneySpent: number;
+  };
+}
+
+export interface EatenMealItem {
+  mealId: string;
+  eatenAt: string;
+  _id: string;
+}
+
+export interface MarkAsEatenResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    eatenMeals: EatenMealItem[];
   };
 }

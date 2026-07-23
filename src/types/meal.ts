@@ -33,7 +33,7 @@ export interface QuickMealItem {
     $numberDecimal: string;
   };
   averageNutritionalInfo?: AverageNutritionalInfo;
-  imageUrl?: string; // Added field from database payload
+  imageUrl?: string;
 }
 
 export interface QuickMealsResponse {
@@ -60,33 +60,11 @@ export interface AddToPlannedResponse {
   data?: any;
 }
 
-export interface DailySpentMeal {
-  _id: string;
-  eatenAt: string;
-  mealId: {
-    _id: string;
-    mealTitle: string;
-    estimatedPrice: {
-      $numberDecimal: string;
-    };
-  };
-}
-
-export interface DailySpentResponse {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: {
-    meals: DailySpentMeal[];
-    totalMoneySpent: number;
-  };
-}
-
 export interface PlannedMealData {
   _id: string;
   isEaten: boolean;
   plannedAt: string;
-  mealId: MealItem; 
+  mealId: MealItem;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -95,5 +73,7 @@ export interface PlannedMealsResponse {
   success: boolean;
   statusCode: number;
   message: string;
-  data: PlannedMealData[];
+  data: {
+    plannedMeals: PlannedMealData[];
+  };
 }

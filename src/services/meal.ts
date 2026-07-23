@@ -3,8 +3,7 @@ import {
   GenerateMealsResponse,
   QuickMealsResponse,
   AddToPlannedResponse,
-  DailySpentResponse,
-  PlannedMealsResponse, // Imported new response interface
+  PlannedMealsResponse,
 } from "@/types/meal";
 
 export const mealService = {
@@ -28,12 +27,6 @@ export const mealService = {
     const response = await apiClient.patch<AddToPlannedResponse>(
       `/track/add-to-planned/${mealId}`,
     );
-    return response.data;
-  },
-
-  getDailySpent: async (): Promise<DailySpentResponse> => {
-    const response =
-      await apiClient.get<DailySpentResponse>("/track/daily-spent");
     return response.data;
   },
 

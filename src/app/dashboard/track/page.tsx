@@ -18,13 +18,13 @@ import { mealService } from "@/services/meal";
 import { StreakData } from "@/types/track";
 import { PlannedMealData } from "@/types/meal";
 
-// Map the real backend data shape into the format expected by your UI component safely
+// Map the real backend data shape into the format expected by UI component
 const mapToMealLog = (item: PlannedMealData) => {
   if (!item) return null;
 
   return {
     id: item._id,
-    time: "", // Keeping this empty so the custom UI element inside your card works seamlessly
+    time: "",
     name: item.mealId?.mealTitle || "Unknown Meal",
     tag: item.mealId?.category || "Budget Friendly",
     price: item.mealId?.estimatedPrice?.$numberDecimal
@@ -58,30 +58,48 @@ export default function TrackMealPage() {
   // —— DEFENSIVE ARRAYS SAFE GUARDING ——
   const safeMeals = Array.isArray(meals) ? meals : [];
 
-  // Derive eating metrics from your real integrated states
+  // Derive eating metrics from real integrated states
   const eatenCount = safeMeals.filter((m) => m && m.isEaten).length;
   const totalCount = safeMeals.length;
 
-  // Safe percentage calculation for the spent progress bar
+  // Safe percentage calculation for spent progress bar
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  const handleToggleEaten = (id: string) => {
-    setMeals((prev) => {
-      const prevArray = Array.isArray(prev) ? prev : [];
-      return prevArray.map((m) =>
-        m && m._id === id ? { ...m, isEaten: !m.isEaten } : m,
-      );
-    });
+  // 🟢 Integrated PATCH mark-as-eaten API call
+  const handleToggleEaten = async (id: string) => {
+    const targetMeal = safeMeals.find((m) => m && m._id === id);
+    // Don't trigger API if already eaten or invalid target
+    if (!targetMeal || targetMeal.isEaten) return;
+
+    try {
+      setIsLoading(true);
+      const res = await trackService.markAsEaten(id);
+
+      if (res && res.success) {
+        // Optimistically update local array
+        setMeals((prev) => {
+          const prevArray = Array.isArray(prev) ? prev : [];
+          return prevArray.map((m) =>
+            m && m._id === id ? { ...m, isEaten: true } : m,
+          );
+        });
+
+        // Re-fetch metrics (Daily Spent, Streak, etc.) to keep top cards synced with backend
+        await fetchTrackerData();
+      }
+    } catch (error) {
+      console.error("Failed to mark meal as eaten:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleMarkNextMealAsEaten = () => {
-    setIsLoading(true);
+  const handleMarkNextMealAsEaten = async () => {
     const firstUnchecked = safeMeals.find((m) => m && !m.isEaten);
     if (firstUnchecked) {
-      handleToggleEaten(firstUnchecked._id);
+      await handleToggleEaten(firstUnchecked._id);
     }
-    setIsLoading(false);
   };
 
   const incrementWater = () => {
@@ -89,20 +107,16 @@ export default function TrackMealPage() {
   };
 
   const fetchTrackerData = async () => {
+    // Fetch Planned Meals
     try {
       setMealsLoading(true);
       const mealsRes = await mealService.getPlannedMeals();
 
       if (
-        mealsRes &&
-        mealsRes.data &&
+        mealsRes?.data?.plannedMeals &&
         Array.isArray(mealsRes.data.plannedMeals)
       ) {
         setMeals(mealsRes.data.plannedMeals);
-      } else if (mealsRes && Array.isArray(mealsRes.plannedMeals)) {
-        setMeals(mealsRes.plannedMeals);
-      } else if (Array.isArray(mealsRes)) {
-        setMeals(mealsRes);
       } else {
         setMeals([]);
       }
@@ -117,7 +131,7 @@ export default function TrackMealPage() {
     try {
       setStreakLoading(true);
       const streakRes = await trackService.getStreak();
-      if (streakRes.success && streakRes.data) {
+      if (streakRes?.success && streakRes?.data) {
         setStreak(streakRes.data);
       }
     } catch (error) {
@@ -130,7 +144,7 @@ export default function TrackMealPage() {
     try {
       setBudgetLoading(true);
       const budgetRes = await trackService.getDailyBudget();
-      if (budgetRes.success && budgetRes.data) {
+      if (budgetRes?.success && budgetRes?.data) {
         setTotalBudget(budgetRes.data.totalBudget);
       }
     } catch (error) {
@@ -143,7 +157,7 @@ export default function TrackMealPage() {
     try {
       setSpentLoading(true);
       const spentRes = await trackService.getDailySpent();
-      if (spentRes.success && spentRes.data) {
+      if (spentRes?.success && spentRes?.data) {
         setTotalSpent(spentRes.data.totalMoneySpent);
       }
     } catch (error) {
