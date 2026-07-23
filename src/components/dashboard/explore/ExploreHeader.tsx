@@ -4,7 +4,12 @@ import React from "react";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { SettingsIcon, SearchIcon } from "@/components/icons/NavIcons";
 
-export default function ExploreHeader() {
+interface ExploreHeaderProps {
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+}
+
+export default function ExploreHeader({ searchValue, onSearchChange }: ExploreHeaderProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -25,7 +30,9 @@ export default function ExploreHeader() {
         </span>
         <input
           type="text"
-          placeholder="Search meals, canteens, ingredients..."
+          value={searchValue}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Search meals, categories, ingredients..."
           className="w-full bg-white pl-12 pr-4 py-3.5 rounded-xl border border-transparent shadow-sm text-sm focus:outline-none focus:border-emerald-600 transition-all placeholder-gray-400"
         />
       </div>

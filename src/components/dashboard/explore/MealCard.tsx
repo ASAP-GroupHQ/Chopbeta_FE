@@ -8,16 +8,16 @@ type Props = {
   desc: string;
   price: number;
   calories: number;
-  img: string;
+  imageUrl: string;
 };
 
-export default function MealCard({ title, desc, price, calories, img }: Props) {
+export default function MealCard({ title, desc, price, calories, imageUrl }: Props) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col group hover:shadow-md transition-shadow">
       <div className="relative h-44 w-full bg-gray-200 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent z-10" />
         <img
-          src={img}
+          src={imageUrl || "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"}
           alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -39,3 +39,4 @@ export default function MealCard({ title, desc, price, calories, img }: Props) {
     </div>
   );
 }
+ 

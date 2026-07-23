@@ -2,18 +2,25 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiHeart, FiActivity, FiX } from "react-icons/fi";
-import { MealItem } from "@/services/meal";
+import { FiActivity, FiX, FiPlus } from "react-icons/fi";
+import { toast } from "react-toastify";
+import { MealItem } from "@/types/meal";
+import { mealService } from "@/services/meal";
 
 interface MealCardProps {
   meal: MealItem;
 }
 
+// Global default fallback asset if database returns an empty url
+const DEFAULT_MEAL_IMAGE =
+  "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
+
 export default function MealCard({ meal }: MealCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
 
-  // Extract nutrition properties safely matching the backend payload
+  // Extract nutrition properties safely matching the type definition structure
   const nutrition = meal.averageNutritionalInfo || {};
 
   // Safe cast to support both 'estimatedMacronutrients' and legacy 'macronutrients'
@@ -22,57 +29,33 @@ export default function MealCard({ meal }: MealCardProps) {
     (nutrition as any).macronutrients ||
     {};
 
-  const calories = nutrition.estimatedCalories || "-- kcal";
-  const carbs = macros.carbohydrates || "-- g";
-  const proteins = macros.proteins || "-- g";
-  const fats = macros.fats || "-- g";
+  const calories = nutrition.estimatedCalories || "0";
+  const carbs = macros.carbohydrates || "0";
+  const proteins = macros.proteins || "0";
+  const fats = macros.fats || "0";
 
-  // Enhanced fallback imagery matching typical ChopBeta meal options
-  const getImagePlaceholder = (title: string) => {
-    const lowerTitle = title.toLowerCase();
+  // Handle live tracking API submission to add the meal to the user's planner
+  const handleAddMealPlan = async () => {
+    if (isAdding) return;
 
-    if (
-      lowerTitle.includes("rice") ||
-      lowerTitle.includes("jollof") ||
-      lowerTitle.includes("fried rice")
-    )
-      return "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=500";
-    if (
-      lowerTitle.includes("egg") ||
-      lowerTitle.includes("bread") ||
-      lowerTitle.includes("tea") ||
-      lowerTitle.includes("pap") ||
-      lowerTitle.includes("akara")
-    )
-      return "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500";
-    if (
-      lowerTitle.includes("swallow") ||
-      lowerTitle.includes("egusi") ||
-      lowerTitle.includes("fufu") ||
-      lowerTitle.includes("amala")
-    )
-      return "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=500";
-    if (
-      lowerTitle.includes("beans") ||
-      lowerTitle.includes("dodo") ||
-      lowerTitle.includes("plantain")
-    )
-      return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500";
-    if (
-      lowerTitle.includes("yam") ||
-      lowerTitle.includes("potatoes") ||
-      lowerTitle.includes("fries")
-    )
-      return "https://images.unsplash.com/photo-1518013431117-eb1465fa5752?q=80&w=500";
-    if (
-      lowerTitle.includes("spaghetti") ||
-      lowerTitle.includes("pasta") ||
-      lowerTitle.includes("indomie") ||
-      lowerTitle.includes("noodles")
-    )
-      return "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=500";
+    setIsAdding(true);
 
-    return "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
+    try {
+      const response = await mealService.addToPlanned(meal._id);
+
+      if (response.success) {
+        setIsAdded(true);
+        toast.success(`${meal.mealTitle} added to your plan successfully! 🍽️`);
+      } else {
+        toast.error(response.message || "Failed to add meal to planner.");
+      }
+    } catch (error: any) {
+      toast.error(
+        error.message || "Error adding meal to planner. Please try again.",
+      );
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (
@@ -89,24 +72,38 @@ export default function MealCard({ meal }: MealCardProps) {
           {/* Card Image Area Frame */}
           <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-50">
             <img
-              src={getImagePlaceholder(meal.mealTitle)}
+              src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
               alt={meal.mealTitle}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => {
+                // Inline broken link safety net handler
+                (e.target as HTMLImageElement).src = DEFAULT_MEAL_IMAGE;
+              }}
             />
-            {/* Contextual Favorite Toggles */}
+
+            {/* Dynamic Add Toggle Button */}
             <button
               type="button"
-              onClick={() => setIsFavorite(!isFavorite)}
-              className="absolute top-2 right-2 p-2 rounded-xl bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all text-gray-400 cursor-pointer z-10"
+              onClick={handleAddMealPlan}
+              disabled={isAdding}
+              className={`absolute top-2 right-2 p-2 rounded-xl shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer z-10 ${
+                isAdded
+                  ? "bg-green-700 text-white"
+                  : "bg-white/90 backdrop-blur-sm text-[#1A2E35] hover:bg-green-50 hover:text-green-700"
+              } ${isAdding ? "opacity-75 pointer-events-none" : ""}`}
             >
-              <FiHeart
-                size={16}
-                className={`transition-colors ${
-                  isFavorite
-                    ? "fill-amber-500 text-amber-500"
-                    : "text-gray-400 hover:text-red-500"
-                }`}
-              />
+              {isAdding ? (
+                <div className="w-4 h-4 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FiPlus
+                  size={16}
+                  className={`stroke-[3] transition-colors ${
+                    isAdded
+                      ? "text-white"
+                      : "text-[#1A2E35] group-hover:text-green-700"
+                  }`}
+                />
+              )}
             </button>
           </div>
 
@@ -173,7 +170,9 @@ export default function MealCard({ meal }: MealCardProps) {
                     Calories
                   </span>
                   <span className="text-base font-black text-[#1A2E35]">
-                    {calories}
+                    {calories.toString().includes("kcal")
+                      ? calories
+                      : `${calories} kcal`}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -181,7 +180,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Carbs
                   </span>
                   <span className="text-base font-black text-blue-600">
-                    {carbs}
+                    {carbs.toString().includes("g") ? carbs : `${carbs} g`}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -189,7 +188,9 @@ export default function MealCard({ meal }: MealCardProps) {
                     Proteins
                   </span>
                   <span className="text-base font-black text-emerald-600">
-                    {proteins}
+                    {proteins.toString().includes("g")
+                      ? proteins
+                      : `${proteins} g`}
                   </span>
                 </div>
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
@@ -197,7 +198,7 @@ export default function MealCard({ meal }: MealCardProps) {
                     Fats
                   </span>
                   <span className="text-base font-black text-amber-500">
-                    {fats}
+                    {fats.toString().includes("g") ? fats : `${fats} g`}
                   </span>
                 </div>
               </div>

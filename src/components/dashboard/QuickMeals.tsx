@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { FiChevronDown, FiActivity } from "react-icons/fi";
-import { mealService, QuickMealItem } from "@/services/meal";
+import { QuickMealItem } from "@/types/meal";
+import { mealService } from "@/services/meal";
 
 const TIME_OPTIONS = [
   {
@@ -32,6 +33,10 @@ const TIME_OPTIONS = [
   },
 ];
 
+// Global default fallback asset if database returns an empty url
+const DEFAULT_MEAL_IMAGE =
+  "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
+
 export default function QuickMeals() {
   const [selectedTime, setSelectedTime] = useState("morning");
   const [meals, setMeals] = useState<QuickMealItem[]>([]);
@@ -52,13 +57,11 @@ export default function QuickMeals() {
         // Safe resolution of the nested meals array
         if (response) {
           if (response.data && Array.isArray(response.data.meals)) {
-            // Case 1: Standard Axios response structure (response.data.meals)
             setMeals(response.data.meals);
           } else if (
             (response as any).meals &&
             Array.isArray((response as any).meals)
           ) {
-            // Case 2: In case your client interceptor already unwraps response.data
             setMeals((response as any).meals);
           } else {
             setMeals([]);
@@ -77,40 +80,6 @@ export default function QuickMeals() {
 
     fetchQuickMeals();
   }, [selectedTime, activeOption]);
-
-  const getImagePlaceholder = (title: string) => {
-    const lowerTitle = title.toLowerCase();
-
-    if (lowerTitle.includes("rice") || lowerTitle.includes("jollof"))
-      return "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=500";
-    if (
-      lowerTitle.includes("egg") ||
-      lowerTitle.includes("bread") ||
-      lowerTitle.includes("pap") ||
-      lowerTitle.includes("akara")
-    )
-      return "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500";
-    if (
-      lowerTitle.includes("swallow") ||
-      lowerTitle.includes("egusi") ||
-      lowerTitle.includes("fufu")
-    )
-      return "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=500";
-    if (
-      lowerTitle.includes("beans") ||
-      lowerTitle.includes("dodo") ||
-      lowerTitle.includes("plantain")
-    )
-      return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500";
-    if (
-      lowerTitle.includes("spaghetti") ||
-      lowerTitle.includes("pasta") ||
-      lowerTitle.includes("noodles")
-    )
-      return "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=500";
-
-    return "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
-  };
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
@@ -152,7 +121,7 @@ export default function QuickMeals() {
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
-              className="min-w-[140px] sm:min-w-0 bg-white border border-gray-50 rounded-2xl p-2.5 space-y-3 animate-pulse"
+              className="min-w-35 sm:min-w-0 bg-white border border-gray-50 rounded-2xl p-2.5 space-y-3 animate-pulse"
             >
               <div className="relative w-full aspect-square rounded-xl bg-gray-100" />
               <div className="space-y-2">
@@ -175,23 +144,34 @@ export default function QuickMeals() {
           {meals.map((meal) => (
             <div
               key={meal._id}
-              className="min-w-[140px] sm:min-w-0 bg-white border border-gray-50 rounded-2xl p-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:shadow-md hover:border-gray-100 transition-all snap-start"
+              className="min-w-35 sm:min-w-0 bg-white border border-gray-50 rounded-2xl p-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:shadow-md hover:border-gray-100 transition-all snap-start"
             >
               <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3">
                 <Image
-                  src={getImagePlaceholder(meal.mealTitle)}
+                  src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
                   alt={meal.mealTitle}
                   fill
                   sizes="(max-width: 640px) 140px, 200px"
                   className="object-cover"
                   unoptimized
+                  onError={(e) => {
+                    // Safety handler if the live cloud image breaks
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== DEFAULT_MEAL_IMAGE) {
+                      target.src = DEFAULT_MEAL_IMAGE;
+                    }
+                  }}
                 />
 
-                {/* Safe render for calories as a numeric value */}
+                {/* Safe render for calories as a numeric/string value */}
                 {meal.averageNutritionalInfo?.estimatedCalories && (
                   <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs px-1.5 py-0.5 rounded-md flex items-center gap-0.5 text-[8px] font-black text-white">
                     <FiActivity size={8} className="text-emerald-400" />
-                    {meal.averageNutritionalInfo.estimatedCalories}
+                    {meal.averageNutritionalInfo.estimatedCalories
+                      .toString()
+                      .includes("kcal")
+                      ? meal.averageNutritionalInfo.estimatedCalories
+                      : `${meal.averageNutritionalInfo.estimatedCalories} kcal`}
                   </div>
                 )}
               </div>
