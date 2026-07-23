@@ -66,7 +66,7 @@ export default function TrackMealPage() {
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // 🟢 Integrated PATCH mark-as-eaten API call
+  // Integrated PATCH mark-as-eaten API call
   const handleToggleEaten = async (id: string) => {
     const targetMeal = safeMeals.find((m) => m && m._id === id);
     // Don't trigger API if already eaten or invalid target
