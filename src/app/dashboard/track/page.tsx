@@ -18,22 +18,29 @@ import { mealService } from "@/services/meal";
 import { StreakData } from "@/types/track";
 import { PlannedMealData } from "@/types/meal";
 
-// Map real backend data into format expected by MealLogCard UI
+// Map the real backend flat data shape into the format expected by UI component
 const mapToMealLog = (item: PlannedMealData) => {
-  if (!item || !item._id) return null;
+  if (!item) return null;
+
+  // Use mealId or fallback _id as unique identifier
+  const targetId = item.mealId || item._id || "";
 
   return {
-    id: item._id, // This is the unique planned meal _id required for mark-as-eaten
-    time: "",
-    name: item.mealId?.mealTitle || "Unknown Meal",
-    tag: item.mealId?.category || "Budget Friendly",
-    price: item.mealId?.estimatedPrice?.$numberDecimal
-      ? parseFloat(item.mealId.estimatedPrice.$numberDecimal)
+    id: targetId,
+    time: item.addedAt
+      ? new Date(item.addedAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "",
+    name: item.mealTitle || "Unknown Meal",
+    tag: item.category || "Budget Friendly",
+    price: item.estimatedPrice?.$numberDecimal
+      ? parseFloat(item.estimatedPrice.$numberDecimal)
       : 0,
     image:
-      item.mealId?.imageUrl ||
       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60",
-    eaten: !!item.isEaten,
+    eaten: Boolean(item.isEaten),
   };
 };
 
@@ -55,35 +62,41 @@ export default function TrackMealPage() {
   const [totalSpent, setTotalSpent] = useState<number>(0);
   const [spentLoading, setSpentLoading] = useState<boolean>(true);
 
-  // Guard array safely
+  // —— DEFENSIVE ARRAYS SAFE GUARDING ——
   const safeMeals = Array.isArray(meals) ? meals : [];
 
-  // Metrics calculation
+  // Derive eating metrics from real integrated states
   const eatenCount = safeMeals.filter((m) => m && m.isEaten).length;
   const totalCount = safeMeals.length;
 
+  // Safe percentage calculation for spent progress bar
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // Handles marking meal as eaten using the unique planned meal ID
-  const handleToggleEaten = async (plannedMealId: string) => {
-    const targetMeal = safeMeals.find((m) => m && m._id === plannedMealId);
+  // Integrated PATCH mark-as-eaten API call
+  const handleToggleEaten = async (id: string) => {
+    const targetMeal = safeMeals.find(
+      (m) => m && (m.mealId === id || m._id === id),
+    );
+    // Don't trigger API if already eaten or invalid target
     if (!targetMeal || targetMeal.isEaten) return;
 
     try {
       setIsLoading(true);
-      const res = await trackService.markAsEaten(plannedMealId);
+      const res = await trackService.markAsEaten(id);
 
       if (res && res.success) {
-        // Optimistic UI update
+        // Optimistically update local array
         setMeals((prev) => {
           const prevArray = Array.isArray(prev) ? prev : [];
           return prevArray.map((m) =>
-            m && m._id === plannedMealId ? { ...m, isEaten: true } : m,
+            m && (m.mealId === id || m._id === id)
+              ? { ...m, isEaten: true }
+              : m,
           );
         });
 
-        // Re-fetch dependent dashboard stats (spent amount, streaks)
+        // Re-fetch metrics (Daily Spent, Streak, etc.) to keep top cards synced with backend
         await fetchTrackerData();
       }
     } catch (error) {
@@ -95,8 +108,11 @@ export default function TrackMealPage() {
 
   const handleMarkNextMealAsEaten = async () => {
     const firstUnchecked = safeMeals.find((m) => m && !m.isEaten);
-    if (firstUnchecked && firstUnchecked._id) {
-      await handleToggleEaten(firstUnchecked._id);
+    if (firstUnchecked) {
+      const targetId = firstUnchecked.mealId || firstUnchecked._id;
+      if (targetId) {
+        await handleToggleEaten(targetId);
+      }
     }
   };
 
@@ -105,64 +121,50 @@ export default function TrackMealPage() {
   };
 
   const fetchTrackerData = async () => {
-    // Fetch Planned Meals
-    try {
-      setMealsLoading(true);
-      const mealsRes = await mealService.getPlannedMeals();
+    setMealsLoading(true);
+    setStreakLoading(true);
+    setBudgetLoading(true);
+    setSpentLoading(true);
 
-      if (
-        mealsRes?.data?.plannedMeals &&
-        Array.isArray(mealsRes.data.plannedMeals)
-      ) {
-        setMeals(mealsRes.data.plannedMeals);
-      } else {
-        setMeals([]);
-      }
-    } catch (error) {
-      console.error("Error retrieving planned meals:", error);
+    // Fetch all tracker endpoint data using Promise.allSettled to prevent layout freeze
+    const [mealsRes, streakRes, budgetRes, spentRes] = await Promise.allSettled(
+      [
+        mealService.getPlannedMeals(),
+        trackService.getStreak(),
+        trackService.getDailyBudget(),
+        trackService.getDailySpent(),
+      ],
+    );
+
+    // Planned Meals response
+    if (
+      mealsRes.status === "fulfilled" &&
+      mealsRes.value?.data?.plannedMeals &&
+      Array.isArray(mealsRes.value.data.plannedMeals)
+    ) {
+      setMeals(mealsRes.value.data.plannedMeals);
+    } else {
       setMeals([]);
-    } finally {
-      setMealsLoading(false);
     }
+    setMealsLoading(false);
 
-    // Fetch Streak
-    try {
-      setStreakLoading(true);
-      const streakRes = await trackService.getStreak();
-      if (streakRes?.success && streakRes?.data) {
-        setStreak(streakRes.data);
-      }
-    } catch (error) {
-      console.error("Error retrieving streak data:", error);
-    } finally {
-      setStreakLoading(false);
+    // Streak response
+    if (streakRes.status === "fulfilled" && streakRes.value?.data) {
+      setStreak(streakRes.value.data);
     }
+    setStreakLoading(false);
 
-    // Fetch Daily Budget
-    try {
-      setBudgetLoading(true);
-      const budgetRes = await trackService.getDailyBudget();
-      if (budgetRes?.success && budgetRes?.data) {
-        setTotalBudget(budgetRes.data.totalBudget);
-      }
-    } catch (error) {
-      console.error("Error retrieving daily budget data:", error);
-    } finally {
-      setBudgetLoading(false);
+    // Daily Budget response
+    if (budgetRes.status === "fulfilled" && budgetRes.value?.data) {
+      setTotalBudget(budgetRes.value.data.totalBudget || 0);
     }
+    setBudgetLoading(false);
 
-    // Fetch Daily Spent
-    try {
-      setSpentLoading(true);
-      const spentRes = await trackService.getDailySpent();
-      if (spentRes?.success && spentRes?.data) {
-        setTotalSpent(spentRes.data.totalMoneySpent);
-      }
-    } catch (error) {
-      console.error("Error retrieving daily spent data:", error);
-    } finally {
-      setSpentLoading(false);
+    // Daily Spent response
+    if (spentRes.status === "fulfilled" && spentRes.value?.data) {
+      setTotalSpent(spentRes.value.data.totalMoneySpent || 0);
     }
+    setSpentLoading(false);
   };
 
   useEffect(() => {
@@ -176,11 +178,13 @@ export default function TrackMealPage() {
     fetchTrackerData();
   }, []);
 
+  // Filter items matching active interactive dashboard views
   const filteredMeals =
     activeTab === "planned"
       ? safeMeals
       : safeMeals.filter((m) => m && m.isEaten);
 
+  // Apply visual transformation mapping and drop null nodes
   const displayedMeals = filteredMeals
     .map(mapToMealLog)
     .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -216,7 +220,7 @@ export default function TrackMealPage() {
           </div>
         </div>
 
-        {/* Metric Cards Grid */}
+        {/* Top Metric Cards Matrix Grid Container */}
         <div className="max-w-[1280px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={<MealEatenIcon />}
@@ -272,13 +276,21 @@ export default function TrackMealPage() {
             <div className="flex items-center border-b border-gray-200/60 gap-8 text-sm font-bold tracking-wide">
               <button
                 onClick={() => setActiveTab("planned")}
-                className={`pb-3 transition-colors ${activeTab === "planned" ? "text-[#1E6B3C] border-b-2 border-[#1E6B3C]" : "text-gray-400 hover:text-gray-600"}`}
+                className={`pb-3 transition-colors ${
+                  activeTab === "planned"
+                    ? "text-[#1E6B3C] border-b-2 border-[#1E6B3C]"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
               >
                 Planned
               </button>
               <button
                 onClick={() => setActiveTab("eaten")}
-                className={`pb-3 transition-colors ${activeTab === "eaten" ? "text-[#1E6B3C] border-b-2 border-[#1E6B3C]" : "text-gray-400 hover:text-gray-600"}`}
+                className={`pb-3 transition-colors ${
+                  activeTab === "eaten"
+                    ? "text-[#1E6B3C] border-b-2 border-[#1E6B3C]"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
               >
                 Eaten
               </button>

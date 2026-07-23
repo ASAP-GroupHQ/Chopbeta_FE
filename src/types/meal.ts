@@ -69,15 +69,16 @@ export interface AddToPlannedResponse {
   };
 }
 
-// Handles both populated mealId object and raw string mealId
 export interface PlannedMealData {
-  _id: string;
-  isEaten?: boolean;
-  plannedAt?: string;
+  _id?: string;
+  mealId: string;
+  mealTitle: string;
+  category?: string;
+  estimatedPrice?: {
+    $numberDecimal: string;
+  };
   addedAt?: string;
-  mealId: MealItem;
-  createdAt?: string;
-  updatedAt?: string;
+  isEaten?: boolean;
 }
 
 export interface PlannedMealsResponse {
