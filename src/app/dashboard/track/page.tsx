@@ -18,12 +18,13 @@ import { mealService } from "@/services/meal";
 import { StreakData } from "@/types/track";
 import { PlannedMealData } from "@/types/meal";
 
-// Map the real backend flat data shape into the format expected by UI component
+// Map the flat backend data into the shape expected by UI components
 const mapToMealLog = (item: PlannedMealData) => {
   if (!item) return null;
 
-  // Use mealId or fallback _id as unique identifier
-  const targetId = item.mealId || item._id || "";
+  // Crucial: Prefer _id (the planned meal sub-document ID) over mealId (catalog ID)
+  // so the mark-as-eaten backend endpoint can match the record in the array
+  const targetId = item._id || item.mealId || "";
 
   return {
     id: targetId,
@@ -52,7 +53,7 @@ export default function TrackMealPage() {
   const [mealsLoading, setMealsLoading] = useState<boolean>(true);
   const [currentDate, setCurrentDate] = useState<string>("");
 
-  // System integrations
+  // Tracking stats
   const [streak, setStreak] = useState<StreakData | null>(null);
   const [streakLoading, setStreakLoading] = useState<boolean>(true);
 
@@ -62,23 +63,22 @@ export default function TrackMealPage() {
   const [totalSpent, setTotalSpent] = useState<number>(0);
   const [spentLoading, setSpentLoading] = useState<boolean>(true);
 
-  // —— DEFENSIVE ARRAYS SAFE GUARDING ——
+  // Safe Array handling
   const safeMeals = Array.isArray(meals) ? meals : [];
 
-  // Derive eating metrics from real integrated states
+  // Derived metrics
   const eatenCount = safeMeals.filter((m) => m && m.isEaten).length;
   const totalCount = safeMeals.length;
 
-  // Safe percentage calculation for spent progress bar
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // Integrated PATCH mark-as-eaten API call
+  // Toggle meal as eaten
   const handleToggleEaten = async (id: string) => {
     const targetMeal = safeMeals.find(
-      (m) => m && (m.mealId === id || m._id === id),
+      (m) => m && (m._id === id || m.mealId === id),
     );
-    // Don't trigger API if already eaten or invalid target
+
     if (!targetMeal || targetMeal.isEaten) return;
 
     try {
@@ -86,17 +86,17 @@ export default function TrackMealPage() {
       const res = await trackService.markAsEaten(id);
 
       if (res && res.success) {
-        // Optimistically update local array
+        // Optimistic local state update
         setMeals((prev) => {
           const prevArray = Array.isArray(prev) ? prev : [];
           return prevArray.map((m) =>
-            m && (m.mealId === id || m._id === id)
+            m && (m._id === id || m.mealId === id)
               ? { ...m, isEaten: true }
               : m,
           );
         });
 
-        // Re-fetch metrics (Daily Spent, Streak, etc.) to keep top cards synced with backend
+        // Re-sync dashboard metrics (Daily Spent, Streak, etc.)
         await fetchTrackerData();
       }
     } catch (error) {
@@ -109,7 +109,7 @@ export default function TrackMealPage() {
   const handleMarkNextMealAsEaten = async () => {
     const firstUnchecked = safeMeals.find((m) => m && !m.isEaten);
     if (firstUnchecked) {
-      const targetId = firstUnchecked.mealId || firstUnchecked._id;
+      const targetId = firstUnchecked._id || firstUnchecked.mealId;
       if (targetId) {
         await handleToggleEaten(targetId);
       }
@@ -126,7 +126,7 @@ export default function TrackMealPage() {
     setBudgetLoading(true);
     setSpentLoading(true);
 
-    // Fetch all tracker endpoint data using Promise.allSettled to prevent layout freeze
+    // Fetch endpoints safely in parallel
     const [mealsRes, streakRes, budgetRes, spentRes] = await Promise.allSettled(
       [
         mealService.getPlannedMeals(),
@@ -136,7 +136,7 @@ export default function TrackMealPage() {
       ],
     );
 
-    // Planned Meals response
+    // Planned Meals
     if (
       mealsRes.status === "fulfilled" &&
       mealsRes.value?.data?.plannedMeals &&
@@ -148,19 +148,19 @@ export default function TrackMealPage() {
     }
     setMealsLoading(false);
 
-    // Streak response
+    // Streak
     if (streakRes.status === "fulfilled" && streakRes.value?.data) {
       setStreak(streakRes.value.data);
     }
     setStreakLoading(false);
 
-    // Daily Budget response
+    // Daily Budget
     if (budgetRes.status === "fulfilled" && budgetRes.value?.data) {
       setTotalBudget(budgetRes.value.data.totalBudget || 0);
     }
     setBudgetLoading(false);
 
-    // Daily Spent response
+    // Daily Spent
     if (spentRes.status === "fulfilled" && spentRes.value?.data) {
       setTotalSpent(spentRes.value.data.totalMoneySpent || 0);
     }
@@ -178,13 +178,13 @@ export default function TrackMealPage() {
     fetchTrackerData();
   }, []);
 
-  // Filter items matching active interactive dashboard views
+  // Filter views based on active tab
   const filteredMeals =
     activeTab === "planned"
       ? safeMeals
       : safeMeals.filter((m) => m && m.isEaten);
 
-  // Apply visual transformation mapping and drop null nodes
+  // Map and clean null values
   const displayedMeals = filteredMeals
     .map(mapToMealLog)
     .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -220,7 +220,7 @@ export default function TrackMealPage() {
           </div>
         </div>
 
-        {/* Top Metric Cards Matrix Grid Container */}
+        {/* Metric Cards Grid */}
         <div className="max-w-[1280px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={<MealEatenIcon />}
@@ -259,7 +259,9 @@ export default function TrackMealPage() {
             label="Streak"
             value={
               streak
-                ? `${streak.currentStreak} ${streak.currentStreak === 1 ? "day" : "days"}`
+                ? `${streak.currentStreak} ${
+                    streak.currentStreak === 1 ? "day" : "days"
+                  }`
                 : "0 days"
             }
             subtext={
@@ -296,7 +298,7 @@ export default function TrackMealPage() {
               </button>
             </div>
 
-            {/* List rendered row items */}
+            {/* Meal Cards Container */}
             <div className="space-y-4 min-h-[300px]">
               {mealsLoading ? (
                 [1, 2].map((n) => (
