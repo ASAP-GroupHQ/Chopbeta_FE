@@ -18,12 +18,12 @@ import { mealService } from "@/services/meal";
 import { StreakData } from "@/types/track";
 import { PlannedMealData } from "@/types/meal";
 
-// Map the real backend data shape into the format expected by UI component
+// Map real backend data into format expected by MealLogCard UI
 const mapToMealLog = (item: PlannedMealData) => {
-  if (!item) return null;
+  if (!item || !item._id) return null;
 
   return {
-    id: item._id,
+    id: item._id, // This is the unique planned meal _id required for mark-as-eaten
     time: "",
     name: item.mealId?.mealTitle || "Unknown Meal",
     tag: item.mealId?.category || "Budget Friendly",
@@ -55,37 +55,35 @@ export default function TrackMealPage() {
   const [totalSpent, setTotalSpent] = useState<number>(0);
   const [spentLoading, setSpentLoading] = useState<boolean>(true);
 
-  // —— DEFENSIVE ARRAYS SAFE GUARDING ——
+  // Guard array safely
   const safeMeals = Array.isArray(meals) ? meals : [];
 
-  // Derive eating metrics from real integrated states
+  // Metrics calculation
   const eatenCount = safeMeals.filter((m) => m && m.isEaten).length;
   const totalCount = safeMeals.length;
 
-  // Safe percentage calculation for spent progress bar
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // Integrated PATCH mark-as-eaten API call
-  const handleToggleEaten = async (id: string) => {
-    const targetMeal = safeMeals.find((m) => m && m._id === id);
-    // Don't trigger API if already eaten or invalid target
+  // Handles marking meal as eaten using the unique planned meal ID
+  const handleToggleEaten = async (plannedMealId: string) => {
+    const targetMeal = safeMeals.find((m) => m && m._id === plannedMealId);
     if (!targetMeal || targetMeal.isEaten) return;
 
     try {
       setIsLoading(true);
-      const res = await trackService.markAsEaten(id);
+      const res = await trackService.markAsEaten(plannedMealId);
 
       if (res && res.success) {
-        // Optimistically update local array
+        // Optimistic UI update
         setMeals((prev) => {
           const prevArray = Array.isArray(prev) ? prev : [];
           return prevArray.map((m) =>
-            m && m._id === id ? { ...m, isEaten: true } : m,
+            m && m._id === plannedMealId ? { ...m, isEaten: true } : m,
           );
         });
 
-        // Re-fetch metrics (Daily Spent, Streak, etc.) to keep top cards synced with backend
+        // Re-fetch dependent dashboard stats (spent amount, streaks)
         await fetchTrackerData();
       }
     } catch (error) {
@@ -97,7 +95,7 @@ export default function TrackMealPage() {
 
   const handleMarkNextMealAsEaten = async () => {
     const firstUnchecked = safeMeals.find((m) => m && !m.isEaten);
-    if (firstUnchecked) {
+    if (firstUnchecked && firstUnchecked._id) {
       await handleToggleEaten(firstUnchecked._id);
     }
   };
@@ -121,7 +119,7 @@ export default function TrackMealPage() {
         setMeals([]);
       }
     } catch (error) {
-      console.error("Error retrieving planned meals layout:", error);
+      console.error("Error retrieving planned meals:", error);
       setMeals([]);
     } finally {
       setMealsLoading(false);
@@ -153,7 +151,7 @@ export default function TrackMealPage() {
       setBudgetLoading(false);
     }
 
-    // Fetch Daily Spent Money
+    // Fetch Daily Spent
     try {
       setSpentLoading(true);
       const spentRes = await trackService.getDailySpent();
@@ -178,13 +176,11 @@ export default function TrackMealPage() {
     fetchTrackerData();
   }, []);
 
-  // Filter items matching active interactive dashboard views
   const filteredMeals =
     activeTab === "planned"
       ? safeMeals
       : safeMeals.filter((m) => m && m.isEaten);
 
-  // Apply visual transformation mapping and drop null nodes
   const displayedMeals = filteredMeals
     .map(mapToMealLog)
     .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -220,7 +216,7 @@ export default function TrackMealPage() {
           </div>
         </div>
 
-        {/* Top Metric Cards Matrix Grid Container */}
+        {/* Metric Cards Grid */}
         <div className="max-w-[1280px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={<MealEatenIcon />}
@@ -307,7 +303,7 @@ export default function TrackMealPage() {
                 ))
               ) : (
                 <div className="text-center py-12 text-sm text-gray-400 bg-white rounded-2xl border border-gray-100">
-                  No logged items to display under this view state filters.
+                  No logged items to display under this view.
                 </div>
               )}
             </div>

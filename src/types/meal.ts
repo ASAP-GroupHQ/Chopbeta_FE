@@ -53,17 +53,28 @@ export interface GenerateMealsResponse {
   data: MealItem[];
 }
 
+// Updated to mirror the new backend response structure
+export interface PlannedMealEntry {
+  _id: string;
+  mealId: string;
+  addedAt: string;
+}
+
 export interface AddToPlannedResponse {
   success: boolean;
   statusCode: number;
   message: string;
-  data?: any;
+  data: {
+    plannedMeals: PlannedMealEntry;
+  };
 }
 
+// Handles both populated mealId object and raw string mealId
 export interface PlannedMealData {
   _id: string;
-  isEaten: boolean;
-  plannedAt: string;
+  isEaten?: boolean;
+  plannedAt?: string;
+  addedAt?: string;
   mealId: MealItem;
   createdAt?: string;
   updatedAt?: string;
