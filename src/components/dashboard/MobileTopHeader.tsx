@@ -78,13 +78,19 @@ export default function MobileTopHeader() {
     <>
       <header className="lg:hidden w-full bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-40 select-none">
         <div className="relative w-24 h-8">
-          <Image
-            src="/chopbeta.png"
-            alt="ChopBeta Logo"
-            fill
-            className="object-contain"
-            priority
-          />
+          <Link
+            href="/dashboard"
+            className="relative w-24 h-8 block active:opacity-80 transition-opacity"
+            aria-label="Go to Dashboard"
+          >
+            <Image
+              src="/chopbeta.png"
+              alt="ChopBeta Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </Link>
         </div>
 
         <div className="flex items-center gap-4">
