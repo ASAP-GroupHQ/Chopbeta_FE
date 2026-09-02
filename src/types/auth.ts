@@ -1,3 +1,20 @@
+export type UserRole = "user" | "admin";
+
+export interface User {
+  _id: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+  isVerified: boolean;
+  allergies?: string[];
+  disLikes?: string[];
+  isSuspended?: boolean;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
 // Signup Data
 export interface SignupData {
   fullName: string;
@@ -6,7 +23,7 @@ export interface SignupData {
 }
 
 export interface OtpVerificationProps {
-  identifier: string; // Accepts email or phone
+  identifier: string;
   initialOtp?: string;
   onBackToSignup: () => void;
   onVerifySuccess: (response: any) => void;
@@ -17,12 +34,14 @@ export interface LoginData {
   email: string;
   password: string;
 }
+
 // OTP Verification Data
 export interface OtpVerificationData {
   email?: string;
   phoneNumber?: string;
   otp: string;
 }
+
 export interface ResendOtpData {
   email: string;
 }
@@ -75,9 +94,10 @@ export interface LogoutResponse {
   message: string;
 }
 
-// Generic Server Response Shape (Axios automatically wraps this)
+// Generic Server Response Shape
 export interface ApiResponse<T = any> {
-  status: string;
+  status?: string;
+  success?: boolean;
   message: string;
   data?: T;
   token?: string;

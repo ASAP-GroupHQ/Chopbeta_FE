@@ -3,22 +3,22 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth";
-import { LoginData } from "@/types/auth";
+import { LoginData, User } from "@/types/auth";
 import { toast } from "react-toastify";
 
 interface AuthContextType {
-  user: any | null;
+  user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (credentials: LoginData) => Promise<void>;
+  login: (credentials: LoginData) => Promise<User>;
   logout: () => void;
-  updateUserData: (newData: Partial<any>) => void;
+  updateUserData: (newData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -28,47 +28,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem("user");
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setToken(storedToken);
+        setUser(parsedUser);
+      } catch (err) {
+        console.error("Failed to parse stored user data:", err);
+      }
     }
     setIsLoading(false);
   }, []);
-  const login = async (credentials: LoginData) => {
+
+  const login = async (credentials: LoginData): Promise<User> => {
     try {
       const response = await authService.studentLogin(credentials);
 
-      // response is ApiResponse with { status, message, data?, token? }
+      // Safe extraction across typical backend API wrapping options
       const extractedToken =
-        response?.token || (response?.data as any)?.accessToken;
-      const userData = response?.data || response;
+        response?.token ||
+        (response?.data as any)?.accessToken ||
+        (response?.data as any)?.token;
+
+      const rawUser = response?.data?.user || response?.data || response;
 
       if (!extractedToken) {
         throw new Error("Authorization token was not issued by the server.");
       }
 
-      // Storing locally for persistent client context
+      // Format user object clean
+      const userData: User = {
+        _id: rawUser._id || rawUser.id,
+        fullName: rawUser.fullName || "",
+        email: rawUser.email || "",
+        role: rawUser.role || "user",
+        isVerified: rawUser.isVerified ?? false,
+        allergies: rawUser.allergies || [],
+        disLikes: rawUser.disLikes || rawUser.dislikes || [],
+        ...rawUser,
+      };
+
+      // Persist client state
       localStorage.setItem("token", extractedToken);
       if ((response?.data as any)?.refreshToken) {
-        localStorage.setItem("refreshToken", (response.data as any).refreshToken);
+        localStorage.setItem(
+          "refreshToken",
+          (response.data as any).refreshToken,
+        );
       }
-      if (userData) {
-        localStorage.setItem("user", JSON.stringify(userData));
-      }
+      localStorage.setItem("user", JSON.stringify(userData));
 
-      // Setting the HTTP cookie for your proxy.ts Edge middleware route guard
+      // Set cookies for Next.js Middleware route guard
       document.cookie = `token=${extractedToken}; path=/; max-age=86400; SameSite=Lax;`;
+      document.cookie = `role=${userData.role}; path=/; max-age=86400; SameSite=Lax;`;
 
       setToken(extractedToken);
-      setUser(userData || {});
+      setUser(userData);
+
+      return userData;
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials. Please try again.");
       throw error;
     }
   };
 
-  // Dynamically sync fields after completing taste preferences
-  const updateUserData = (newData: Partial<any>) => {
-    setUser((prevUser: any) => {
+  const updateUserData = (newData: Partial<User>) => {
+    setUser((prevUser) => {
+      if (!prevUser) return null;
       const updated = { ...prevUser, ...newData };
       localStorage.setItem("user", JSON.stringify(updated));
       return updated;
@@ -79,14 +104,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authService.logoutUser();
     } catch (err: any) {
-      console.error("Backend logout failed to register:", err.message || err);
+      console.error("Backend logout failed:", err.message || err);
     } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
-      // Clear Next.js cookies
+      // Clear cookies
       document.cookie = "token=; path=/; max-age=0; SameSite=Lax;";
+      document.cookie = "role=; path=/; max-age=0; SameSite=Lax;";
 
       setToken(null);
       setUser(null);
@@ -95,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.replace("/login");
     }
   };
+
   return (
     <AuthContext.Provider
       value={{ user, token, isLoading, login, logout, updateUserData }}
