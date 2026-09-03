@@ -89,3 +89,35 @@ export interface PlannedMealsResponse {
     plannedMeals: PlannedMealData[];
   };
 }
+// Raw item shape returned from backend
+export interface ApiPartialMealItem {
+  mealTitle: string;
+  estimatedPrice: {
+    $numberDecimal: string;
+  };
+  uniqueId: string;
+  addedAt: string;
+}
+
+// API Response Wrapper
+export interface AllPartialMealsResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    data: ApiPartialMealItem[];
+    totalMeals: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
+// Clean Client-Side Meal Model (No image property)
+export interface MealLog {
+  id: string;
+  time: string;
+  name: string;
+  tag?: string;
+  price: number;
+  eaten: boolean;
+}

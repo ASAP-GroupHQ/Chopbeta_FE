@@ -16,7 +16,7 @@ import HeaderActions from "@/components/dashboard/HeaderActions";
 import { trackService } from "@/services/track";
 import { mealService } from "@/services/meal";
 import { StreakData, SpentMealEntry } from "@/types/track";
-import { PlannedMealData } from "@/types/meal";
+import { PlannedMealData, MealLog } from "@/types/meal";
 
 // Helper: Safely convert MongoDB Decimal objects or raw string numbers into float numbers
 const parseDecimal = (val: unknown): number => {
@@ -29,7 +29,7 @@ const parseDecimal = (val: unknown): number => {
 };
 
 // Map planned meal entry to standard UI structure
-const mapToMealLog = (item: PlannedMealData) => {
+const mapToMealLog = (item: PlannedMealData): MealLog | null => {
   if (!item) return null;
   const targetId = item._id || item.mealId || "";
 
@@ -44,14 +44,12 @@ const mapToMealLog = (item: PlannedMealData) => {
     name: item.mealTitle || "Unknown Meal",
     tag: item.category || "Budget Friendly",
     price: parseDecimal(item.estimatedPrice),
-    image:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60",
     eaten: Boolean(item.isEaten),
   };
 };
 
-// Map spent entry from daily-spent endpoint directly to UI structure for the "Eaten" tab fallback
-const mapSpentToMealLog = (item: SpentMealEntry) => {
+// Map spent entry from daily-spent endpoint directly to UI structure
+const mapSpentToMealLog = (item: SpentMealEntry): MealLog | null => {
   if (!item) return null;
 
   return {
@@ -65,14 +63,13 @@ const mapSpentToMealLog = (item: SpentMealEntry) => {
     name: item.mealId?.mealTitle || "Eaten Meal",
     tag: "Eaten Today",
     price: parseDecimal(item.mealId?.estimatedPrice),
-    image:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60",
     eaten: true,
   };
 };
 
 export default function TrackMealPage() {
   const [meals, setMeals] = useState<PlannedMealData[]>([]);
+  const [partialMeals, setPartialMeals] = useState<MealLog[]>([]);
   const [spentMeals, setSpentMeals] = useState<SpentMealEntry[]>([]);
   const [activeTab, setActiveTab] = useState<"planned" | "eaten">("planned");
   const [waterGlasses, setWaterGlasses] = useState(4);
@@ -93,18 +90,29 @@ export default function TrackMealPage() {
   // Safe Array handling
   const safeMeals = Array.isArray(meals) ? meals : [];
 
-  // Derived metrics
+  // Derived metrics incorporating partial meals
   const eatenCount = safeMeals.filter((m) => m && m.isEaten).length;
-  const totalCount = safeMeals.length;
+  const totalCount = safeMeals.length + partialMeals.length;
 
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
   // Toggle meal as eaten
   const handleToggleEaten = async (id: string) => {
+    // Check if target meal is in planned meals
     const targetMeal = safeMeals.find(
       (m) => m && (m._id === id || m.mealId === id),
     );
+
+    // If it's a partial meal, handle local check toggling
+    const isPartial = partialMeals.some((pm) => pm.id === id);
+
+    if (isPartial) {
+      setPartialMeals((prev) =>
+        prev.map((pm) => (pm.id === id ? { ...pm, eaten: !pm.eaten } : pm)),
+      );
+      return;
+    }
 
     if (!targetMeal || targetMeal.isEaten) return;
 
@@ -113,7 +121,6 @@ export default function TrackMealPage() {
       const res = await trackService.markAsEaten(id);
 
       if (res && res.success) {
-        // Optimistic local state update
         setMeals((prev) => {
           const prevArray = Array.isArray(prev) ? prev : [];
           return prevArray.map((m) =>
@@ -123,7 +130,6 @@ export default function TrackMealPage() {
           );
         });
 
-        // Re-sync dashboard metrics (Daily Spent, Streak, etc.)
         await fetchTrackerData();
       }
     } catch (error) {
@@ -153,14 +159,14 @@ export default function TrackMealPage() {
     setBudgetLoading(true);
     setSpentLoading(true);
 
-    const [mealsRes, streakRes, budgetRes, spentRes] = await Promise.allSettled(
-      [
+    const [mealsRes, partialRes, streakRes, budgetRes, spentRes] =
+      await Promise.allSettled([
         mealService.getPlannedMeals(),
+        mealService.getAllPartialMeals(1, 10),
         trackService.getStreak(),
         trackService.getDailyBudget(),
         trackService.getDailySpent(),
-      ],
-    );
+      ]);
 
     // Planned Meals
     if (
@@ -171,6 +177,13 @@ export default function TrackMealPage() {
       setMeals(mealsRes.value.data.plannedMeals);
     } else {
       setMeals([]);
+    }
+
+    // Partial Meals Integration
+    if (partialRes.status === "fulfilled" && partialRes.value?.meals) {
+      setPartialMeals(partialRes.value.meals);
+    } else {
+      setPartialMeals([]);
     }
     setMealsLoading(false);
 
@@ -211,25 +224,31 @@ export default function TrackMealPage() {
   }, []);
 
   // Display mapped meals based on active view tab
-  const getDisplayedMeals = () => {
+  const getDisplayedMeals = (): MealLog[] => {
     if (activeTab === "planned") {
-      return safeMeals
+      const plannedMapped = safeMeals
         .map(mapToMealLog)
-        .filter((item): item is NonNullable<typeof item> => item !== null);
+        .filter((item): item is MealLog => item !== null);
+
+      // Merge planned meals with partial meals
+      return [...plannedMapped, ...partialMeals];
     }
 
-    // Combine locally checked eaten meals with backend spent meals array
+    // Combine eaten planned, partial, and backend spent meals
     const eatenFromPlanned = safeMeals
       .filter((m) => m && m.isEaten)
       .map(mapToMealLog);
+    const eatenFromPartial = partialMeals.filter((pm) => pm.eaten);
     const eatenFromSpent = spentMeals.map(mapSpentToMealLog);
 
-    const merged = [...eatenFromPlanned, ...eatenFromSpent].filter(
-      (item): item is NonNullable<typeof item> => item !== null,
-    );
+    const merged = [
+      ...eatenFromPlanned,
+      ...eatenFromPartial,
+      ...eatenFromSpent,
+    ].filter((item): item is MealLog => item !== null);
 
     // Deduplicate by ID
-    const uniqueMap = new Map();
+    const uniqueMap = new Map<string, MealLog>();
     merged.forEach((item) => uniqueMap.set(item.id, item));
     return Array.from(uniqueMap.values());
   };
