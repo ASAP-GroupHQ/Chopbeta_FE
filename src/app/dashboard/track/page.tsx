@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
+import { toast } from "react-toastify";
 import {
   MealEatenIcon,
   BudgetIcon,
@@ -14,11 +15,10 @@ import { MealLogCard } from "@/components/dashboard/track/MealLogCard";
 import { ProgressSidebar } from "@/components/dashboard/track/ProgressSidebar";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { trackService } from "@/services/track";
-import { mealService } from "@/services/meal";
 import { StreakData, SpentMealEntry } from "@/types/track";
+import { mealService } from "@/services/meal";
 import { PlannedMealData, MealLog } from "@/types/meal";
 
-// Helper: Safely convert MongoDB Decimal objects or raw string numbers into float numbers
 const parseDecimal = (val: unknown): number => {
   if (typeof val === "number") return val;
   if (typeof val === "string") return parseFloat(val) || 0;
@@ -28,7 +28,6 @@ const parseDecimal = (val: unknown): number => {
   return 0;
 };
 
-// Map planned meal entry to standard UI structure
 const mapToMealLog = (item: PlannedMealData): MealLog | null => {
   if (!item) return null;
   const targetId = item._id || item.mealId || "";
@@ -48,7 +47,6 @@ const mapToMealLog = (item: PlannedMealData): MealLog | null => {
   };
 };
 
-// Map spent entry from daily-spent endpoint directly to UI structure
 const mapSpentToMealLog = (item: SpentMealEntry): MealLog | null => {
   if (!item) return null;
 
@@ -77,7 +75,10 @@ export default function TrackMealPage() {
   const [mealsLoading, setMealsLoading] = useState<boolean>(true);
   const [currentDate, setCurrentDate] = useState<string>("");
 
-  // Tracking stats
+  // Tracking Stats
+  const [eatenTodayCount, setEatenTodayCount] = useState<number>(0);
+  const [eatenTodayLoading, setEatenTodayLoading] = useState<boolean>(true);
+
   const [streak, setStreak] = useState<StreakData | null>(null);
   const [streakLoading, setStreakLoading] = useState<boolean>(true);
 
@@ -87,53 +88,51 @@ export default function TrackMealPage() {
   const [totalSpent, setTotalSpent] = useState<number>(0);
   const [spentLoading, setSpentLoading] = useState<boolean>(true);
 
-  // Safe Array handling
   const safeMeals = Array.isArray(meals) ? meals : [];
 
-  // Derived metrics incorporating partial meals
   const eatenCount = safeMeals.filter((m) => m && m.isEaten).length;
   const totalCount = safeMeals.length + partialMeals.length;
 
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // Toggle meal as eaten
-  const handleToggleEaten = async (id: string) => {
-    // Check if target meal is in planned meals
+  // Mark planned meal as eaten via PATCH API
+  const handleToggleEaten = async (plannedMealId: string) => {
     const targetMeal = safeMeals.find(
-      (m) => m && (m._id === id || m.mealId === id),
+      (m) => m && (m._id === plannedMealId || m.mealId === plannedMealId),
     );
 
-    // If it's a partial meal, handle local check toggling
-    const isPartial = partialMeals.some((pm) => pm.id === id);
-
-    if (isPartial) {
-      setPartialMeals((prev) =>
-        prev.map((pm) => (pm.id === id ? { ...pm, eaten: !pm.eaten } : pm)),
-      );
+    // Lock check: prevent unmarking or re-submitting an eaten meal
+    if (targetMeal?.isEaten) {
+      toast.info("This meal has already been eaten and cannot be undone.");
       return;
     }
 
-    if (!targetMeal || targetMeal.isEaten) return;
-
     try {
       setIsLoading(true);
-      const res = await trackService.markAsEaten(id);
+
+      const res = await trackService.markAsEaten(plannedMealId);
 
       if (res && res.success) {
+        // Optimistically set eaten status on target meal
         setMeals((prev) => {
           const prevArray = Array.isArray(prev) ? prev : [];
           return prevArray.map((m) =>
-            m && (m._id === id || m.mealId === id)
+            m && (m._id === plannedMealId || m.mealId === plannedMealId)
               ? { ...m, isEaten: true }
               : m,
           );
         });
 
+        // Trigger react-toastify success alert
+        toast.success(res.message || "Meal marked as eaten successfully!");
+
+        // Refetch latest tracking stats
         await fetchTrackerData();
       }
     } catch (error) {
       console.error("Failed to mark meal as eaten:", error);
+      toast.error("Failed to mark meal as eaten. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -146,6 +145,8 @@ export default function TrackMealPage() {
       if (targetId) {
         await handleToggleEaten(targetId);
       }
+    } else {
+      toast.info("All planned meals are marked as eaten!");
     }
   };
 
@@ -155,18 +156,26 @@ export default function TrackMealPage() {
 
   const fetchTrackerData = async () => {
     setMealsLoading(true);
+    setEatenTodayLoading(true);
     setStreakLoading(true);
     setBudgetLoading(true);
     setSpentLoading(true);
 
-    const [mealsRes, partialRes, streakRes, budgetRes, spentRes] =
-      await Promise.allSettled([
-        mealService.getPlannedMeals(),
-        mealService.getAllPartialMeals(1, 10),
-        trackService.getStreak(),
-        trackService.getDailyBudget(),
-        trackService.getDailySpent(),
-      ]);
+    const [
+      mealsRes,
+      partialRes,
+      eatenTodayRes,
+      streakRes,
+      budgetRes,
+      spentRes,
+    ] = await Promise.allSettled([
+      mealService.getPlannedMeals(),
+      mealService.getAllPartialMeals(1, 10),
+      trackService.getMealsEatenToday(),
+      trackService.getStreak(),
+      trackService.getDailyBudget(),
+      trackService.getDailySpent(),
+    ]);
 
     // Planned Meals
     if (
@@ -179,13 +188,25 @@ export default function TrackMealPage() {
       setMeals([]);
     }
 
-    // Partial Meals Integration
+    // Partial Meals
     if (partialRes.status === "fulfilled" && partialRes.value?.meals) {
       setPartialMeals(partialRes.value.meals);
     } else {
       setPartialMeals([]);
     }
     setMealsLoading(false);
+
+    // Meals Eaten Today Count
+    if (
+      eatenTodayRes.status === "fulfilled" &&
+      eatenTodayRes.value?.success &&
+      typeof eatenTodayRes.value?.data?.count === "number"
+    ) {
+      setEatenTodayCount(eatenTodayRes.value.data.count);
+    } else {
+      setEatenTodayCount(0);
+    }
+    setEatenTodayLoading(false);
 
     // Streak
     if (streakRes.status === "fulfilled" && streakRes.value?.data) {
@@ -195,8 +216,7 @@ export default function TrackMealPage() {
 
     // Daily Budget
     if (budgetRes.status === "fulfilled" && budgetRes.value?.data) {
-      const parsedBudget = parseDecimal(budgetRes.value.data.totalBudget);
-      setTotalBudget(parsedBudget);
+      setTotalBudget(budgetRes.value.data.totalBudget || 0);
     }
     setBudgetLoading(false);
 
@@ -223,18 +243,15 @@ export default function TrackMealPage() {
     fetchTrackerData();
   }, []);
 
-  // Display mapped meals based on active view tab
   const getDisplayedMeals = (): MealLog[] => {
     if (activeTab === "planned") {
       const plannedMapped = safeMeals
         .map(mapToMealLog)
         .filter((item): item is MealLog => item !== null);
 
-      // Merge planned meals with partial meals
       return [...plannedMapped, ...partialMeals];
     }
 
-    // Combine eaten planned, partial, and backend spent meals
     const eatenFromPlanned = safeMeals
       .filter((m) => m && m.isEaten)
       .map(mapToMealLog);
@@ -247,7 +264,6 @@ export default function TrackMealPage() {
       ...eatenFromSpent,
     ].filter((item): item is MealLog => item !== null);
 
-    // Deduplicate by ID
     const uniqueMap = new Map<string, MealLog>();
     merged.forEach((item) => uniqueMap.set(item.id, item));
     return Array.from(uniqueMap.values());
@@ -291,11 +307,13 @@ export default function TrackMealPage() {
           <StatCard
             icon={<MealEatenIcon />}
             label="Meal Eaten"
-            value={`${eatenCount}/${totalCount}`}
+            value={`${eatenTodayCount}`}
             subtext="Keep it up!"
             progressColor="#1E6B3C"
-            progressWidth={totalCount > 0 ? (eatenCount / totalCount) * 100 : 0}
-            isLoading={mealsLoading}
+            progressWidth={
+              totalCount > 0 ? (eatenTodayCount / totalCount) * 100 : 0
+            }
+            isLoading={eatenTodayLoading || mealsLoading}
           />
 
           <StatCard
@@ -404,23 +422,6 @@ export default function TrackMealPage() {
             </button>
 
             <div className="flex items-center gap-1.5 text-[11px] text-gray-400 pl-1 font-medium select-none">
-              <span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M8.77778 11.1111H8V8H7.22222M8 4.88889H8.00778M15 8C15 8.91925 14.8189 9.82951 14.4672 10.6788C14.1154 11.5281 13.5998 12.2997 12.9497 12.9497C12.2997 13.5998 11.5281 14.1154 10.6788 14.4672C9.82951 14.8189 8.91925 15 8 15C7.08075 15 6.1705 14.8189 5.32122 14.4672C4.47194 14.1154 3.70026 13.5998 3.05025 12.9497C2.40024 12.2997 1.88463 11.5281 1.53284 10.6788C1.18106 9.82951 1 8.91925 1 8C1 6.14348 1.7375 4.36301 3.05025 3.05025C4.36301 1.7375 6.14348 1 8 1C9.85652 1 11.637 1.7375 12.9497 3.05025C14.2625 4.36301 15 6.14348 15 8Z"
-                    stroke="#1E6B3C"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
               <span className="font-semibold text-gray-500">Tip:</span>
               <span>
                 Consistency is the key to a healthier you. Keep tracking! 💚
@@ -430,7 +431,7 @@ export default function TrackMealPage() {
 
           <div className="lg:col-span-1">
             <ProgressSidebar
-              eatenCount={eatenCount}
+              eatenCount={eatenTodayCount}
               totalCount={totalCount}
               waterGlasses={waterGlasses}
               onAddWater={incrementWater}

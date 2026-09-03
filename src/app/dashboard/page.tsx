@@ -22,6 +22,19 @@ const containerVariants = {
   },
 };
 
+// Helper to safely extract numeric values from potential MongoDB Decimal128 objects or strings
+const parseNumericValue = (
+  val: number | { $numberDecimal: string } | string | undefined | null,
+): number => {
+  if (val === undefined || val === null) return 0;
+  if (typeof val === "number") return val;
+  if (typeof val === "string") return parseFloat(val) || 0;
+  if (typeof val === "object" && "$numberDecimal" in val) {
+    return parseFloat(val.$numberDecimal) || 0;
+  }
+  return 0;
+};
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const [greeting, setGreeting] = useState("Hello");
@@ -37,7 +50,7 @@ export default function DashboardPage() {
   const [totalSpent, setTotalSpent] = useState<number>(0);
   const [spentLoading, setSpentLoading] = useState<boolean>(true);
 
-  // Meal tracking fallback counters (synchronized dynamically based on spent response if available)
+  // Meal tracking fallback counters
   const [eatenCount, setEatenCount] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
 
@@ -79,7 +92,8 @@ export default function DashboardPage() {
         setBudgetLoading(true);
         const budgetRes = await trackService.getDailyBudget();
         if (budgetRes.success && budgetRes.data) {
-          setTotalBudget(budgetRes.data.totalBudget);
+          const budgetNum = parseNumericValue(budgetRes.data.totalBudget);
+          setTotalBudget(budgetNum);
         }
       } catch (error) {
         console.error("Failed to retrieve dashboard daily budget:", error);
@@ -92,12 +106,11 @@ export default function DashboardPage() {
         setSpentLoading(true);
         const spentRes = await trackService.getDailySpent();
         if (spentRes.success && spentRes.data) {
-          setTotalSpent(spentRes.data.totalMoneySpent);
+          const numericSpent = parseNumericValue(spentRes.data.totalMoneySpent);
+          setTotalSpent(numericSpent);
 
-          // Optionally extract real-time counts from underlying array if returned
           if (spentRes.data.meals) {
             setEatenCount(spentRes.data.meals.length);
-            // Defaulting sample placeholder limit context contextually or using backend mapping
             setTotalCount(Math.max(spentRes.data.meals.length, 3));
           }
         }
@@ -111,7 +124,6 @@ export default function DashboardPage() {
     fetchDashboardMetrics();
   }, []);
 
-  // Safe percentage calculation for the premium linear tracker line
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
@@ -212,7 +224,7 @@ export default function DashboardPage() {
                       Meal Eaten
                     </p>
                     <p className="text-xs font-black text-[#1A2E35]">
-                      {eatenCount}/{totalCount || 3}
+                      {eatenCount}
                     </p>
                   </>
                 )}
@@ -306,6 +318,7 @@ export default function DashboardPage() {
                   <span className="font-black text-[#1A2E35]">
                     ₦ {totalSpent.toLocaleString()}
                     <span className="text-gray-300 font-medium">
+                      {" "}
                       /₦ {totalBudget.toLocaleString()}
                     </span>
                   </span>

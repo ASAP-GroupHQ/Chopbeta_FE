@@ -64,3 +64,17 @@ export interface MarkAsEatenResponse {
     eatenMeals: EatenMealItem[];
   };
 }
+
+export interface MealsEatenTodayResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    meals: Array<{
+      mealId: string;
+      eatenAt: string;
+      _id: string;
+    }>;
+    count: number;
+  };
+}
