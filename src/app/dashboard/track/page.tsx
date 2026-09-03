@@ -15,15 +15,22 @@ import { ProgressSidebar } from "@/components/dashboard/track/ProgressSidebar";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { trackService } from "@/services/track";
 import { mealService } from "@/services/meal";
-import { StreakData } from "@/types/track";
+import { StreakData, SpentMealEntry } from "@/types/track";
 import { PlannedMealData } from "@/types/meal";
 
-// Map the flat backend data into the shape expected by UI components
+// Helper: Safely convert MongoDB Decimal objects or raw string numbers into float numbers
+const parseDecimal = (val: unknown): number => {
+  if (typeof val === "number") return val;
+  if (typeof val === "string") return parseFloat(val) || 0;
+  if (typeof val === "object" && val !== null && "$numberDecimal" in val) {
+    return parseFloat((val as { $numberDecimal: string }).$numberDecimal) || 0;
+  }
+  return 0;
+};
+
+// Map planned meal entry to standard UI structure
 const mapToMealLog = (item: PlannedMealData) => {
   if (!item) return null;
-
-  // Crucial: Prefer _id (the planned meal sub-document ID) over mealId (catalog ID)
-  // so the mark-as-eaten backend endpoint can match the record in the array
   const targetId = item._id || item.mealId || "";
 
   return {
@@ -36,17 +43,37 @@ const mapToMealLog = (item: PlannedMealData) => {
       : "",
     name: item.mealTitle || "Unknown Meal",
     tag: item.category || "Budget Friendly",
-    price: item.estimatedPrice?.$numberDecimal
-      ? parseFloat(item.estimatedPrice.$numberDecimal)
-      : 0,
+    price: parseDecimal(item.estimatedPrice),
     image:
       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60",
     eaten: Boolean(item.isEaten),
   };
 };
 
+// Map spent entry from daily-spent endpoint directly to UI structure for the "Eaten" tab fallback
+const mapSpentToMealLog = (item: SpentMealEntry) => {
+  if (!item) return null;
+
+  return {
+    id: item._id,
+    time: item.eatenAt
+      ? new Date(item.eatenAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "",
+    name: item.mealId?.mealTitle || "Eaten Meal",
+    tag: "Eaten Today",
+    price: parseDecimal(item.mealId?.estimatedPrice),
+    image:
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60",
+    eaten: true,
+  };
+};
+
 export default function TrackMealPage() {
   const [meals, setMeals] = useState<PlannedMealData[]>([]);
+  const [spentMeals, setSpentMeals] = useState<SpentMealEntry[]>([]);
   const [activeTab, setActiveTab] = useState<"planned" | "eaten">("planned");
   const [waterGlasses, setWaterGlasses] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
@@ -126,7 +153,6 @@ export default function TrackMealPage() {
     setBudgetLoading(true);
     setSpentLoading(true);
 
-    // Fetch endpoints safely in parallel
     const [mealsRes, streakRes, budgetRes, spentRes] = await Promise.allSettled(
       [
         mealService.getPlannedMeals(),
@@ -156,13 +182,19 @@ export default function TrackMealPage() {
 
     // Daily Budget
     if (budgetRes.status === "fulfilled" && budgetRes.value?.data) {
-      setTotalBudget(budgetRes.value.data.totalBudget || 0);
+      const parsedBudget = parseDecimal(budgetRes.value.data.totalBudget);
+      setTotalBudget(parsedBudget);
     }
     setBudgetLoading(false);
 
     // Daily Spent
     if (spentRes.status === "fulfilled" && spentRes.value?.data) {
-      setTotalSpent(spentRes.value.data.totalMoneySpent || 0);
+      const parsedSpent = parseDecimal(spentRes.value.data.totalMoneySpent);
+      setTotalSpent(parsedSpent);
+      setSpentMeals(spentRes.value.data.meals || []);
+    } else {
+      setTotalSpent(0);
+      setSpentMeals([]);
     }
     setSpentLoading(false);
   };
@@ -178,16 +210,31 @@ export default function TrackMealPage() {
     fetchTrackerData();
   }, []);
 
-  // Filter views based on active tab
-  const filteredMeals =
-    activeTab === "planned"
-      ? safeMeals
-      : safeMeals.filter((m) => m && m.isEaten);
+  // Display mapped meals based on active view tab
+  const getDisplayedMeals = () => {
+    if (activeTab === "planned") {
+      return safeMeals
+        .map(mapToMealLog)
+        .filter((item): item is NonNullable<typeof item> => item !== null);
+    }
 
-  // Map and clean null values
-  const displayedMeals = filteredMeals
-    .map(mapToMealLog)
-    .filter((item): item is NonNullable<typeof item> => item !== null);
+    // Combine locally checked eaten meals with backend spent meals array
+    const eatenFromPlanned = safeMeals
+      .filter((m) => m && m.isEaten)
+      .map(mapToMealLog);
+    const eatenFromSpent = spentMeals.map(mapSpentToMealLog);
+
+    const merged = [...eatenFromPlanned, ...eatenFromSpent].filter(
+      (item): item is NonNullable<typeof item> => item !== null,
+    );
+
+    // Deduplicate by ID
+    const uniqueMap = new Map();
+    merged.forEach((item) => uniqueMap.set(item.id, item));
+    return Array.from(uniqueMap.values());
+  };
+
+  const displayedMeals = getDisplayedMeals();
 
   return (
     <>
@@ -300,7 +347,7 @@ export default function TrackMealPage() {
 
             {/* Meal Cards Container */}
             <div className="space-y-4 min-h-[300px]">
-              {mealsLoading ? (
+              {mealsLoading || spentLoading ? (
                 [1, 2].map((n) => (
                   <div
                     key={n}

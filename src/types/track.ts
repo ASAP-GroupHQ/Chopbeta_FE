@@ -46,7 +46,7 @@ export interface DailySpentResponse {
   message: string;
   data: {
     meals: SpentMealEntry[];
-    totalMoneySpent: number;
+    totalMoneySpent: number | { $numberDecimal: string } | string;
   };
 }
 
