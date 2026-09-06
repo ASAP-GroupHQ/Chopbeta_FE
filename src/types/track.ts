@@ -56,15 +56,6 @@ export interface EatenMealItem {
   _id: string;
 }
 
-export interface MarkAsEatenResponse {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: {
-    eatenMeals: EatenMealItem[];
-  };
-}
-
 export interface MealsEatenTodayResponse {
   success: boolean;
   statusCode: number;
@@ -77,4 +68,18 @@ export interface MealsEatenTodayResponse {
     }>;
     count: number;
   };
+}
+
+export interface MarkAsEatenData {
+  mealId: string;
+  uniqueId: string;
+  eatenAt: string;
+  _id: string;
+}
+
+export interface MarkAsEatenResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: MarkAsEatenData | null;
 }

@@ -34,6 +34,7 @@ const mapToMealLog = (item: PlannedMealData): MealLog | null => {
 
   return {
     id: targetId,
+    uniqueId: item._id || item.mealId || targetId,
     time: item.addedAt
       ? new Date(item.addedAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -52,6 +53,7 @@ const mapSpentToMealLog = (item: SpentMealEntry): MealLog | null => {
 
   return {
     id: item._id,
+    uniqueId: item._id,
     time: item.eatenAt
       ? new Date(item.eatenAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -72,6 +74,7 @@ export default function TrackMealPage() {
   const [activeTab, setActiveTab] = useState<"planned" | "eaten">("planned");
   const [waterGlasses, setWaterGlasses] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [mealsLoading, setMealsLoading] = useState<boolean>(true);
   const [currentDate, setCurrentDate] = useState<string>("");
 
@@ -96,45 +99,52 @@ export default function TrackMealPage() {
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // Mark planned meal as eaten via PATCH API
+  // Optimistic Toggle Handler
   const handleToggleEaten = async (plannedMealId: string) => {
     const targetMeal = safeMeals.find(
       (m) => m && (m._id === plannedMealId || m.mealId === plannedMealId),
     );
 
-    // Lock check: prevent unmarking or re-submitting an eaten meal
+    // Prevent unmarking or re-submitting an already eaten meal
     if (targetMeal?.isEaten) {
       toast.info("This meal has already been eaten and cannot be undone.");
       return;
     }
 
-    try {
-      setIsLoading(true);
+    setTogglingId(plannedMealId);
 
+    // Snapshot original state for rollback on error
+    const previousMeals = [...meals];
+
+    // 1. Optimistic UI update
+    setMeals((prev) => {
+      const prevArray = Array.isArray(prev) ? prev : [];
+      return prevArray.map((m) =>
+        m && (m._id === plannedMealId || m.mealId === plannedMealId)
+          ? { ...m, isEaten: true }
+          : m,
+      );
+    });
+
+    try {
       const res = await trackService.markAsEaten(plannedMealId);
 
       if (res && res.success) {
-        // Optimistically set eaten status on target meal
-        setMeals((prev) => {
-          const prevArray = Array.isArray(prev) ? prev : [];
-          return prevArray.map((m) =>
-            m && (m._id === plannedMealId || m.mealId === plannedMealId)
-              ? { ...m, isEaten: true }
-              : m,
-          );
-        });
-
-        // Trigger react-toastify success alert
         toast.success(res.message || "Meal marked as eaten successfully!");
-
-        // Refetch latest tracking stats
-        await fetchTrackerData();
+        // Refresh tracker metrics silently in the background
+        await fetchTrackerData(true);
+      } else {
+        // Revert on unexpected failure response
+        setMeals(previousMeals);
+        toast.error("Failed to mark meal as eaten. Please try again.");
       }
     } catch (error) {
       console.error("Failed to mark meal as eaten:", error);
+      // Revert optimistic state on network error
+      setMeals(previousMeals);
       toast.error("Failed to mark meal as eaten. Please try again.");
     } finally {
-      setIsLoading(false);
+      setTogglingId(null);
     }
   };
 
@@ -143,7 +153,9 @@ export default function TrackMealPage() {
     if (firstUnchecked) {
       const targetId = firstUnchecked._id || firstUnchecked.mealId;
       if (targetId) {
+        setIsLoading(true);
         await handleToggleEaten(targetId);
+        setIsLoading(false);
       }
     } else {
       toast.info("All planned meals are marked as eaten!");
@@ -154,12 +166,14 @@ export default function TrackMealPage() {
     setWaterGlasses((prev) => (prev < 6 ? prev + 1 : 0));
   };
 
-  const fetchTrackerData = async () => {
-    setMealsLoading(true);
-    setEatenTodayLoading(true);
-    setStreakLoading(true);
-    setBudgetLoading(true);
-    setSpentLoading(true);
+  const fetchTrackerData = async (silent = false) => {
+    if (!silent) {
+      setMealsLoading(true);
+      setEatenTodayLoading(true);
+      setStreakLoading(true);
+      setBudgetLoading(true);
+      setSpentLoading(true);
+    }
 
     const [
       mealsRes,
@@ -184,14 +198,14 @@ export default function TrackMealPage() {
       Array.isArray(mealsRes.value.data.plannedMeals)
     ) {
       setMeals(mealsRes.value.data.plannedMeals);
-    } else {
+    } else if (!silent) {
       setMeals([]);
     }
 
     // Partial Meals
     if (partialRes.status === "fulfilled" && partialRes.value?.meals) {
       setPartialMeals(partialRes.value.meals);
-    } else {
+    } else if (!silent) {
       setPartialMeals([]);
     }
     setMealsLoading(false);
@@ -203,7 +217,7 @@ export default function TrackMealPage() {
       typeof eatenTodayRes.value?.data?.count === "number"
     ) {
       setEatenTodayCount(eatenTodayRes.value.data.count);
-    } else {
+    } else if (!silent) {
       setEatenTodayCount(0);
     }
     setEatenTodayLoading(false);
@@ -225,7 +239,7 @@ export default function TrackMealPage() {
       const parsedSpent = parseDecimal(spentRes.value.data.totalMoneySpent);
       setTotalSpent(parsedSpent);
       setSpentMeals(spentRes.value.data.meals || []);
-    } else {
+    } else if (!silent) {
       setTotalSpent(0);
       setSpentMeals([]);
     }
@@ -394,9 +408,10 @@ export default function TrackMealPage() {
               ) : displayedMeals.length > 0 ? (
                 displayedMeals.map((meal) => (
                   <MealLogCard
-                    key={meal.id}
+                    key={meal.uniqueId || meal.id}
                     meal={meal}
                     onToggleEaten={handleToggleEaten}
+                    isLoading={togglingId === (meal.uniqueId || meal.id)}
                   />
                 ))
               ) : (

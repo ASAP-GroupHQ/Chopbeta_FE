@@ -26,10 +26,9 @@ export const trackService = {
     return response.data;
   },
 
-  // Note: plannedMealId MUST be the _id of the planned meal entry
-  markAsEaten: async (plannedMealId: string): Promise<MarkAsEatenResponse> => {
+  markAsEaten: async (uniqueId: string): Promise<MarkAsEatenResponse> => {
     const response = await apiClient.patch<MarkAsEatenResponse>(
-      `/track/mark-as-eaten/${plannedMealId}`,
+      `/track/mark-as-eaten/${uniqueId}`,
     );
     return response.data;
   },
