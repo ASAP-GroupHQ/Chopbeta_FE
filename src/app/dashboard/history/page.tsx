@@ -16,7 +16,6 @@ const MOCK_HISTORY_DATA: MealHistoryItem[] = [
     dayOfWeek: "Tuesday",
     mealCount: 2,
     status: "Completed",
-    images: ["", "", ""],
     totalSpent: 1000,
   },
   {
@@ -25,7 +24,6 @@ const MOCK_HISTORY_DATA: MealHistoryItem[] = [
     dayOfWeek: "Tuesday",
     mealCount: 2,
     status: "Completed",
-    images: ["", ""],
     totalSpent: 1000,
   },
   {
@@ -34,7 +32,6 @@ const MOCK_HISTORY_DATA: MealHistoryItem[] = [
     dayOfWeek: "Tuesday",
     mealCount: 2,
     status: "Partial",
-    images: ["", ""],
     totalSpent: 1000,
   },
   {
@@ -43,7 +40,6 @@ const MOCK_HISTORY_DATA: MealHistoryItem[] = [
     dayOfWeek: "Tuesday",
     mealCount: 3,
     status: "Completed",
-    images: ["", "", ""],
     totalSpent: 1000,
   },
   {
@@ -52,7 +48,6 @@ const MOCK_HISTORY_DATA: MealHistoryItem[] = [
     dayOfWeek: "Tuesday",
     mealCount: 2,
     status: "Partial",
-    images: ["", ""],
     totalSpent: 1000,
   },
 ];
@@ -154,7 +149,7 @@ export default function HistoryPage() {
               <h3 className="font-bold text-base text-[#1A1A2E]">
                 History Summary
               </h3>
-              <select className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 outline-none font-medium text-gray-600">
+              <select className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 outline-none font-medium text-gray-600 cursor-pointer">
                 <option>This week</option>
               </select>
             </div>
