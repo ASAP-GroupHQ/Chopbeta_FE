@@ -11,7 +11,6 @@ interface MealCardProps {
   meal: MealItem;
 }
 
-// Global default fallback asset if database returns an empty url
 const DEFAULT_MEAL_IMAGE =
   "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
 
@@ -20,10 +19,8 @@ export default function MealCard({ meal }: MealCardProps) {
   const [isAdded, setIsAdded] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
 
-  // Extract nutrition properties safely matching the type definition structure
   const nutrition = meal.averageNutritionalInfo || {};
 
-  // Safe cast to support both 'estimatedMacronutrients' and legacy 'macronutrients'
   const macros =
     (nutrition as any).estimatedMacronutrients ||
     (nutrition as any).macronutrients ||
@@ -34,7 +31,9 @@ export default function MealCard({ meal }: MealCardProps) {
   const proteins = macros.proteins || "0";
   const fats = macros.fats || "0";
 
-  // Handle live tracking API submission to add the meal to the user's planner
+  const rawPrice = meal.estimatedPrice?.$numberDecimal;
+  const priceDisplay = rawPrice ? parseFloat(rawPrice).toLocaleString() : "0";
+
   const handleAddMealPlan = async () => {
     if (isAdding) return;
 
@@ -69,19 +68,16 @@ export default function MealCard({ meal }: MealCardProps) {
         className="bg-white border border-gray-100 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow relative group flex flex-col justify-between"
       >
         <div>
-          {/* Card Image Area Frame */}
           <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-50">
             <img
               src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
               alt={meal.mealTitle}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onError={(e) => {
-                // Inline broken link safety net handler
                 (e.target as HTMLImageElement).src = DEFAULT_MEAL_IMAGE;
               }}
             />
 
-            {/* Dynamic Add Toggle Button */}
             <button
               type="button"
               onClick={handleAddMealPlan}
@@ -112,10 +108,9 @@ export default function MealCard({ meal }: MealCardProps) {
           </h3>
         </div>
 
-        {/* Footing Meta Details Blocks */}
         <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50 px-1">
           <span className="font-extrabold text-green-700 text-sm">
-            ₦{parseFloat(meal.estimatedPrice.$numberDecimal).toLocaleString()}
+            ₦{priceDisplay}
           </span>
 
           <button
@@ -128,7 +123,6 @@ export default function MealCard({ meal }: MealCardProps) {
         </div>
       </motion.div>
 
-      {/* MACRONUTRIENT POPUP DETAIL OVERLAY DRAWER */}
       <AnimatePresence>
         {showNutrition && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -163,7 +157,6 @@ export default function MealCard({ meal }: MealCardProps) {
                 </button>
               </div>
 
-              {/* Data Values Matrix Presentation Layout Grid */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="p-3 bg-gray-50/70 rounded-xl text-center">
                   <span className="text-[10px] block font-bold text-gray-400 uppercase tracking-wider">
