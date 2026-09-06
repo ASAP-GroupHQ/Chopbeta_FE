@@ -12,6 +12,7 @@ import {
   FiInfo,
   FiTrendingDown,
   FiLogOut,
+  FiUser,
 } from "react-icons/fi";
 import {
   MOCK_NOTIFICATIONS,
@@ -21,7 +22,7 @@ import { PROFILE_MENU_ITEMS } from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export default function HeaderActions() {
-  const { user, logout } = useAuth(); // Wired up logout function 🚀
+  const { user, logout } = useAuth();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -98,6 +99,9 @@ export default function HeaderActions() {
         );
     }
   };
+
+  // Profile image URL or null
+  const avatarUrl = user?.profilePicture || user?.avatar || null;
 
   return (
     <div className="hidden lg:flex items-center gap-3 relative z-40">
@@ -226,17 +230,24 @@ export default function HeaderActions() {
               : "bg-white text-[#1A2E35] border-gray-100 shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:bg-gray-50"
           }`}
         >
-          <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-gray-100">
-            <Image
-              src="/images/team/emmanuel_ozo.JPG"
-              alt={
-                user?.fullName ? `${user.fullName}'s profile` : "User profile"
-              }
-              fill
-              sizes="28px"
-              className="object-cover"
-              priority
-            />
+          <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-gray-100 bg-gray-100 flex items-center justify-center flex-shrink-0">
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt={
+                  user?.fullName ? `${user.fullName}'s profile` : "User profile"
+                }
+                fill
+                sizes="28px"
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <FiUser
+                size={15}
+                className={isProfileOpen ? "text-white" : "text-gray-500"}
+              />
+            )}
           </div>
           <span className="text-sm font-bold ml-0.5">
             {user?.fullName ? user.fullName.split(" ")[0] : "User"}

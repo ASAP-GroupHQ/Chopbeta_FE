@@ -9,7 +9,7 @@ import MealCard from "@/components/dashboard/generate/MealCard";
 import InstructionModal from "@/components/dashboard/generate/InstructionModal";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { MealItem } from "@/types/meal";
-import { mealService } from "@/services/meal"; 
+import { mealService } from "@/services/meal";
 
 export default function GeneratePage() {
   const [budget, setBudget] = useState("");
@@ -18,10 +18,8 @@ export default function GeneratePage() {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [showMobileHelp, setShowMobileHelp] = useState(false);
 
-  // State to hold active live backend data
   const [generatedMeals, setGeneratedMeals] = useState<MealItem[]>([]);
 
-  // Main execution submission block hitting the live API routes
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!budget || parseFloat(budget) <= 0) {
@@ -42,14 +40,12 @@ export default function GeneratePage() {
         );
       }
     } catch (error: any) {
-      // Axios global errors are already caught and parsed by interceptors
       toast.error(error.message || "Error generating meal pipeline execution.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Re-triggers generation pipeline for updates
   const handleReshuffle = async () => {
     if (!budget) return;
     setIsReshuffling(true);
@@ -66,14 +62,12 @@ export default function GeneratePage() {
     }
   };
 
-  // Safe category filtering supporting both server configurations ('lunch' / 'morning' combos)
+  // Improved helper supporting category matching & dynamic rendering
   const renderMealSection = (
     sectionTitle: string,
-    backendCategories: string[],
+    filterFn: (m: MealItem) => boolean,
   ) => {
-    const filteredMeals = generatedMeals.filter((m) =>
-      backendCategories.includes(m.category.toLowerCase()),
-    );
+    const filteredMeals = generatedMeals.filter(filterFn);
 
     if (filteredMeals.length === 0) return null;
 
@@ -90,6 +84,15 @@ export default function GeneratePage() {
       </div>
     );
   };
+
+  const knownCategories = [
+    "morning",
+    "breakfast",
+    "afternoon",
+    "lunch",
+    "evening",
+    "dinner",
+  ];
 
   return (
     <div className="w-full relative lg:pr-[300px] pb-24">
@@ -123,7 +126,6 @@ export default function GeneratePage() {
               />
             </div>
 
-            {/* Quick Selection Options Grid */}
             <div className="space-y-2">
               <span className="block text-[#1A2E35] text-xs font-black uppercase tracking-wider">
                 Quick Select
@@ -206,14 +208,23 @@ export default function GeneratePage() {
               </button>
             </div>
 
-            {/* Support displaying combinations of categories gracefully */}
-            {renderMealSection("Breakfast", ["morning", "breakfast"])}
-            {renderMealSection("Lunch & Dinner", [
-              "afternoon",
-              "lunch",
-              "evening",
-              "dinner",
-            ])}
+            {/* Breakfast */}
+            {renderMealSection("Breakfast", (m) =>
+              ["morning", "breakfast"].includes(m.category?.toLowerCase()),
+            )}
+
+            {/* Lunch & Dinner */}
+            {renderMealSection("Lunch & Dinner", (m) =>
+              ["afternoon", "lunch", "evening", "dinner"].includes(
+                m.category?.toLowerCase(),
+              ),
+            )}
+
+            {/* Mid-Night Snacks & Other Categories */}
+            {renderMealSection(
+              "Snacks & Extras",
+              (m) => !knownCategories.includes(m.category?.toLowerCase()),
+            )}
 
             {generatedMeals.length === 0 && (
               <p className="text-center text-xs font-bold text-gray-400 py-6">
@@ -225,7 +236,6 @@ export default function GeneratePage() {
         )}
       </div>
 
-      {/* RIGHT SIDEBAR GUIDE */}
       <aside className="hidden lg:block w-[260px] fixed top-[120px] right-8 bg-white border border-gray-100 rounded-2xl p-5 shadow-xs">
         <h4 className="text-xs font-black text-[#1A2E35] flex items-center gap-1.5 capitalize tracking-wide mb-6">
           How <span className="text-green-700 capitalize">ChopBeta</span> Works
@@ -277,7 +287,6 @@ export default function GeneratePage() {
         </div>
       </aside>
 
-      {/* MOBILE FLOATING HELP ACTION TRIGGER */}
       <button
         type="button"
         onClick={() => setShowMobileHelp(true)}

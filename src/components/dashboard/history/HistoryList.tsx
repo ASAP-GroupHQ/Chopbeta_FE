@@ -8,7 +8,6 @@ export interface MealHistoryItem {
   dayOfWeek: string;
   mealCount: number;
   status: "Completed" | "Partial";
-  images: string[];
   totalSpent: number;
 }
 
@@ -22,23 +21,30 @@ export default function HistoryList({ items }: HistoryListProps) {
       {items.map((item) => (
         <div
           key={item.id}
-          className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition"
+          className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs hover:shadow-sm transition"
         >
-          {/* Date and Day */}
-          <div className="min-w-[120px]">
-            <p className="font-semibold text-base text-[#0F623D]">
-              {item.date}
-            </p>
-            <p className="text-xs text-gray-400 capitalize">{item.dayOfWeek}</p>
+          {/* Date, Day and Divider */}
+          <div className="flex items-center gap-6">
+            <div className="min-w-[110px]">
+              <p className="font-bold text-sm sm:text-base text-[#0F623D]">
+                {item.date}
+              </p>
+              <p className="text-xs text-gray-400 font-medium capitalize mt-0.5">
+                {item.dayOfWeek}
+              </p>
+            </div>
+
+            {/* Vertical Divider */}
+            <div className="hidden sm:block w-[1px] h-9 bg-gray-100" />
           </div>
 
           {/* Meals Count & Status Badge */}
           <div className="flex items-center gap-3">
-            <span className="text-sm font-bold text-gray-700">
+            <span className="text-sm font-bold text-[#1A1A2E]">
               {item.mealCount} Meals
             </span>
             <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold ${
                 item.status === "Completed"
                   ? "bg-[#E6F4EA] text-[#0F623D]"
                   : "bg-[#FFF0E6] text-[#FF7A00]"
@@ -48,28 +54,23 @@ export default function HistoryList({ items }: HistoryListProps) {
             </span>
           </div>
 
-          {/* Inline Meal Thumbnails */}
-          <div className="flex items-center -space-x-2 overflow-hidden">
-            {item.images.map((_, idx) => (
-              <div
-                key={idx}
-                className="w-10 h-10 rounded-xl border-2 border-white overflow-hidden bg-gray-200 shadow-sm"
-              />
-            ))}
-          </div>
-
-          {/* Total Cost Spent & Action */}
-          <div className="flex items-center justify-between sm:justify-end gap-6 border-t sm:border-0 pt-3 sm:pt-0">
+          {/* Total Cost Spent & Expand Trigger */}
+          <div className="flex items-center justify-between sm:justify-end gap-5 border-t sm:border-0 pt-3 sm:pt-0">
             <div className="sm:text-right">
-              <p className="text-xs text-gray-400">Total Spent</p>
-              <p className="font-bold text-base text-[#1A1A2E]">
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                Total Spent
+              </p>
+              <p className="font-extrabold text-sm sm:text-base text-[#1A1A2E] mt-0.5">
                 ₦{item.totalSpent.toLocaleString()}
               </p>
             </div>
-            <button className="text-gray-400 hover:text-gray-600 p-1 transition">
+            <button
+              type="button"
+              className="text-gray-400 hover:text-gray-600 p-1 transition cursor-pointer"
+            >
               <svg
-                width="12"
-                height="12"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

@@ -46,7 +46,7 @@ export interface DailySpentResponse {
   message: string;
   data: {
     meals: SpentMealEntry[];
-    totalMoneySpent: number;
+    totalMoneySpent: number | { $numberDecimal: string } | string;
   };
 }
 
@@ -56,11 +56,30 @@ export interface EatenMealItem {
   _id: string;
 }
 
-export interface MarkAsEatenResponse {
+export interface MealsEatenTodayResponse {
   success: boolean;
   statusCode: number;
   message: string;
   data: {
-    eatenMeals: EatenMealItem[];
+    meals: Array<{
+      mealId: string;
+      eatenAt: string;
+      _id: string;
+    }>;
+    count: number;
   };
+}
+
+export interface MarkAsEatenData {
+  mealId: string;
+  uniqueId: string;
+  eatenAt: string;
+  _id: string;
+}
+
+export interface MarkAsEatenResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: MarkAsEatenData | null;
 }

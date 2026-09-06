@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
+import { toast } from "react-toastify";
 import {
   MealEatenIcon,
   BudgetIcon,
@@ -14,20 +15,26 @@ import { MealLogCard } from "@/components/dashboard/track/MealLogCard";
 import { ProgressSidebar } from "@/components/dashboard/track/ProgressSidebar";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { trackService } from "@/services/track";
+import { StreakData, SpentMealEntry } from "@/types/track";
 import { mealService } from "@/services/meal";
-import { StreakData } from "@/types/track";
-import { PlannedMealData } from "@/types/meal";
+import { PlannedMealData, MealLog } from "@/types/meal";
 
-// Map the flat backend data into the shape expected by UI components
-const mapToMealLog = (item: PlannedMealData) => {
+const parseDecimal = (val: unknown): number => {
+  if (typeof val === "number") return val;
+  if (typeof val === "string") return parseFloat(val) || 0;
+  if (typeof val === "object" && val !== null && "$numberDecimal" in val) {
+    return parseFloat((val as { $numberDecimal: string }).$numberDecimal) || 0;
+  }
+  return 0;
+};
+
+const mapToMealLog = (item: PlannedMealData): MealLog | null => {
   if (!item) return null;
-
-  // Crucial: Prefer _id (the planned meal sub-document ID) over mealId (catalog ID)
-  // so the mark-as-eaten backend endpoint can match the record in the array
   const targetId = item._id || item.mealId || "";
 
   return {
     id: targetId,
+    uniqueId: item._id || item.mealId || targetId,
     time: item.addedAt
       ? new Date(item.addedAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -36,24 +43,48 @@ const mapToMealLog = (item: PlannedMealData) => {
       : "",
     name: item.mealTitle || "Unknown Meal",
     tag: item.category || "Budget Friendly",
-    price: item.estimatedPrice?.$numberDecimal
-      ? parseFloat(item.estimatedPrice.$numberDecimal)
-      : 0,
-    image:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60",
+    price: parseDecimal(item.estimatedPrice),
     eaten: Boolean(item.isEaten),
+  };
+};
+
+const mapSpentToMealLog = (
+  item: SpentMealEntry,
+  endpointId?: string,
+): MealLog | null => {
+  if (!item) return null;
+
+  return {
+    id: item._id,
+    uniqueId: endpointId || item.mealId?._id || item._id,
+    time: item.eatenAt
+      ? new Date(item.eatenAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "",
+    name: item.mealId?.mealTitle || "Eaten Meal",
+    tag: "Eaten Today",
+    price: parseDecimal(item.mealId?.estimatedPrice),
+    eaten: true,
   };
 };
 
 export default function TrackMealPage() {
   const [meals, setMeals] = useState<PlannedMealData[]>([]);
+  const [partialMeals, setPartialMeals] = useState<MealLog[]>([]);
+  const [spentMeals, setSpentMeals] = useState<SpentMealEntry[]>([]);
   const [activeTab, setActiveTab] = useState<"planned" | "eaten">("planned");
   const [waterGlasses, setWaterGlasses] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [mealsLoading, setMealsLoading] = useState<boolean>(true);
   const [currentDate, setCurrentDate] = useState<string>("");
 
-  // Tracking stats
+  // Tracking Stats
+  const [eatenTodayCount, setEatenTodayCount] = useState<number>(0);
+  const [eatenTodayLoading, setEatenTodayLoading] = useState<boolean>(true);
+
   const [streak, setStreak] = useState<StreakData | null>(null);
   const [streakLoading, setStreakLoading] = useState<boolean>(true);
 
@@ -63,46 +94,103 @@ export default function TrackMealPage() {
   const [totalSpent, setTotalSpent] = useState<number>(0);
   const [spentLoading, setSpentLoading] = useState<boolean>(true);
 
-  // Safe Array handling
   const safeMeals = Array.isArray(meals) ? meals : [];
 
-  // Derived metrics
   const eatenCount = safeMeals.filter((m) => m && m.isEaten).length;
-  const totalCount = safeMeals.length;
+  const totalCount = safeMeals.length + partialMeals.length;
 
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // Toggle meal as eaten
-  const handleToggleEaten = async (id: string) => {
+  const handleToggleEaten = async (plannedMealId: string) => {
     const targetMeal = safeMeals.find(
-      (m) => m && (m._id === id || m.mealId === id),
+      (m) => m && (m._id === plannedMealId || m.mealId === plannedMealId),
     );
+    const targetLog = displayedMeals.find(
+      (meal) => (meal.uniqueId || meal.id) === plannedMealId,
+    );
+    const wasEaten = targetMeal?.isEaten ?? targetLog?.eaten ?? false;
+    const nextEaten = !wasEaten;
 
-    if (!targetMeal || targetMeal.isEaten) return;
+    setTogglingId(plannedMealId);
+
+    const previousMeals = [...meals];
+    const previousPartialMeals = [...partialMeals];
+    const previousSpentMeals = [...spentMeals];
+
+    setMeals((prev) => {
+      const prevArray = Array.isArray(prev) ? prev : [];
+      return prevArray.map((m) =>
+        m && (m._id === plannedMealId || m.mealId === plannedMealId)
+          ? { ...m, isEaten: nextEaten }
+          : m,
+      );
+    });
+    setPartialMeals((prev) =>
+      prev.map((meal) =>
+        (meal.uniqueId || meal.id) === plannedMealId
+          ? { ...meal, eaten: nextEaten }
+          : meal,
+      ),
+    );
+    if (!nextEaten) {
+      setSpentMeals((prev) =>
+        prev.filter(
+          (meal) =>
+            meal._id !== plannedMealId && meal.mealId?._id !== plannedMealId,
+        ),
+      );
+    }
 
     try {
-      setIsLoading(true);
-      const res = await trackService.markAsEaten(id);
+      const candidateIds = Array.from(
+        new Set(
+          [
+            plannedMealId,
+            targetMeal?._id,
+            targetMeal?.mealId,
+            targetLog?.id,
+          ].filter((id): id is string => Boolean(id)),
+        ),
+      );
+      let res = null;
+      let lastError: unknown;
+
+      for (const candidateId of candidateIds) {
+        try {
+          const candidateResponse =
+            await trackService.markAsEaten(candidateId);
+          res = candidateResponse;
+          if (candidateResponse.success) break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (!res?.success && lastError) throw lastError;
 
       if (res && res.success) {
-        // Optimistic local state update
-        setMeals((prev) => {
-          const prevArray = Array.isArray(prev) ? prev : [];
-          return prevArray.map((m) =>
-            m && (m._id === id || m.mealId === id)
-              ? { ...m, isEaten: true }
-              : m,
-          );
-        });
-
-        // Re-sync dashboard metrics (Daily Spent, Streak, etc.)
-        await fetchTrackerData();
+        toast.success(
+          res.message ||
+            (nextEaten
+              ? "Meal marked as eaten successfully!"
+              : "Meal removed from eaten meals successfully!"),
+        );
+        await fetchTrackerData(true);
+      } else {
+        setMeals(previousMeals);
+        setPartialMeals(previousPartialMeals);
+        setSpentMeals(previousSpentMeals);
+        toast.error(res?.message || "Failed to update meal status.");
       }
     } catch (error) {
-      console.error("Failed to mark meal as eaten:", error);
+      console.error("Failed to update meal status:", error);
+      setMeals(previousMeals);
+      setPartialMeals(previousPartialMeals);
+      setSpentMeals(previousSpentMeals);
+      toast.error("Failed to update meal status. Please try again.");
     } finally {
-      setIsLoading(false);
+      setTogglingId(null);
     }
   };
 
@@ -111,8 +199,12 @@ export default function TrackMealPage() {
     if (firstUnchecked) {
       const targetId = firstUnchecked._id || firstUnchecked.mealId;
       if (targetId) {
+        setIsLoading(true);
         await handleToggleEaten(targetId);
+        setIsLoading(false);
       }
+    } else {
+      toast.info("All planned meals are marked as eaten!");
     }
   };
 
@@ -120,21 +212,30 @@ export default function TrackMealPage() {
     setWaterGlasses((prev) => (prev < 6 ? prev + 1 : 0));
   };
 
-  const fetchTrackerData = async () => {
-    setMealsLoading(true);
-    setStreakLoading(true);
-    setBudgetLoading(true);
-    setSpentLoading(true);
+  const fetchTrackerData = async (silent = false) => {
+    if (!silent) {
+      setMealsLoading(true);
+      setEatenTodayLoading(true);
+      setStreakLoading(true);
+      setBudgetLoading(true);
+      setSpentLoading(true);
+    }
 
-    // Fetch endpoints safely in parallel
-    const [mealsRes, streakRes, budgetRes, spentRes] = await Promise.allSettled(
-      [
-        mealService.getPlannedMeals(),
-        trackService.getStreak(),
-        trackService.getDailyBudget(),
-        trackService.getDailySpent(),
-      ],
-    );
+    const [
+      mealsRes,
+      partialRes,
+      eatenTodayRes,
+      streakRes,
+      budgetRes,
+      spentRes,
+    ] = await Promise.allSettled([
+      mealService.getPlannedMeals(),
+      mealService.getAllPartialMeals(1, 10),
+      trackService.getMealsEatenToday(),
+      trackService.getStreak(),
+      trackService.getDailyBudget(),
+      trackService.getDailySpent(),
+    ]);
 
     // Planned Meals
     if (
@@ -143,10 +244,29 @@ export default function TrackMealPage() {
       Array.isArray(mealsRes.value.data.plannedMeals)
     ) {
       setMeals(mealsRes.value.data.plannedMeals);
-    } else {
+    } else if (!silent) {
       setMeals([]);
     }
+
+    // Partial Meals
+    if (partialRes.status === "fulfilled" && partialRes.value?.meals) {
+      setPartialMeals(partialRes.value.meals);
+    } else if (!silent) {
+      setPartialMeals([]);
+    }
     setMealsLoading(false);
+
+    // Meals Eaten Today Count
+    if (
+      eatenTodayRes.status === "fulfilled" &&
+      eatenTodayRes.value?.success &&
+      typeof eatenTodayRes.value?.data?.count === "number"
+    ) {
+      setEatenTodayCount(eatenTodayRes.value.data.count);
+    } else if (!silent) {
+      setEatenTodayCount(0);
+    }
+    setEatenTodayLoading(false);
 
     // Streak
     if (streakRes.status === "fulfilled" && streakRes.value?.data) {
@@ -162,7 +282,12 @@ export default function TrackMealPage() {
 
     // Daily Spent
     if (spentRes.status === "fulfilled" && spentRes.value?.data) {
-      setTotalSpent(spentRes.value.data.totalMoneySpent || 0);
+      const parsedSpent = parseDecimal(spentRes.value.data.totalMoneySpent);
+      setTotalSpent(parsedSpent);
+      setSpentMeals(spentRes.value.data.meals || []);
+    } else if (!silent) {
+      setTotalSpent(0);
+      setSpentMeals([]);
     }
     setSpentLoading(false);
   };
@@ -178,16 +303,39 @@ export default function TrackMealPage() {
     fetchTrackerData();
   }, []);
 
-  // Filter views based on active tab
-  const filteredMeals =
-    activeTab === "planned"
-      ? safeMeals
-      : safeMeals.filter((m) => m && m.isEaten);
+  const getDisplayedMeals = (): MealLog[] => {
+    if (activeTab === "planned") {
+      const plannedMapped = safeMeals
+        .map(mapToMealLog)
+        .filter((item): item is MealLog => item !== null);
 
-  // Map and clean null values
-  const displayedMeals = filteredMeals
-    .map(mapToMealLog)
-    .filter((item): item is NonNullable<typeof item> => item !== null);
+      return [...plannedMapped, ...partialMeals];
+    }
+
+    const eatenFromPlanned = safeMeals
+      .filter((m) => m && m.isEaten)
+      .map(mapToMealLog);
+    const eatenFromPartial = partialMeals.filter((pm) => pm.eaten);
+    const eatenFromSpent = spentMeals.map((item) => {
+      const plannedMeal = safeMeals.find(
+        (meal) =>
+          meal.mealId === item.mealId?._id || meal._id === item._id,
+      );
+      return mapSpentToMealLog(item, plannedMeal?._id);
+    });
+
+    const merged = [
+      ...eatenFromPlanned,
+      ...eatenFromPartial,
+      ...eatenFromSpent,
+    ].filter((item): item is MealLog => item !== null);
+
+    const uniqueMap = new Map<string, MealLog>();
+    merged.forEach((item) => uniqueMap.set(item.id, item));
+    return Array.from(uniqueMap.values());
+  };
+
+  const displayedMeals = getDisplayedMeals();
 
   return (
     <>
@@ -225,11 +373,13 @@ export default function TrackMealPage() {
           <StatCard
             icon={<MealEatenIcon />}
             label="Meal Eaten"
-            value={`${eatenCount}/${totalCount}`}
+            value={`${eatenTodayCount}`}
             subtext="Keep it up!"
             progressColor="#1E6B3C"
-            progressWidth={totalCount > 0 ? (eatenCount / totalCount) * 100 : 0}
-            isLoading={mealsLoading}
+            progressWidth={
+              totalCount > 0 ? (eatenTodayCount / totalCount) * 100 : 0
+            }
+            isLoading={eatenTodayLoading || mealsLoading}
           />
 
           <StatCard
@@ -300,7 +450,7 @@ export default function TrackMealPage() {
 
             {/* Meal Cards Container */}
             <div className="space-y-4 min-h-[300px]">
-              {mealsLoading ? (
+              {mealsLoading || spentLoading ? (
                 [1, 2].map((n) => (
                   <div
                     key={n}
@@ -310,9 +460,10 @@ export default function TrackMealPage() {
               ) : displayedMeals.length > 0 ? (
                 displayedMeals.map((meal) => (
                   <MealLogCard
-                    key={meal.id}
+                    key={meal.uniqueId || meal.id}
                     meal={meal}
                     onToggleEaten={handleToggleEaten}
+                    isLoading={togglingId === (meal.uniqueId || meal.id)}
                   />
                 ))
               ) : (
@@ -338,23 +489,6 @@ export default function TrackMealPage() {
             </button>
 
             <div className="flex items-center gap-1.5 text-[11px] text-gray-400 pl-1 font-medium select-none">
-              <span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M8.77778 11.1111H8V8H7.22222M8 4.88889H8.00778M15 8C15 8.91925 14.8189 9.82951 14.4672 10.6788C14.1154 11.5281 13.5998 12.2997 12.9497 12.9497C12.2997 13.5998 11.5281 14.1154 10.6788 14.4672C9.82951 14.8189 8.91925 15 8 15C7.08075 15 6.1705 14.8189 5.32122 14.4672C4.47194 14.1154 3.70026 13.5998 3.05025 12.9497C2.40024 12.2997 1.88463 11.5281 1.53284 10.6788C1.18106 9.82951 1 8.91925 1 8C1 6.14348 1.7375 4.36301 3.05025 3.05025C4.36301 1.7375 6.14348 1 8 1C9.85652 1 11.637 1.7375 12.9497 3.05025C14.2625 4.36301 15 6.14348 15 8Z"
-                    stroke="#1E6B3C"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
               <span className="font-semibold text-gray-500">Tip:</span>
               <span>
                 Consistency is the key to a healthier you. Keep tracking! 💚
@@ -364,7 +498,7 @@ export default function TrackMealPage() {
 
           <div className="lg:col-span-1">
             <ProgressSidebar
-              eatenCount={eatenCount}
+              eatenCount={eatenTodayCount}
               totalCount={totalCount}
               waterGlasses={waterGlasses}
               onAddWater={incrementWater}

@@ -4,7 +4,13 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiCheckSquare, FiInfo, FiTrendingDown } from "react-icons/fi";
+import {
+  FiX,
+  FiCheckSquare,
+  FiInfo,
+  FiTrendingDown,
+  FiUser,
+} from "react-icons/fi";
 import {
   HistoryIcon,
   SettingsIcon,
@@ -17,7 +23,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 
 export default function MobileTopHeader() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const [activeSheet, setActiveSheet] = useState<
     "notifications" | "profile" | null
@@ -74,17 +80,25 @@ export default function MobileTopHeader() {
     }
   };
 
+  const avatarUrl = user?.profilePicture || user?.avatar || null;
+
   return (
     <>
       <header className="lg:hidden w-full bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-40 select-none">
         <div className="relative w-24 h-8">
-          <Image
-            src="/chopbeta.png"
-            alt="ChopBeta Logo"
-            fill
-            className="object-contain"
-            priority
-          />
+          <Link
+            href="/dashboard"
+            className="relative w-24 h-8 block active:opacity-80 transition-opacity"
+            aria-label="Go to Dashboard"
+          >
+            <Image
+              src="/chopbeta.png"
+              alt="ChopBeta Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </Link>
         </div>
 
         <div className="flex items-center gap-4">
@@ -137,15 +151,20 @@ export default function MobileTopHeader() {
           <button
             type="button"
             onClick={() => setActiveSheet("profile")}
-            className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-200 shadow-sm active:scale-90 transition-transform cursor-pointer"
+            className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-200 shadow-sm active:scale-90 transition-transform cursor-pointer bg-gray-100 flex items-center justify-center"
             aria-label="Open User Account Sheet"
           >
-            <Image
-              src="/images/team/emmanuel_ozo.JPG"
-              alt="User Avatar"
-              fill
-              className="object-cover"
-            />
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt="User Avatar"
+                fill
+                //  sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover"
+              />
+            ) : (
+              <FiUser size={16} className="text-gray-500" />
+            )}
           </button>
         </div>
       </header>

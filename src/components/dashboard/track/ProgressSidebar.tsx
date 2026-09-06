@@ -55,7 +55,7 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
           <div className="space-y-1">
             <h4 className="font-bold text-[#1E6B3C] text-sm">Great job!</h4>
             <p className="text-xs text-gray-500 leading-normal">
-                You&&apos;ve eaten {eatenCount} of {totalCount} meals today
+              You&apos;ve eaten {eatenCount} meals today
             </p>
           </div>
         </div>

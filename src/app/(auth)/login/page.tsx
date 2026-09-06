@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiMail, FiLock, FiUser } from "react-icons/fi";
+import { FiMail, FiLock } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "react-toastify";
@@ -12,24 +12,34 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [targetPath, setTargetPath] = useState("/dashboard");
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!identifier.trim() || !password.trim()) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password.trim()) {
       toast.error("Please fill all fields.");
       return;
     }
 
     setIsLoading(true);
     try {
-      await login({ email: identifier, password });
+      const userData = await login({ email: trimmedEmail, password });
+
+      // Determine destination path dynamically based on role
+      const userRole = userData?.role || userData?.user?.role || "user";
+      const redirectPath =
+        userRole === "admin" ? "/admin/dashboard" : "/dashboard";
+
+      setTargetPath(redirectPath);
       setShowSuccess(true);
     } catch (error) {
+      // Handled by AuthContext toast
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +50,7 @@ export default function LoginPage() {
       <SuccessfulScreen
         message="Welcome Back! 👋"
         subMessage="Logging you back into your ChopBeta account..."
-        redirectTo="/dashboard"
+        redirectTo={targetPath}
         delaySeconds={2.5}
       />
     );
@@ -178,7 +188,7 @@ export default function LoginPage() {
                   Welcome Back 👋
                 </h1>
                 <p className="text-gray-500 text-sm mt-1.5">
-                  Enter your details to access your ChopBeta
+                  Enter your details to access your ChopBeta account
                 </p>
               </div>
 
@@ -186,10 +196,10 @@ export default function LoginPage() {
                 <AuthInput
                   label="Email Address"
                   type="email"
-                  placeholder="Enter email address"
+                  placeholder="Enter your email"
                   Icon={FiMail}
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
                   required
                 />

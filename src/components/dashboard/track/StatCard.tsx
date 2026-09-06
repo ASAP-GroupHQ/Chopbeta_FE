@@ -21,7 +21,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   progressWidth,
   isLoading = false,
 }) => {
-  // Normalize progress width value seamlessly (handles both raw numbers like 45 and strings like "45%")
+  // Normalize progress width value seamlessly (handles numbers like 45 and strings like "45%")
   const normalizedWidth =
     typeof progressWidth === "number"
       ? `${Math.min(Math.max(progressWidth, 0), 100)}%`
@@ -34,7 +34,6 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-50 flex flex-col justify-between min-h-[115px] transition-all hover:shadow-md duration-300">
       {isLoading ? (
-        // Pulsing skeleton loader layout matching exact dimensional frames
         <div className="animate-pulse space-y-3">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-gray-100 rounded-xl flex-shrink-0" />
