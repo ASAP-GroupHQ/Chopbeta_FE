@@ -115,6 +115,7 @@ export interface AllPartialMealsResponse {
 // Clean Client-Side Meal Model (No image property)
 export interface MealLog {
   id: string;
+  uniqueId?: string;
   time: string;
   name: string;
   tag?: string;

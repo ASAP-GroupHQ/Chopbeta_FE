@@ -48,12 +48,15 @@ const mapToMealLog = (item: PlannedMealData): MealLog | null => {
   };
 };
 
-const mapSpentToMealLog = (item: SpentMealEntry): MealLog | null => {
+const mapSpentToMealLog = (
+  item: SpentMealEntry,
+  endpointId?: string,
+): MealLog | null => {
   if (!item) return null;
 
   return {
     id: item._id,
-    uniqueId: item._id,
+    uniqueId: endpointId || item.mealId?._id || item._id,
     time: item.eatenAt
       ? new Date(item.eatenAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -99,50 +102,93 @@ export default function TrackMealPage() {
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // Optimistic Toggle Handler
   const handleToggleEaten = async (plannedMealId: string) => {
     const targetMeal = safeMeals.find(
       (m) => m && (m._id === plannedMealId || m.mealId === plannedMealId),
     );
-
-    // Prevent unmarking or re-submitting an already eaten meal
-    if (targetMeal?.isEaten) {
-      toast.info("This meal has already been eaten and cannot be undone.");
-      return;
-    }
+    const targetLog = displayedMeals.find(
+      (meal) => (meal.uniqueId || meal.id) === plannedMealId,
+    );
+    const wasEaten = targetMeal?.isEaten ?? targetLog?.eaten ?? false;
+    const nextEaten = !wasEaten;
 
     setTogglingId(plannedMealId);
 
-    // Snapshot original state for rollback on error
     const previousMeals = [...meals];
+    const previousPartialMeals = [...partialMeals];
+    const previousSpentMeals = [...spentMeals];
 
-    // 1. Optimistic UI update
     setMeals((prev) => {
       const prevArray = Array.isArray(prev) ? prev : [];
       return prevArray.map((m) =>
         m && (m._id === plannedMealId || m.mealId === plannedMealId)
-          ? { ...m, isEaten: true }
+          ? { ...m, isEaten: nextEaten }
           : m,
       );
     });
+    setPartialMeals((prev) =>
+      prev.map((meal) =>
+        (meal.uniqueId || meal.id) === plannedMealId
+          ? { ...meal, eaten: nextEaten }
+          : meal,
+      ),
+    );
+    if (!nextEaten) {
+      setSpentMeals((prev) =>
+        prev.filter(
+          (meal) =>
+            meal._id !== plannedMealId && meal.mealId?._id !== plannedMealId,
+        ),
+      );
+    }
 
     try {
-      const res = await trackService.markAsEaten(plannedMealId);
+      const candidateIds = Array.from(
+        new Set(
+          [
+            plannedMealId,
+            targetMeal?._id,
+            targetMeal?.mealId,
+            targetLog?.id,
+          ].filter((id): id is string => Boolean(id)),
+        ),
+      );
+      let res = null;
+      let lastError: unknown;
+
+      for (const candidateId of candidateIds) {
+        try {
+          const candidateResponse =
+            await trackService.markAsEaten(candidateId);
+          res = candidateResponse;
+          if (candidateResponse.success) break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (!res?.success && lastError) throw lastError;
 
       if (res && res.success) {
-        toast.success(res.message || "Meal marked as eaten successfully!");
-        // Refresh tracker metrics silently in the background
+        toast.success(
+          res.message ||
+            (nextEaten
+              ? "Meal marked as eaten successfully!"
+              : "Meal removed from eaten meals successfully!"),
+        );
         await fetchTrackerData(true);
       } else {
-        // Revert on unexpected failure response
         setMeals(previousMeals);
-        toast.error("Failed to mark meal as eaten. Please try again.");
+        setPartialMeals(previousPartialMeals);
+        setSpentMeals(previousSpentMeals);
+        toast.error(res?.message || "Failed to update meal status.");
       }
     } catch (error) {
-      console.error("Failed to mark meal as eaten:", error);
-      // Revert optimistic state on network error
+      console.error("Failed to update meal status:", error);
       setMeals(previousMeals);
-      toast.error("Failed to mark meal as eaten. Please try again.");
+      setPartialMeals(previousPartialMeals);
+      setSpentMeals(previousSpentMeals);
+      toast.error("Failed to update meal status. Please try again.");
     } finally {
       setTogglingId(null);
     }
@@ -270,7 +316,13 @@ export default function TrackMealPage() {
       .filter((m) => m && m.isEaten)
       .map(mapToMealLog);
     const eatenFromPartial = partialMeals.filter((pm) => pm.eaten);
-    const eatenFromSpent = spentMeals.map(mapSpentToMealLog);
+    const eatenFromSpent = spentMeals.map((item) => {
+      const plannedMeal = safeMeals.find(
+        (meal) =>
+          meal.mealId === item.mealId?._id || meal._id === item._id,
+      );
+      return mapSpentToMealLog(item, plannedMeal?._id);
+    });
 
     const merged = [
       ...eatenFromPlanned,
