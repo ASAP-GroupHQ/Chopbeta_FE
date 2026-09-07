@@ -64,6 +64,7 @@ export const mealService = {
     // Transform backend decimal objects and ISO dates into client-friendly structure
     const mappedMeals: MealLog[] = (rawData.data || []).map((item) => ({
       id: item.uniqueId,
+      uniqueId: item.uniqueId,
       name: item.mealTitle || "Untitled Meal",
       price: item.estimatedPrice?.$numberDecimal
         ? parseFloat(item.estimatedPrice.$numberDecimal)

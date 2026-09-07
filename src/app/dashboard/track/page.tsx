@@ -29,12 +29,11 @@ const parseDecimal = (val: unknown): number => {
 };
 
 const mapToMealLog = (item: PlannedMealData): MealLog | null => {
-  if (!item) return null;
-  const targetId = item._id || item.mealId || "";
+  if (!item || !item.uniqueId) return null;
 
   return {
-    id: targetId,
-    uniqueId: item._id || item.mealId || targetId,
+    id: item._id || item.mealId,
+    uniqueId: item.uniqueId,
     time: item.addedAt
       ? new Date(item.addedAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -48,15 +47,13 @@ const mapToMealLog = (item: PlannedMealData): MealLog | null => {
   };
 };
 
-const mapSpentToMealLog = (
-  item: SpentMealEntry,
-  endpointId?: string,
-): MealLog | null => {
+const mapSpentToMealLog = (item: SpentMealEntry): MealLog | null => {
   if (!item) return null;
+  if (!item.uniqueId) return null;
 
   return {
     id: item._id,
-    uniqueId: endpointId || item.mealId?._id || item._id,
+    uniqueId: item.uniqueId,
     time: item.eatenAt
       ? new Date(item.eatenAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -102,17 +99,15 @@ export default function TrackMealPage() {
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  const handleToggleEaten = async (plannedMealId: string) => {
-    const targetMeal = safeMeals.find(
-      (m) => m && (m._id === plannedMealId || m.mealId === plannedMealId),
-    );
+  const handleToggleEaten = async (uniqueId: string) => {
+    const targetMeal = safeMeals.find((m) => m.uniqueId === uniqueId);
     const targetLog = displayedMeals.find(
-      (meal) => (meal.uniqueId || meal.id) === plannedMealId,
+      (meal) => meal.uniqueId === uniqueId,
     );
     const wasEaten = targetMeal?.isEaten ?? targetLog?.eaten ?? false;
     const nextEaten = !wasEaten;
 
-    setTogglingId(plannedMealId);
+    setTogglingId(uniqueId);
 
     const previousMeals = [...meals];
     const previousPartialMeals = [...partialMeals];
@@ -121,14 +116,14 @@ export default function TrackMealPage() {
     setMeals((prev) => {
       const prevArray = Array.isArray(prev) ? prev : [];
       return prevArray.map((m) =>
-        m && (m._id === plannedMealId || m.mealId === plannedMealId)
+        m && m.uniqueId === uniqueId
           ? { ...m, isEaten: nextEaten }
           : m,
       );
     });
     setPartialMeals((prev) =>
       prev.map((meal) =>
-        (meal.uniqueId || meal.id) === plannedMealId
+        meal.uniqueId === uniqueId
           ? { ...meal, eaten: nextEaten }
           : meal,
       ),
@@ -137,37 +132,13 @@ export default function TrackMealPage() {
       setSpentMeals((prev) =>
         prev.filter(
           (meal) =>
-            meal._id !== plannedMealId && meal.mealId?._id !== plannedMealId,
+            meal.uniqueId !== uniqueId,
         ),
       );
     }
 
     try {
-      const candidateIds = Array.from(
-        new Set(
-          [
-            plannedMealId,
-            targetMeal?._id,
-            targetMeal?.mealId,
-            targetLog?.id,
-          ].filter((id): id is string => Boolean(id)),
-        ),
-      );
-      let res = null;
-      let lastError: unknown;
-
-      for (const candidateId of candidateIds) {
-        try {
-          const candidateResponse =
-            await trackService.markAsEaten(candidateId);
-          res = candidateResponse;
-          if (candidateResponse.success) break;
-        } catch (error) {
-          lastError = error;
-        }
-      }
-
-      if (!res?.success && lastError) throw lastError;
+      const res = await trackService.markAsEaten(uniqueId);
 
       if (res && res.success) {
         toast.success(
@@ -197,12 +168,9 @@ export default function TrackMealPage() {
   const handleMarkNextMealAsEaten = async () => {
     const firstUnchecked = safeMeals.find((m) => m && !m.isEaten);
     if (firstUnchecked) {
-      const targetId = firstUnchecked._id || firstUnchecked.mealId;
-      if (targetId) {
-        setIsLoading(true);
-        await handleToggleEaten(targetId);
-        setIsLoading(false);
-      }
+      setIsLoading(true);
+      await handleToggleEaten(firstUnchecked.uniqueId);
+      setIsLoading(false);
     } else {
       toast.info("All planned meals are marked as eaten!");
     }
@@ -317,11 +285,7 @@ export default function TrackMealPage() {
       .map(mapToMealLog);
     const eatenFromPartial = partialMeals.filter((pm) => pm.eaten);
     const eatenFromSpent = spentMeals.map((item) => {
-      const plannedMeal = safeMeals.find(
-        (meal) =>
-          meal.mealId === item.mealId?._id || meal._id === item._id,
-      );
-      return mapSpentToMealLog(item, plannedMeal?._id);
+      return mapSpentToMealLog(item);
     });
 
     const merged = [
@@ -331,7 +295,7 @@ export default function TrackMealPage() {
     ].filter((item): item is MealLog => item !== null);
 
     const uniqueMap = new Map<string, MealLog>();
-    merged.forEach((item) => uniqueMap.set(item.id, item));
+    merged.forEach((item) => uniqueMap.set(item.uniqueId, item));
     return Array.from(uniqueMap.values());
   };
 
@@ -460,10 +424,10 @@ export default function TrackMealPage() {
               ) : displayedMeals.length > 0 ? (
                 displayedMeals.map((meal) => (
                   <MealLogCard
-                    key={meal.uniqueId || meal.id}
+                    key={meal.uniqueId}
                     meal={meal}
                     onToggleEaten={handleToggleEaten}
-                    isLoading={togglingId === (meal.uniqueId || meal.id)}
+                    isLoading={togglingId === meal.uniqueId}
                   />
                 ))
               ) : (

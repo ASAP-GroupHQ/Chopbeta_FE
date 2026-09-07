@@ -28,7 +28,7 @@ export const trackService = {
 
   markAsEaten: async (uniqueId: string): Promise<MarkAsEatenResponse> => {
     const response = await apiClient.patch<MarkAsEatenResponse>(
-      `/track/mark-as-eaten/${uniqueId}`,
+      `/track/mark-as-eaten/${encodeURIComponent(uniqueId)}`,
     );
     return response.data;
   },

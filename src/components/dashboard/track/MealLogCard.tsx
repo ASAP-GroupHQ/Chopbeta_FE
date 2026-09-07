@@ -14,9 +14,6 @@ export const MealLogCard: React.FC<MealLogCardProps> = ({
   onToggleEaten,
   isLoading = false,
 }) => {
-  // Use uniqueId if available, fallback to id
-  const targetId = meal.uniqueId || meal.id;
-
   return (
     <div className="w-full bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md">
       {/* Left Section: Status Dot & Meal Details */}
@@ -70,7 +67,7 @@ export const MealLogCard: React.FC<MealLogCardProps> = ({
         </div>
 
         <button
-          onClick={() => onToggleEaten(targetId)}
+          onClick={() => onToggleEaten(meal.uniqueId)}
           disabled={isLoading}
           aria-label={
             meal.eaten ? "Mark meal as not eaten" : "Mark meal as eaten"
