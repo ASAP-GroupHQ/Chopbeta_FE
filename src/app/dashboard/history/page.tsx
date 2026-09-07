@@ -17,6 +17,24 @@ const MOCK_HISTORY_DATA: MealHistoryItem[] = [
     mealCount: 2,
     status: "Completed",
     totalSpent: 1000,
+    meals: [
+      {
+        id: "m1",
+        time: "12:30PM",
+        name: "Rice and Beans",
+        price: 1000,
+        status: "Completed",
+        image: "/meals/rice-beans.jpg",
+      },
+      {
+        id: "m2",
+        time: "1:30PM",
+        name: "Bread and Egg",
+        price: 1000,
+        status: "Completed",
+        image: "/meals/bread-egg.jpg",
+      },
+    ],
   },
   {
     id: "2",
@@ -25,6 +43,16 @@ const MOCK_HISTORY_DATA: MealHistoryItem[] = [
     mealCount: 2,
     status: "Completed",
     totalSpent: 1000,
+    meals: [
+      {
+        id: "m3",
+        time: "12:30PM",
+        name: "Rice and Beans",
+        price: 1000,
+        status: "Completed",
+        image: "/meals/rice-beans.jpg",
+      },
+    ],
   },
   {
     id: "3",
@@ -33,6 +61,24 @@ const MOCK_HISTORY_DATA: MealHistoryItem[] = [
     mealCount: 2,
     status: "Partial",
     totalSpent: 1000,
+    meals: [
+      {
+        id: "m4",
+        time: "8:00AM",
+        name: "Pap and Akara",
+        price: 500,
+        status: "Completed",
+        image: "/meals/pap-akara.jpg",
+      },
+      {
+        id: "m5",
+        time: "2:00PM",
+        name: "Jollof Rice",
+        price: 500,
+        status: "Pending",
+        image: "/meals/jollof.jpg",
+      },
+    ],
   },
   {
     id: "4",
@@ -71,6 +117,11 @@ const TOP_MEALS: TopMealItem[] = [
 export default function HistoryPage() {
   const [activeTab, setActiveTab] = useState<string>("All Plans");
 
+  const filteredHistory =
+    activeTab === "All Plans"
+      ? MOCK_HISTORY_DATA
+      : MOCK_HISTORY_DATA.filter((item) => item.status === activeTab);
+
   return (
     <div className="min-h-screen bg-[#F9F8FC] p-4 md:p-8 text-[#1A1A2E]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -84,7 +135,7 @@ export default function HistoryPage() {
         </div>
 
         <div className="flex items-center gap-3 self-start sm:self-center">
-          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm hover:bg-gray-50 transition text-sm font-medium">
+          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-xs hover:bg-gray-50 transition text-sm font-medium">
             <svg
               width="18"
               height="18"
@@ -111,7 +162,7 @@ export default function HistoryPage() {
             </svg>
           </button>
 
-          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm hover:bg-gray-50 transition text-sm font-medium">
+          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-xs hover:bg-gray-50 transition text-sm font-medium">
             <svg
               width="14"
               height="14"
@@ -138,18 +189,17 @@ export default function HistoryPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <HistoryTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-          <HistoryList items={MOCK_HISTORY_DATA} />
+          <HistoryList items={filteredHistory} />
         </div>
 
         {/* RIGHT */}
         <div className="space-y-6">
-          {/* HISTORY SUMMARY CARD */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-base text-[#1A1A2E]">
                 History Summary
               </h3>
-              <select className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 outline-none font-medium text-gray-600 cursor-pointer">
+              <select className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 outline-hidden font-medium text-gray-600 cursor-pointer">
                 <option>This week</option>
               </select>
             </div>
@@ -162,7 +212,6 @@ export default function HistoryPage() {
 
           <TopMeals meals={TOP_MEALS} />
 
-          {/* BUDGET ADVOCACY CARD */}
           <div className="bg-[#EAF4EF] rounded-2xl p-5 border border-[#D5ECE1] relative overflow-hidden">
             <h4 className="font-bold text-sm text-[#0F623D] mb-1">
               Save More, Eat Better

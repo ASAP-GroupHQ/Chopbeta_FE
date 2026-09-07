@@ -4,7 +4,7 @@ import React from "react";
 
 interface HistoryTabsProps {
   activeTab: string;
-  setActiveTab: (tab: any) => void;
+  setActiveTab: (tab: string) => void;
 }
 
 export default function HistoryTabs({
@@ -19,7 +19,7 @@ export default function HistoryTabs({
         <button
           key={tab}
           onClick={() => setActiveTab(tab)}
-          className={`pb-3 text-sm font-semibold whitespace-nowrap transition-all relative ${
+          className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors relative ${
             activeTab === tab
               ? "text-[#0F623D]"
               : "text-gray-400 hover:text-gray-600"
