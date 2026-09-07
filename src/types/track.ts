@@ -36,6 +36,7 @@ export interface SpentMealEntry {
       $numberDecimal: string;
     };
   };
+  uniqueId: string;
   eatenAt: string;
   _id: string;
 }
@@ -52,6 +53,7 @@ export interface DailySpentResponse {
 
 export interface EatenMealItem {
   mealId: string;
+  uniqueId: string;
   eatenAt: string;
   _id: string;
 }
@@ -63,6 +65,7 @@ export interface MealsEatenTodayResponse {
   data: {
     meals: Array<{
       mealId: string;
+      uniqueId: string;
       eatenAt: string;
       _id: string;
     }>;

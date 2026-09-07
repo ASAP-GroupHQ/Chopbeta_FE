@@ -6,7 +6,7 @@ import {
   TrackIcon,
   HistoryIcon,
   SettingsIcon,
-  PremiumIcon,
+  // PremiumIcon,
 } from "@/components/icons/NavIcons";
 
 export interface NavItem {
@@ -27,7 +27,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { label: "Track", href: "/dashboard/track", icon: TrackIcon },
   { label: "History", href: "/dashboard/history", icon: HistoryIcon },
   { label: "Settings", href: "/dashboard/setting", icon: SettingsIcon },
-  { label: "Premium", href: "/dashboard/premium", icon: PremiumIcon },
+  // { label: "Premium", href: "/dashboard/premium", icon: PremiumIcon },
 ];
 
 export const MOBILE_BOTTOM_ITEMS: NavItem[] = [
@@ -42,5 +42,6 @@ export const MOBILE_BOTTOM_ITEMS: NavItem[] = [
   },
 
   { label: "Track", href: "/dashboard/track", icon: TrackIcon },
-  { label: "Premium", href: "/dashboard/premium", icon: PremiumIcon },
+  // { label: "Premium", href: "/dashboard/premium", icon: PremiumIcon },
+  { label: "Settings", href: "/dashboard/setting", icon: SettingsIcon },
 ];
