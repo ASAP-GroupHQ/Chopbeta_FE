@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import HistoryTabs from "@/components/dashboard/history/HistoryTabs";
 import HistoryList, {
   MealHistoryItem,
@@ -8,95 +8,106 @@ import HistoryList, {
 import SpendingChart from "@/components/dashboard/history/SpendingChart";
 import TopMeals, { TopMealItem } from "@/components/dashboard/history/TopMeals";
 import HeaderActions from "@/components/dashboard/HeaderActions";
+import { mealService } from "@/services/meal";
+import {
+  CompletedMealHistoryItem,
+  ApiPartialMealItem,
+  PlannedMealsHistoryItem,
+} from "@/types/meal";
 
-const MOCK_HISTORY_DATA: MealHistoryItem[] = [
-  {
-    id: "1",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 2,
-    status: "Completed",
-    totalSpent: 1000,
-    meals: [
-      {
-        id: "m1",
-        time: "12:30PM",
-        name: "Rice and Beans",
-        price: 1000,
-        status: "Completed",
-        image: "/meals/rice-beans.jpg",
-      },
-      {
-        id: "m2",
-        time: "1:30PM",
-        name: "Bread and Egg",
-        price: 1000,
-        status: "Completed",
-        image: "/meals/bread-egg.jpg",
-      },
-    ],
-  },
-  {
-    id: "2",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 2,
-    status: "Completed",
-    totalSpent: 1000,
-    meals: [
-      {
-        id: "m3",
-        time: "12:30PM",
-        name: "Rice and Beans",
-        price: 1000,
-        status: "Completed",
-        image: "/meals/rice-beans.jpg",
-      },
-    ],
-  },
-  {
-    id: "3",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 2,
-    status: "Partial",
-    totalSpent: 1000,
-    meals: [
-      {
-        id: "m4",
-        time: "8:00AM",
-        name: "Pap and Akara",
-        price: 500,
-        status: "Completed",
-        image: "/meals/pap-akara.jpg",
-      },
-      {
-        id: "m5",
-        time: "2:00PM",
-        name: "Jollof Rice",
-        price: 500,
-        status: "Pending",
-        image: "/meals/jollof.jpg",
-      },
-    ],
-  },
-  {
-    id: "4",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 3,
-    status: "Completed",
-    totalSpent: 1000,
-  },
-  {
-    id: "5",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 2,
-    status: "Partial",
-    totalSpent: 1000,
-  },
-];
+const toDateKey = (date: string) => new Date(date).toISOString().slice(0, 10);
+
+const formatDate = (dateKey: string) =>
+  new Date(`${dateKey}T00:00:00`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+const formatTime = (date: string) =>
+  new Date(date).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+const buildHistory = (
+  completedMeals: CompletedMealHistoryItem[],
+  partialMeals: ApiPartialMealItem[],
+  plannedMeals: PlannedMealsHistoryItem[],
+): MealHistoryItem[] => {
+  const grouped = new Map<string, MealHistoryItem>();
+
+  const addGroup = (
+    date: string,
+    status: MealHistoryItem["status"],
+    meal: NonNullable<MealHistoryItem["meals"]>[number],
+  ) => {
+    const dateKey = toDateKey(date);
+    const groupId = `${status}-${dateKey}`;
+    const existing = grouped.get(groupId);
+
+    if (existing) {
+      existing.meals = [...(existing.meals || []), meal];
+      existing.mealCount += 1;
+      existing.totalSpent += meal.price || 0;
+      return;
+    }
+
+    grouped.set(groupId, {
+      id: groupId,
+      date: formatDate(dateKey),
+      dayOfWeek: new Date(`${dateKey}T00:00:00`).toLocaleDateString("en-US", {
+        weekday: "long",
+      }),
+      mealCount: 1,
+      status,
+      totalSpent: meal.price || 0,
+      meals: [meal],
+    });
+  };
+
+  completedMeals.forEach((meal) => {
+    addGroup(meal.eatenAt, "Completed", {
+      id: meal.uniqueId,
+      time: formatTime(meal.eatenAt),
+      name: meal.mealTitle,
+      price: null,
+      status: "Completed",
+    });
+  });
+
+  partialMeals.forEach((meal) => {
+    const price = meal.estimatedPrice?.$numberDecimal
+      ? Number(meal.estimatedPrice.$numberDecimal)
+      : null;
+
+    addGroup(meal.addedAt, "Partial", {
+      id: meal.uniqueId,
+      time: formatTime(meal.addedAt),
+      name: meal.mealTitle,
+      price,
+      status: "Pending",
+    });
+  });
+
+  plannedMeals.forEach((meal) => {
+    const price = meal.estimatedPrice?.$numberDecimal
+      ? Number(meal.estimatedPrice.$numberDecimal)
+      : null;
+
+    addGroup(meal.addedAt, "Saved", {
+      id: meal.mealId,
+      time: formatTime(meal.addedAt),
+      name: meal.mealTitle,
+      price,
+      status: "Pending",
+    });
+  });
+
+  return Array.from(grouped.values()).sort(
+    (first, second) => second.id.localeCompare(first.id),
+  );
+};
 
 const CHART_DATA = [
   { day: "Mon", spent: 2100 },
@@ -116,11 +127,51 @@ const TOP_MEALS: TopMealItem[] = [
 
 export default function HistoryPage() {
   const [activeTab, setActiveTab] = useState<string>("All Plans");
+  const [history, setHistory] = useState<MealHistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const [completedResponse, partialResponse, plannedResponse] =
+          await Promise.all([
+            mealService.getAllCompletedMeals(1, 10),
+            mealService.getAllPartialMealsForHistory(1, 10),
+            mealService.getAllPlannedMealsForHistory(1, 10),
+          ]);
+
+        setHistory(
+          buildHistory(
+            completedResponse.data?.meals || [],
+            partialResponse.data?.data || [],
+            plannedResponse.data?.meals || [],
+          ),
+        );
+      } catch (loadError) {
+        console.error("Failed to load meal history:", loadError);
+        setError("Unable to load your meal history right now.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, []);
 
   const filteredHistory =
     activeTab === "All Plans"
-      ? MOCK_HISTORY_DATA
-      : MOCK_HISTORY_DATA.filter((item) => item.status === activeTab);
+      ? history
+      : history.filter((item) => item.status === activeTab);
+
+  const totalSpent = history.reduce((sum, item) => sum + item.totalSpent, 0);
+  const totalMeals = history.reduce((sum, item) => sum + item.mealCount, 0);
+  const completedPlans = history.filter(
+    (item) => item.status === "Completed",
+  ).length;
 
   return (
     <div className="min-h-screen bg-[#F9F8FC] p-4 md:p-8 text-[#1A1A2E]">
@@ -189,7 +240,17 @@ export default function HistoryPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <HistoryTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-          <HistoryList items={filteredHistory} />
+          {isLoading ? (
+            <div className="rounded-2xl border border-gray-100 bg-white px-5 py-12 text-center text-sm text-gray-400 shadow-xs">
+              Loading meal history...
+            </div>
+          ) : error ? (
+            <div className="rounded-2xl border border-red-100 bg-white px-5 py-12 text-center text-sm text-red-500 shadow-xs">
+              {error}
+            </div>
+          ) : (
+            <HistoryList items={filteredHistory} />
+          )}
         </div>
 
         {/* RIGHT */}
@@ -203,9 +264,38 @@ export default function HistoryPage() {
                 <option>This week</option>
               </select>
             </div>
-            <div className="h-28 flex items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-xl">
-              <span className="text-xs">No metrics context loaded</span>
-            </div>
+            {history.length === 0 ? (
+              <div className="h-28 flex items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-xl">
+                <span className="text-xs">No history summary available yet</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-5 pt-1">
+                <div>
+                  <p className="text-xs text-gray-400">Total plans</p>
+                  <p className="text-xl font-bold text-[#1A1A2E] mt-1">
+                    {history.length}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Meals recorded</p>
+                  <p className="text-xl font-bold text-[#1A1A2E] mt-1">
+                    {totalMeals}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Completed plans</p>
+                  <p className="text-xl font-bold text-[#0F623D] mt-1">
+                    {completedPlans}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Total spent</p>
+                  <p className="text-xl font-bold text-[#0F623D] mt-1">
+                    ₦{totalSpent.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <SpendingChart data={CHART_DATA} />

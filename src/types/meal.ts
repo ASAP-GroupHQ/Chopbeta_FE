@@ -55,9 +55,11 @@ export interface GenerateMealsResponse {
 
 // Updated to mirror the new backend response structure
 export interface PlannedMealEntry {
-  _id: string;
   mealId: string;
-  uniqueId: string;
+  mealTitle: string;
+  estimatedPrice?: {
+    $numberDecimal: string;
+  };
   addedAt: string;
 }
 
@@ -72,7 +74,7 @@ export interface AddToPlannedResponse {
 
 export interface PlannedMealData {
   _id?: string;
-  uniqueId: string;
+  uniqueId?: string;
   mealId: string;
   mealTitle: string;
   category?: string;
@@ -88,7 +90,31 @@ export interface PlannedMealsResponse {
   statusCode: number;
   message: string;
   data: {
-    plannedMeals: PlannedMealData[];
+    meals: PlannedMealData[];
+    totalMealsFound: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
+export interface PlannedMealsHistoryItem {
+  mealId: string;
+  mealTitle: string;
+  estimatedPrice?: {
+    $numberDecimal: string;
+  };
+  addedAt: string;
+}
+
+export interface AllPlannedMealsResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    meals: PlannedMealsHistoryItem[];
+    totalMealsFound: number;
+    totalPages: number;
+    currentPage: number;
   };
 }
 // Raw item shape returned from backend
@@ -109,6 +135,24 @@ export interface AllPartialMealsResponse {
   data: {
     data: ApiPartialMealItem[];
     totalMeals: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
+export interface CompletedMealHistoryItem {
+  mealTitle: string;
+  uniqueId: string;
+  eatenAt: string;
+}
+
+export interface AllCompletedMealsResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    meals: CompletedMealHistoryItem[];
+    totalMealsFound: number;
     totalPages: number;
     currentPage: number;
   };

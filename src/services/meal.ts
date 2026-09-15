@@ -5,6 +5,8 @@ import {
   AddToPlannedResponse,
   PlannedMealsResponse,
   AllPartialMealsResponse,
+  AllCompletedMealsResponse,
+  AllPlannedMealsResponse,
   MealLog,
 } from "@/types/meal";
 
@@ -32,10 +34,40 @@ export const mealService = {
     return response.data;
   },
 
-  getPlannedMeals: async (): Promise<PlannedMealsResponse> => {
+  getPlannedMeals: async (
+    page: number = 1,
+    pageSize: number = 10,
+    date?: string,
+  ): Promise<PlannedMealsResponse> => {
+    const params: Record<string, string | number> = { page, pageSize };
+
+    if (date) {
+      params.date = date;
+    }
+
     const response = await apiClient.get<PlannedMealsResponse>(
       "/track/planned-meals",
+      { params },
     );
+    return response.data;
+  },
+
+  getAllPlannedMealsForHistory: async (
+    page: number = 1,
+    pageSize: number = 10,
+    date?: string,
+  ): Promise<AllPlannedMealsResponse> => {
+    const params: Record<string, string | number> = { page, pageSize };
+
+    if (date) {
+      params.date = date;
+    }
+
+    const response = await apiClient.get<AllPlannedMealsResponse>(
+      "/track/planned-meals",
+      { params },
+    );
+
     return response.data;
   },
 
@@ -84,5 +116,43 @@ export const mealService = {
       totalMeals: rawData.totalMeals || 0,
       totalPages: rawData.totalPages || 1,
     };
+  },
+
+  getAllPartialMealsForHistory: async (
+    page: number = 1,
+    pageSize: number = 10,
+    date?: string,
+  ): Promise<AllPartialMealsResponse> => {
+    const params: Record<string, string | number> = { page, pageSize };
+
+    if (date) {
+      params.date = date;
+    }
+
+    const response = await apiClient.get<AllPartialMealsResponse>(
+      "/track/all-partial-meals",
+      { params },
+    );
+
+    return response.data;
+  },
+
+  getAllCompletedMeals: async (
+    page: number = 1,
+    pageSize: number = 10,
+    date?: string,
+  ): Promise<AllCompletedMealsResponse> => {
+    const params: Record<string, string | number> = { page, pageSize };
+
+    if (date) {
+      params.date = date;
+    }
+
+    const response = await apiClient.get<AllCompletedMealsResponse>(
+      "/track/all-completed-meals",
+      { params },
+    );
+
+    return response.data;
   },
 };

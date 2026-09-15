@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 
 export interface MealDetail {
   id: string;
   time: string;
   name: string;
-  price: number;
+  price: number | null;
   status: "Completed" | "Pending" | "Cancelled";
   image?: string;
 }
@@ -17,7 +16,7 @@ export interface MealHistoryItem {
   date: string;
   dayOfWeek: string;
   mealCount: number;
-  status: "Completed" | "Partial";
+  status: "Completed" | "Partial" | "Saved";
   totalSpent: number;
   meals?: MealDetail[];
 }
@@ -70,7 +69,9 @@ export default function HistoryList({ items, onSavePlan }: HistoryListProps) {
                   className={`px-4 py-1.5 rounded-full text-xs font-semibold ${
                     item.status === "Completed"
                       ? "bg-[#EAF5ED] text-[#14532d]"
-                      : "bg-[#FFF4EC] text-[#E65100]"
+                      : item.status === "Saved"
+                        ? "bg-blue-50 text-blue-700"
+                        : "bg-[#FFF4EC] text-[#E65100]"
                   }`}
                 >
                   {item.status}
@@ -148,26 +149,18 @@ export default function HistoryList({ items, onSavePlan }: HistoryListProps) {
                               {meal.time}
                             </td>
 
-                            {/* Meal Thumbnail + Name */}
+                            {/* Meal Name */}
                             <td className="py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                                  <Image
-                                    src={meal.image || "/placeholder-meal.jpg"}
-                                    alt={meal.name}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                                <span className="font-bold text-gray-800 text-sm">
-                                  {meal.name}
-                                </span>
-                              </div>
+                              <span className="font-bold text-gray-800 text-sm">
+                                {meal.name}
+                              </span>
                             </td>
 
                             {/* Price */}
                             <td className="py-4 font-bold text-gray-900 whitespace-nowrap">
-                              ₦{meal.price.toLocaleString()}
+                              {meal.price === null
+                                ? "—"
+                                : `₦${meal.price.toLocaleString()}`}
                             </td>
 
                             {/* Status */}

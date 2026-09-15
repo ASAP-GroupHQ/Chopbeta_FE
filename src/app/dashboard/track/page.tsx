@@ -208,10 +208,10 @@ export default function TrackMealPage() {
     // Planned Meals
     if (
       mealsRes.status === "fulfilled" &&
-      mealsRes.value?.data?.plannedMeals &&
-      Array.isArray(mealsRes.value.data.plannedMeals)
+      mealsRes.value?.data?.meals &&
+      Array.isArray(mealsRes.value.data.meals)
     ) {
-      setMeals(mealsRes.value.data.plannedMeals);
+      setMeals(mealsRes.value.data.meals);
     } else if (!silent) {
       setMeals([]);
     }
