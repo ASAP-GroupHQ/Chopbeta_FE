@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { BarChart3, DollarSign, LayoutDashboard, Settings, Utensils, Users } from "lucide-react";
 
@@ -18,9 +19,8 @@ export default function AdminSidebar() {
 
   return (
     <aside className="fixed left-0 top-0 z-20 flex h-screen w-64 flex-col border-r border-gray-100 bg-white p-4">
-      <div className="mb-4 flex items-center gap-2 px-3 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-lg font-bold text-white">C</div>
-        <span className="text-xl font-bold text-emerald-800">ChopBeta</span>
+      <div className="mb-4 flex items-center px-3 py-4">
+        <Image src="/chopbeta.png" alt="ChopBeta" width={150} height={50} className="h-[50px] w-[150px] object-contain" priority />
       </div>
       <nav className="space-y-1">
         {menuItems.map((item) => {
