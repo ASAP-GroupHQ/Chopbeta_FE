@@ -1,135 +1,262 @@
-"use client";
+// ==========================================
+// 1. TYPES DEFINITION (types.ts)
+// ==========================================
+export interface MetricCardProps {
+  title: string;
+  value: string;
+  trend: string;
+  trendText: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+}
 
-import React from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { FiArrowLeft } from "react-icons/fi";
-import { ASAP_TEAM } from "@/constants/team-data";
+export interface ActivityItem {
+  id: string;
+  userName: string;
+  avatar: string;
+  action: string;
+  time: string;
+  statusColor: string;
+}
 
-export default function AboutAsapPage() {
-  // Motion Animation Presets
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1, // Delays the animation of each child (card)
-      },
-    },
-  };
+export interface PopularMeal {
+  id: string;
+  name: string;
+  category: string;
+  count: string;
+  trend: string;
+  percentage: number;
+  image: string;
+}
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-  };
+// ==========================================
+// 2. MOCK DATA INITIALIZATION (mockData.ts)
+// ==========================================
+export const mockMetrics: MetricCardProps[] = [
+  { title: 'Total Users', value: '48,325', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '👤' },
+  { title: 'Daily Active Users', value: '12,325', trend: '↑ 8%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '👥' },
+  { title: 'Completed Meals', value: '23,325', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '🍲' },
+  { title: 'Meals Plans Generated', value: '23,325', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '📋' },
+  { title: 'Users Retention Rate', value: '96.7%', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '📈' },
+  { title: 'Meals in Database', value: '96.7%', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '🗄️' },
+  { title: 'Completed Meals', value: '23,325', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '🍲' },
+];
 
+export const mockActivities: ActivityItem[] = [
+  { id: '1', userName: 'Esther', avatar: 'https://unsplash.com', action: 'updated the price of Jollof Rice', time: '2 minutes ago', statusColor: 'bg-emerald-600' },
+  { id: '2', userName: 'Marvelous Admin', avatar: 'https://unsplash.com', action: 'added a new meal Pancake', time: '15 minutes ago', statusColor: 'bg-orange-500' },
+  { id: '3', userName: 'Emmanuel O.', avatar: 'https://unsplash.com', action: 'exported user activity report', time: '35 minutes ago', statusColor: 'bg-purple-600' },
+  { id: '4', userName: 'Oluwaseyi', avatar: 'https://unsplash.com', action: 'exported user activity report', time: '1 hour ago', statusColor: 'bg-emerald-600' },
+];
+
+export const mockPopularMeals: PopularMeal[] = [
+  { id: '1', name: 'Bread & Egg', category: 'African Dish', count: '2,432', trend: '↑ 8%', percentage: 85, image: 'https://unsplash.com' },
+  { id: '2', name: 'Pap & Akara', category: 'African Dish', count: '2,432', trend: '↑ 8%', percentage: 70, image: 'https://unsplash.com' },
+  { id: '3', name: 'Noodles & Egg', category: 'African Dish', count: '2,432', trend: '↑ 8%', percentage: 60, image: 'https://unsplash.com' },
+  { id: '4', name: 'Rice & Beans', category: 'African Dish', count: '2,432', trend: '↑ 8%', percentage: 90, image: 'https://unsplash.com' },
+];
+
+// ==========================================
+// 3. COMPLETE DASHBOARD PAGE LAYER
+// ==========================================
+import React from 'react';
+import { 
+  LayoutDashboard, 
+  Utensils, 
+  DollarSign, 
+  Users, 
+  BarChart3, 
+  Settings, 
+  HelpCircle, 
+  Search,
+  ChevronDown,
+  PlusCircle,
+  RefreshCw,
+  Eye,
+  TrendingUp
+} from 'lucide-react';
+
+export default function ChopBetaDashboard() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#F4FAF6] via-white to-white text-[#1A2E35] font-sans overflow-x-hidden">
-      {/* 1. MINIMAL HEADER NAVBAR */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between border-b border-gray-100/50 relative z-20">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-500 hover:text-green-700 transition-colors"
-        >
-          <FiArrowLeft /> Back to ChopBeta
-        </Link>
-        <div className="relative w-32 h-10">
-          <Image
-            src="/chopbeta.png"
-            alt="ChopBeta Logo"
-            fill
-            className="object-contain"
-            priority
-          />
+    <div className="flex bg-[#F8FAFC] min-h-screen text-slate-800 antialiased font-sans">
+      
+      {/* SIDEBAR NAVIGATION */}
+      <aside className="w-64 border-r border-slate-100 bg-white h-screen fixed left-0 top-0 flex flex-col p-5 z-20">
+        <div className="flex items-center gap-2 px-2 py-3 mb-8">
+          <div className="w-7 h-7 rounded bg-[#105D38] flex items-center justify-center text-white font-black text-sm">C</div>
+          <span className="font-bold text-lg text-[#105D38] tracking-tight">ChopBeta</span>
         </div>
-        <div className="text-[11px] font-medium text-gray-400">
-          Team Page
-        </div>
-      </header>
+        
+        <nav className="flex-1 space-y-1">
+          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-[#105D38] text-white transition-colors relative">
+            <LayoutDashboard className="w-4 h-4" />
+            <span>Dashboard</span>
+            <span className="absolute right-3 w-1 h-4 bg-orange-500 rounded-full" />
+          </a>
+          
+          {[
+            { label: 'Meal Management', icon: Utensils },
+            { label: 'Price Management', icon: DollarSign },
+            { label: 'User Management', icon: Users },
+            { label: 'Analytics & Reports', icon: BarChart3 },
+            { label: 'Settings', icon: Settings },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <a key={item.label} href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                <Icon className="w-4 h-4 text-slate-400" />
+                <span>{item.label}</span>
+              </a>
+            );
+          })}
+        </nav>
+      </aside>
 
-      {/* 2. HERO INTRODUCTION SECTION */}
-      <section className="max-w-7xl mx-auto px-6 pt-16 pb-10 text-center space-y-4">
-        {/* ASAP Bold Green Text Logo */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-block px-5 py-2.5 bg-green-50 rounded-full border border-green-100 shadow-inner"
-        >
-          <span className="text-2xl font-black text-green-700 tracking-tightest">
-            ASAP
-          </span>
-        </motion.div>
+      {/* MAIN CONTENT AREA CONTAINER */}
+      <div className="flex-1 pl-64">
+        
+        {/* APP GLOBAL TOP BAR */}
+        <header className="flex items-center justify-between py-4 px-8 border-b border-slate-100 bg-white sticky top-0 z-10">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Welcome Back Admin!👋</h1>
+            <p className="text-xs text-slate-400 mt-0.5">Here is what's happening with ChopBeta.</p>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <button className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50">
+              <HelpCircle className="w-4 h-4" />
+            </button>
+            <button className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50">
+              <Search className="w-4 h-4" />
+            </button>
+            
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-100">
+              <img
+                src="https://unsplash.com"
+                alt="Profile"
+                className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-100"
+              />
+              <button className="flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-slate-900">
+                Victor
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+            </div>
+          </div>
+        </header>
 
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1A2E35] leading-tight max-w-2xl mx-auto">
-          The brilliant minds powering{" "}
-          <span className="text-green-700 bg-gradient-to-r from-green-700 to-emerald-500 bg-clip-text text-transparent">
-            ASAP
-          </span>{" "}
-          Team
-        </h1>
-        <p className="text-gray-600 text-lg max-w-lg mx-auto leading-relaxed">
-          The dedicated innovators building ChopBeta to make student meal
-          planning affordable and smart.
-        </p>
-      </section>
-
-      {/* 3. TEAM GRID SECTION */}
-      <section className="max-w-7xl mx-auto px-6 pb-24">
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6"
-          // variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {ASAP_TEAM.map((member) => (
-            <motion.div
-              key={member.id}
-              // variants={cardVariants}
-              whileHover={{ scale: 1.03, y: -5 }}
-              className="p-6 bg-white rounded-[24px] border border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:border-green-600/30 transition-all cursor-pointer text-center group flex flex-col items-center gap-4"
-            >
-              {/* Member Picture Container */}
-              <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl ring-2 ring-gray-100 group-hover:ring-green-100 transition-all duration-300">
-                <Image
-                  src={member.image}
-                  alt={member.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 96px"
-                  className="object-cover"
-                />
+        {/* DASHBOARD VIEW METRIC CONTENT CANVAS */}
+        <main className="p-8 space-y-6 max-w-[1400px] mx-auto">
+          
+          {/* HORIZONTAL HORIZON HORIZON METRICS LIST SLIDER */}
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200">
+            {mockMetrics.map((item, index) => (
+              <div key={index} className="min-w-[175px] flex-1 bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex flex-col justify-between">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-medium text-slate-400 whitespace-nowrap">{item.title}</p>
+                    <p className="text-lg font-bold text-slate-900 tracking-tight">{item.value}</p>
+                  </div>
+                  <div className={`w-7 h-7 rounded-lg ${item.iconBg} flex items-center justify-center text-xs`}>
+                    {item.icon}
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between mt-3 pt-1.5 border-t border-slate-50 text-[9px]">
+                  <span className="font-bold text-emerald-600">{item.trend}</span>
+                  <span className="text-slate-400 font-medium">{item.trendText}</span>
+                  <span className="text-emerald-500 text-[10px] font-bold">📈</span>
+                </div>
               </div>
+            ))}
+          </div>
 
-              {/* Member Name */}
-              <div className="space-y-1">
-                <h2 className="text-sm font-bold text-[#1A2E35] group-hover:text-green-800 transition-colors">
-                  {member.name}
-                </h2>
-
-                {/* Member Role - Using Nigerian Student Aesthetic colors */}
-                <p className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full inline-block">
-                  {member.role}
-                </p>
+          {/* QUICK ACTIONS & RECENT ACTIVITIES TWO-COLUMN MIDDLE SPLIT COMPONENT */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* CANVAS: QUICK ACTION BUTTON WIDGETS */}
+            <div className="bg-white border border-slate-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+              <h3 className="text-xs font-bold text-slate-900 mb-3 tracking-wide uppercase">Quick Actions</h3>
+              <div className="grid grid-cols-2 gap-3 flex-1">
+                {[
+                  { label: 'Add new meals', sub: 'Add a new meal to the database', icon: <PlusCircle className="w-4 h-4 text-indigo-600" />, iconBg: 'bg-indigo-50' },
+                  { label: 'Update Meal Prices', sub: 'Update prices of existing meals', icon: <DollarSign className="w-4 h-4 text-emerald-600" />, iconBg: 'bg-emerald-50' },
+                  { label: 'View Users', sub: 'View and manage user accounts', icon: <Users className="w-4 h-4 text-blue-600" />, iconBg: 'bg-blue-50' },
+                  { label: 'View Analytics', sub: 'See detailed platform analytics', icon: <TrendingUp className="w-4 h-4 text-rose-600" />, iconBg: 'bg-rose-50' },
+                ].map((act, i) => (
+                  <button key={i} className="flex items-center gap-2 rounded-lg border border-slate-100 p-3 text-left transition-colors hover:border-slate-200 hover:bg-slate-50">
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${act.iconBg}`}>
+                      {act.icon}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[11px] font-semibold text-slate-700">{act.label}</span>
+                      <span className="mt-0.5 block text-[9px] text-slate-400">{act.sub}</span>
+                    </span>
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {/* Subtle hover detail indicator */}
-              <div className="w-10 h-1 h-0.5 bg-green-200 rounded-full mt-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
+            {/* CANVAS: RECENT ACTIVITY WIDGET */}
+            <div className="col-span-1 lg:col-span-2 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-slate-900">Recent Activities</h3>
+                  <p className="mt-1 text-[10px] text-slate-400">Latest changes across your platform</p>
+                </div>
+                <button className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700 hover:text-emerald-800">
+                  <RefreshCw className="h-3 w-3" /> Refresh
+                </button>
+              </div>
+              <div className="space-y-3">
+                {mockActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-center gap-3 border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${activity.statusColor}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs text-slate-700"><span className="font-semibold">{activity.userName}</span> {activity.action}</p>
+                      <p className="mt-1 text-[10px] text-slate-400">{activity.time}</p>
+                    </div>
+                    <button aria-label={`View activity by ${activity.userName}`} className="rounded p-1 text-slate-300 hover:bg-slate-50 hover:text-slate-500">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
-      {/* 4. TEAM CALL-OUT FOOTER */}
-      <footer className="max-w-7xl mx-auto px-6 pb-20 text-center">
-        <div className="inline-block p-1 bg-green-50 border border-green-100 rounded-full font-bold text-xs text-green-700">
-           ASAP (As Soon As Possible)
-        </div>
-      </footer>
-    </main>
+          {/* POPULAR MEALS TABLE */}
+          <section className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-slate-900">Popular Meals</h3>
+                <p className="mt-1 text-[10px] text-slate-400">Most selected meals this month</p>
+              </div>
+              <button className="text-[10px] font-semibold text-emerald-700 hover:text-emerald-800">View all</button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {mockPopularMeals.map((meal) => (
+                <div key={meal.id} className="rounded-lg border border-slate-100 p-3">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800">{meal.name}</p>
+                      <p className="mt-1 text-[10px] text-slate-400">{meal.category}</p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-emerald-600">{meal.trend}</span>
+                  </div>
+                  <div className="mb-1 flex items-center justify-between text-[10px] text-slate-400">
+                    <span>{meal.count} selections</span>
+                    <span>{meal.percentage}%</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-emerald-600" style={{ width: `${meal.percentage}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
   );
 }
