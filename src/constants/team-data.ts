@@ -44,15 +44,15 @@ export const ASAP_TEAM: TeamMember[] = [
   },
   {
     id: 7,
-    name: "Marvelous Ndukwe",
-    role: "Brand & Product Designer",
-    image: "/images/team/marvellous.png",
-  },
-  {
-    id: 8,
     name: "Victor Olamire",
-    role: "Product Designer",
+    role: "Brand & Product Designer",
     image: "/images/team/victor.jpeg",
+  },
+   {
+    id: 8,
+    name: "Odewole Samuel Adesola",
+    role: "Product Designer",
+    image: "/images/team/monarch.jpeg",
   },
   {
     id: 9,
@@ -62,14 +62,8 @@ export const ASAP_TEAM: TeamMember[] = [
   },
   {
     id: 10,
-    name: "Joy Ikwue",
-    role: "Data Analyst",
-    image: "/images/team/joy.jpeg",
-  },
-  {
-    id: 11,
-    name: "Oluwapelumi Mary",
-    role: "Data Analyst",
-    image: "/images/team/mary.jpeg",
-  },
+    name: "Obatuga Boluwatife",
+    role: "Social Media Manager",
+    image: "/images/team/tife.jpeg",
+  }
 ];
