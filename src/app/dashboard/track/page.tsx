@@ -28,12 +28,45 @@ const parseDecimal = (val: unknown): number => {
   return 0;
 };
 
+const getMealIdentifier = (
+  item:
+    | { uniqueId?: string | null; _id?: string | null; mealId?: string | null | { _id?: string | null } }
+    | null
+    | undefined,
+): string | null => {
+  if (!item) return null;
+
+  if (typeof item.uniqueId === "string" && item.uniqueId.trim()) {
+    return item.uniqueId;
+  }
+
+  if (typeof item._id === "string" && item._id.trim()) {
+    return item._id;
+  }
+
+  if (typeof item.mealId === "string" && item.mealId.trim()) {
+    return item.mealId;
+  }
+
+  if (
+    typeof item.mealId === "object" &&
+    item.mealId !== null &&
+    typeof item.mealId._id === "string" &&
+    item.mealId._id.trim()
+  ) {
+    return item.mealId._id;
+  }
+
+  return null;
+};
+
 const mapToMealLog = (item: PlannedMealData): MealLog | null => {
-  if (!item || !item.uniqueId) return null;
+  const uniqueId = getMealIdentifier(item);
+  if (!uniqueId) return null;
 
   return {
     id: item._id || item.mealId,
-    uniqueId: item.uniqueId,
+    uniqueId,
     time: item.addedAt
       ? new Date(item.addedAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -49,11 +82,13 @@ const mapToMealLog = (item: PlannedMealData): MealLog | null => {
 
 const mapSpentToMealLog = (item: SpentMealEntry): MealLog | null => {
   if (!item) return null;
-  if (!item.uniqueId) return null;
+
+  const uniqueId = getMealIdentifier(item);
+  if (!uniqueId) return null;
 
   return {
-    id: item._id,
-    uniqueId: item.uniqueId,
+    id: item._id || item.mealId?._id,
+    uniqueId,
     time: item.eatenAt
       ? new Date(item.eatenAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -167,9 +202,11 @@ export default function TrackMealPage() {
 
   const handleMarkNextMealAsEaten = async () => {
     const firstUnchecked = safeMeals.find((m) => m && !m.isEaten);
-    if (firstUnchecked) {
+    const fallbackId = firstUnchecked?.uniqueId ?? firstUnchecked?._id ?? null;
+
+    if (fallbackId) {
       setIsLoading(true);
-      await handleToggleEaten(firstUnchecked.uniqueId);
+      await handleToggleEaten(fallbackId);
       setIsLoading(false);
     } else {
       toast.info("All planned meals are marked as eaten!");
@@ -308,7 +345,7 @@ export default function TrackMealPage() {
       </Head>
 
       <div className="min-h-screen bg-[#FAFAFC] p-4 md:p-8 font-sans antialiased">
-        <div className="max-w-[1280px] mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl md:text-[28px] font-extrabold text-gray-900 tracking-tight">
               Track Meal
@@ -322,7 +359,7 @@ export default function TrackMealPage() {
           <div className="flex items-center self-end sm:self-auto gap-4">
             <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold text-gray-700 select-none">
               <button className="hover:text-black transition-colors">‹</button>
-              <span className="px-1 min-w-[70px] text-center">
+              <span className="px-1 min-w-17.5 text-center">
                 {currentDate || "Loading..."}
               </span>
               <button className="hover:text-black transition-colors">›</button>
@@ -333,7 +370,7 @@ export default function TrackMealPage() {
         </div>
 
         {/* Metric Cards Grid */}
-        <div className="max-w-[1280px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={<MealEatenIcon />}
             label="Meal Eaten"
@@ -387,7 +424,7 @@ export default function TrackMealPage() {
           />
         </div>
 
-        <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center border-b border-gray-200/60 gap-8 text-sm font-bold tracking-wide">
               <button
@@ -413,7 +450,7 @@ export default function TrackMealPage() {
             </div>
 
             {/* Meal Cards Container */}
-            <div className="space-y-4 min-h-[300px]">
+            <div className="space-y-4 min-h-75">
               {mealsLoading || spentLoading ? (
                 [1, 2].map((n) => (
                   <div
