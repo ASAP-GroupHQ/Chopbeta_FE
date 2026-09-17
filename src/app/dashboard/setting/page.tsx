@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PersonalDetails from "@/components/dashboard/setting/PersonalDetails";
+import KycTierOneForm from "@/components/dashboard/setting/KycTierOneForm";
 import { SettingsIcons } from "@/components/dashboard/setting/SettingsIcons";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 
@@ -182,14 +183,18 @@ export default function SettingsPage() {
                 Back to Settings
               </button>
 
-              <div className="max-w-2xl">
+              <div className="max-w-3xl">
                 {activeTab === "personal" ? (
                   <PersonalDetails />
+                ) : activeTab === "kyc" ? (
+                  <KycTierOneForm />
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-[280px] text-center">
-                    <p className="text-gray-400 text-sm font-medium max-w-sm">
-                      This section is currently under development and will be
-                      available soon.
+                  <div className="flex flex-col items-center justify-center min-h-70 rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center p-8">
+                    <p className="text-lg font-semibold text-gray-700">This section is being prepared.</p>
+                    <p className="mt-2 text-sm text-gray-500 max-w-md">
+                      The content for this settings area is not ready yet, but the
+                      rest of the account experience has already been expanded to
+                      support richer profile and verification details.
                     </p>
                   </div>
                 )}
