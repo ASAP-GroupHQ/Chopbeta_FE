@@ -32,6 +32,32 @@ export default function Home() {
     animate: { transition: { staggerChildren: 0.1 } },
   };
 
+  const scrollReveal = {
+    initial: { opacity: 0, y: 28 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.2 },
+    transition: { duration: 0.65, ease: "easeOut" as const },
+  };
+
+  const scrollStagger = {
+    initial: "hidden",
+    whileInView: "visible",
+    viewport: { once: true, amount: 0.15 },
+    variants: {
+      hidden: {},
+      visible: { transition: { staggerChildren: 0.1 } },
+    },
+  };
+
+  const scrollChild = {
+    hidden: { opacity: 0, y: 22 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" as const },
+    },
+  };
+
   // useEffect(() => {
   //   if (typeof window !== "undefined") {
   //     const hasVisited = localStorage.getItem("chopbeta_onboarded");
@@ -341,7 +367,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      <section id="features" className="border-t border-[#E6EFE8] bg-white px-6 py-24 scroll-mt-8">
+      <motion.section id="features" className="border-t border-[#E6EFE8] bg-white px-6 py-24 scroll-mt-8" {...scrollReveal}>
         <div className="mx-auto max-w-7xl">
           <div className="max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1E6B3C]">
@@ -357,7 +383,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
+          <motion.div className="mt-12 grid gap-5 md:grid-cols-3" {...scrollStagger}>
             {[
               {
                 number: "01",
@@ -383,8 +409,9 @@ export default function Home() {
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <article
+                <motion.article
                   key={item.number}
+                  variants={scrollChild}
                   className="rounded-2xl border border-[#E6EDE8] bg-[#FBFDFC] p-6"
                 >
                   <div className="flex items-center justify-between">
@@ -397,14 +424,14 @@ export default function Home() {
                   </div>
                   <h3 className="mt-8 text-lg font-bold text-[#1A2E35]">{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-gray-500">{item.text}</p>
-                </article>
+                </motion.article>
               );
             })}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section id="pricing" className="bg-[#F4FAF6] px-6 py-24 scroll-mt-8">
+      <motion.section id="pricing" className="bg-[#F4FAF6] px-6 py-24 scroll-mt-8" {...scrollReveal}>
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1E6B3C]">
@@ -425,7 +452,13 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="rounded-3xl border border-[#DCE9DF] bg-white p-6 shadow-[0_20px_50px_rgba(30,107,60,0.08)] sm:p-8">
+          <motion.div
+            className="rounded-3xl border border-[#DCE9DF] bg-white p-6 shadow-[0_20px_50px_rgba(30,107,60,0.08)] sm:p-8"
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.65, ease: "easeOut", delay: 0.1 }}
+          >
             <div className="flex items-start justify-between gap-5 border-b border-gray-100 pb-6">
               <div>
                 <p className="text-sm font-bold text-[#1A2E35]">Student-friendly access</p>
@@ -448,11 +481,11 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="bg-[#1E6B3C] px-6 py-20 text-center text-white">
+      <motion.section className="bg-[#1E6B3C] px-6 py-20 text-center text-white" {...scrollReveal}>
         <div className="mx-auto max-w-2xl">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/65">
             Your next good meal starts here
@@ -470,7 +503,7 @@ export default function Home() {
             Get started <FiArrowRight />
           </Link>
         </div>
-      </section>
+      </motion.section>
 
       <footer className="bg-[#1E6B3C] px-6 pb-7 text-center text-white">
         <div className="mx-auto max-w-7xl border-t border-white/20 pt-6">

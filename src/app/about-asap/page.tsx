@@ -8,6 +8,15 @@ import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
 import { ASAP_TEAM } from "@/constants/team-data";
 
 export default function AboutAsapPage() {
+  const cardVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  };
+
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#FBFDFB] font-sans text-[#1A2E35]">
       <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between border-b border-[#E6EFE8] px-6 py-5">
@@ -62,11 +71,17 @@ export default function AboutAsapPage() {
         <motion.div
           className="grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           initial="hidden"
-          animate="visible"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.12 }}
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.08 } },
+          }}
         >
           {ASAP_TEAM.map((member) => (
             <motion.div
               key={member.id}
+              variants={cardVariants}
               whileHover={{ y: -4 }}
               className="group cursor-default"
             >
