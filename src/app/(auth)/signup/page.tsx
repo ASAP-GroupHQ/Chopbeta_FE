@@ -6,18 +6,19 @@ import { FiUser, FiMail, FiLock } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
-import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import OtpVerification from "@/components/auth/OtpVerification";
 import FoodSelectionStep from "@/components/onboarding/FoodSelectionStep";
 import { SLIDER_DATA } from "@/constants/auth-slider";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/context/ToastContext";
 import { authService } from "@/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
 export default function SignUpPage() {
   const { updateUserData } = useAuth();
+  const toast = useToast();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");

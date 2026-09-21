@@ -5,13 +5,14 @@ import { FiMail, FiArrowLeft, FiCompass } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/context/ToastContext";
 import { authService } from "@/services/auth";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 

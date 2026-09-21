@@ -3,15 +3,16 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FiRefreshCw, FiHelpCircle } from "react-icons/fi";
-import { toast } from "react-toastify";
 import HeroSlider from "@/components/dashboard/generate/HeroSlider";
 import MealCard from "@/components/dashboard/generate/MealCard";
 import InstructionModal from "@/components/dashboard/generate/InstructionModal";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { MealItem } from "@/types/meal";
 import { mealService } from "@/services/meal";
+import { useToast } from "@/context/ToastContext";
 
 export default function GeneratePage() {
+  const toast = useToast();
   const [budget, setBudget] = useState("");
   const [isReshuffling, setIsReshuffling] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { FiMail, FiArrowLeft, FiKey } from "react-icons/fi";
 import Link from "next/link";
-import { toast } from "react-toastify";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/context/ToastContext";
 import { authService } from "@/services/auth";
 
 interface OtpVerificationProps {
@@ -21,6 +21,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   onBackToSignup,
   onVerifySuccess,
 }) => {
+  const toast = useToast();
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState<number>(59);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);

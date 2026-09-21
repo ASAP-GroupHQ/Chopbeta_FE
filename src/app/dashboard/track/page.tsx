@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
-import { toast } from "react-toastify";
 import {
   MealEatenIcon,
   BudgetIcon,
@@ -18,6 +17,7 @@ import { trackService } from "@/services/track";
 import { StreakData, SpentMealEntry } from "@/types/track";
 import { mealService } from "@/services/meal";
 import { PlannedMealData, MealLog } from "@/types/meal";
+import { useToast } from "@/context/ToastContext";
 
 const parseDecimal = (val: unknown): number => {
   if (typeof val === "number") return val;
@@ -103,6 +103,7 @@ const mapSpentToMealLog = (item: SpentMealEntry): MealLog | null => {
 };
 
 export default function TrackMealPage() {
+  const toast = useToast();
   const [meals, setMeals] = useState<PlannedMealData[]>([]);
   const [partialMeals, setPartialMeals] = useState<MealLog[]>([]);
   const [spentMeals, setSpentMeals] = useState<SpentMealEntry[]>([]);

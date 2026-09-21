@@ -5,12 +5,13 @@ import Image from "next/image";
 import { FiMail, FiArrowLeft, FiKey } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "react-toastify";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/context/ToastContext";
 import { authService } from "@/services/auth";
 
 function OtpVerificationFormContent() {
   const router = useRouter();
+  const toast = useToast();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const initialOtp = searchParams.get("otp") || null;

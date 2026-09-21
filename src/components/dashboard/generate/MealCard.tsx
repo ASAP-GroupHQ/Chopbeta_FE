@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiActivity, FiX, FiPlus } from "react-icons/fi";
-import { toast } from "react-toastify";
 import { MealItem } from "@/types/meal";
 import { mealService } from "@/services/meal";
+import { useToast } from "@/context/ToastContext";
 
 interface MealCardProps {
   meal: MealItem;
@@ -15,6 +15,7 @@ const DEFAULT_MEAL_IMAGE =
   "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
 
 export default function MealCard({ meal }: MealCardProps) {
+  const toast = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);

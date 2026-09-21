@@ -4,14 +4,15 @@ import React, { useState } from "react";
 import { FiMail, FiLock } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
-import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);

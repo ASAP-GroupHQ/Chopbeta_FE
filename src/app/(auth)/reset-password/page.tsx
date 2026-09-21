@@ -5,14 +5,15 @@ import { useSearchParams } from "next/navigation";
 import { FiLock, FiCheckCircle } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
-import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/context/ToastContext";
 import { authService } from "@/services/auth";
 
 function ResetPasswordFormContent() {
   const searchParams = useSearchParams();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
