@@ -5,7 +5,16 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiArrowRight, FiMenu, FiX } from "react-icons/fi";
+import {
+  FiArrowRight,
+  FiBarChart2,
+  FiCalendar,
+  FiCheck,
+  FiCompass,
+  FiMenu,
+  FiTarget,
+  FiX,
+} from "react-icons/fi";
 import { CORE_FEATURES, SAMPLE_MEALS } from "@/constants/landing-data";
 
 export default function Home() {
@@ -48,10 +57,10 @@ export default function Home() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <Link href="#" className="hover:text-green-700 transition-colors">
+          <Link href="#features" className="hover:text-green-700 transition-colors">
             Features
           </Link>
-          <Link href="#" className="hover:text-green-700 transition-colors">
+          <Link href="#pricing" className="hover:text-green-700 transition-colors">
             Pricing
           </Link>
           <Link
@@ -111,14 +120,14 @@ export default function Home() {
               <nav className="flex flex-col gap-4 font-semibold text-lg text-gray-700">
                 <Link
                   onClick={() => setIsMenuOpen(false)}
-                  href="#"
+                  href="#features"
                   className="hover:text-green-700 py-1 transition-colors"
                 >
                   Features
                 </Link>
                 <Link
                   onClick={() => setIsMenuOpen(false)}
-                  href="#"
+                  href="#pricing"
                   className="hover:text-green-700 py-1 transition-colors"
                 >
                   Pricing
@@ -331,6 +340,145 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      <section id="features" className="border-t border-[#E6EFE8] bg-white px-6 py-24 scroll-mt-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1E6B3C]">
+              How ChopBeta works
+            </p>
+            <h2 className="mt-3 text-3xl font-extrabold leading-tight text-[#1A2E35] sm:text-4xl">
+              A better way to make every naira count.
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-gray-600 sm:text-lg">
+              Planning food should feel practical, not like another task to
+              figure out. ChopBeta turns your budget into meals you can
+              actually look forward to.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {[
+              {
+                number: "01",
+                title: "Tell us your budget",
+                text: "Set what you can comfortably spend for the day.",
+                icon: FiTarget,
+                tone: "bg-[#E8F5EA] text-[#1E6B3C]",
+              },
+              {
+                number: "02",
+                title: "Discover your options",
+                text: "Find familiar local meals with prices and useful nutrition details.",
+                icon: FiCompass,
+                tone: "bg-[#FFF3E5] text-[#C96A24]",
+              },
+              {
+                number: "03",
+                title: "Plan and keep track",
+                text: "Build a realistic routine and see where your food money goes.",
+                icon: FiBarChart2,
+                tone: "bg-[#EAF1F8] text-[#477394]",
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <article
+                  key={item.number}
+                  className="rounded-2xl border border-[#E6EDE8] bg-[#FBFDFC] p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.tone}`}>
+                      <Icon size={20} />
+                    </div>
+                    <span className="text-xs font-bold tracking-[0.16em] text-gray-300">
+                      {item.number}
+                    </span>
+                  </div>
+                  <h3 className="mt-8 text-lg font-bold text-[#1A2E35]">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-500">{item.text}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="bg-[#F4FAF6] px-6 py-24 scroll-mt-8">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1E6B3C]">
+              Pricing that makes sense
+            </p>
+            <h2 className="mt-3 text-3xl font-extrabold leading-tight text-[#1A2E35] sm:text-4xl">
+              Start with the plan that fits your season.
+            </h2>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-gray-600">
+              Whether you are stretching a tight allowance or simply trying to
+              eat more intentionally, ChopBeta starts with your reality.
+            </p>
+            <Link
+              href="/signup"
+              className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#1E6B3C] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#1E6B3C]/15 transition hover:bg-[#185A31]"
+            >
+              Create your free plan <FiArrowRight />
+            </Link>
+          </div>
+
+          <div className="rounded-3xl border border-[#DCE9DF] bg-white p-6 shadow-[0_20px_50px_rgba(30,107,60,0.08)] sm:p-8">
+            <div className="flex items-start justify-between gap-5 border-b border-gray-100 pb-6">
+              <div>
+                <p className="text-sm font-bold text-[#1A2E35]">Student-friendly access</p>
+                <p className="mt-1 text-sm text-gray-500">Everything you need to plan with confidence.</p>
+              </div>
+              <FiCalendar className="mt-1 shrink-0 text-[#1E6B3C]" size={22} />
+            </div>
+            <div className="grid gap-4 pt-6 sm:grid-cols-2">
+              {[
+                "Personal meal planning",
+                "Budget-aware suggestions",
+                "Local meal discovery",
+                "Spending and meal tracking",
+              ].map((feature) => (
+                <div key={feature} className="flex items-center gap-2 text-sm font-medium text-gray-600">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E5F3E8] text-[#1E6B3C]">
+                    <FiCheck size={12} strokeWidth={3} />
+                  </span>
+                  {feature}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#1E6B3C] px-6 py-20 text-center text-white">
+        <div className="mx-auto max-w-2xl">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/65">
+            Your next good meal starts here
+          </p>
+          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+            Plan better. Spend wiser. Eat well.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
+            Build a meal routine that works for your pocket and your everyday life.
+          </p>
+          <Link
+            href="/signup"
+            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#1E6B3C] transition hover:bg-[#F4FAF6]"
+          >
+            Get started <FiArrowRight />
+          </Link>
+        </div>
+      </section>
+
+      <footer className="bg-[#1E6B3C] px-6 pb-7 text-center text-white">
+        <div className="mx-auto max-w-7xl border-t border-white/20 pt-6">
+          <p className="text-xs font-medium text-white/65">
+            © 2026 ChopBeta. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }
