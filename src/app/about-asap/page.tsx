@@ -31,6 +31,7 @@ export default function AboutAsapPage() {
             src="/chopbeta.png"
             alt="ChopBeta Logo"
             fill
+            sizes="128px"
             className="object-contain"
             priority
           />

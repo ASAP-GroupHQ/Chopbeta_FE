@@ -89,6 +89,7 @@ export default function AllergiesStep({
               src="/chopbeta.png"
               alt="ChopBeta Logo"
               fill
+              sizes="96px"
               className="object-contain"
               priority
             />

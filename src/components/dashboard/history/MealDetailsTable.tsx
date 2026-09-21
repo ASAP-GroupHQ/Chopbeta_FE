@@ -51,6 +51,7 @@ export default function MealDetailsTable({
                         src={meal.image || "/placeholder-meal.jpg"}
                         alt={meal.name}
                         fill
+                        sizes="40px"
                         className="object-cover"
                       />
                     </div>

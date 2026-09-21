@@ -99,6 +99,7 @@ export default function FoodSelectionStep({
               src="/chopbeta.png"
               alt="ChopBeta Logo"
               fill
+              sizes="96px"
               className="object-contain"
               priority
             />

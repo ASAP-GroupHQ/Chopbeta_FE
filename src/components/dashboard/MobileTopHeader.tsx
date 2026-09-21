@@ -95,6 +95,7 @@ export default function MobileTopHeader() {
               src="/chopbeta.png"
               alt="ChopBeta Logo"
               fill
+              sizes="96px"
               className="object-contain"
               priority
             />
@@ -159,7 +160,7 @@ export default function MobileTopHeader() {
                 src={avatarUrl}
                 alt="User Avatar"
                 fill
-                //  sizes="(max-width: 768px) 100vw, 33vw"
+                sizes="32px"
                 className="object-cover"
               />
             ) : (
