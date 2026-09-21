@@ -33,7 +33,7 @@ export default function Home() {
   // }, [router]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#F4FAF6] via-white to-white text-[#1A2E35] font-sans overflow-x-hidden relative">
+    <main className="relative min-h-screen bg-linear-to-b from-[#F4FAF6] via-white to-white font-sans text-[#1A2E35] overflow-x-hidden">
       {/* HEADER NAVBAR */}
       <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between relative z-50">
         <div className="relative w-32 h-10">
@@ -176,7 +176,7 @@ export default function Home() {
             className="text-4xl sm:text-5xl font-extrabold text-[#1A2E35] leading-[1.15] tracking-tight"
           >
             Budget-Friendly Meals, <br />
-            <span className="text-green-700 bg-gradient-to-r from-green-700 to-emerald-500 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-green-700 to-emerald-500 bg-clip-text text-transparent">
               Plan Your Way
             </span>
           </motion.h1>
@@ -210,55 +210,50 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Right Side: Dashboard Canvas */}
+        {/* Right Side: Sample meal plan preview */}
         <motion.div
-          className="lg:col-span-7 relative w-full h-[450px] sm:h-[550px] bg-emerald-700/5 rounded-[40px] border border-emerald-500/10 p-4 sm:p-8 flex items-center justify-center"
+          className="relative flex h-112.5 w-full items-center justify-center rounded-4xl border border-[#D8E7DC] bg-[#EEF7F0] p-3 lg:col-span-7 sm:h-137.5 sm:p-7"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {/* Subtle Ambient Decorative Glows */}
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-emerald-400/20 rounded-full filter blur-[80px] -z-10 animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-orange-400/10 rounded-full filter blur-[80px] -z-10" />
-
-          {/* Core Interactive Center Wheel Block */}
-          <div className="relative w-full h-full max-w-xl bg-white/80 backdrop-blur-md border border-white rounded-[32px] shadow-2xl p-6 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="relative grid h-full w-full max-w-xl grid-cols-1 gap-5 overflow-hidden rounded-[26px] border border-white bg-white p-5 shadow-[0_20px_50px_rgba(30,107,60,0.12)] sm:p-6 md:grid-cols-12">
             {/* Left Side: Budget Metric Cards */}
-            <div className="md:col-span-5 flex flex-col justify-between gap-4">
-              {/* Glassmorphic Balance Block */}
+            <div className="flex flex-col justify-between gap-4 md:col-span-5">
               <motion.div
                 whileHover={{ y: -4 }}
-                className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm space-y-2"
+                className="space-y-3 rounded-2xl border border-[#E4ECE5] bg-[#FAFCFA] p-4"
               >
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                  Target Budget
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400">
+                    Monthly budget
+                  </span>
+                  {/* <span className="rounded-full bg-[#E5F3E8] px-2 py-1 text-[10px] font-bold text-[#1E6B3C]">
+                    On track
+                  </span> */}
+                </div>
                 <div className="text-2xl font-black text-[#1A2E35]">
                   ₦30,000
-                  <span className="text-xs text-gray-400 font-normal">
-                    {" "}
-                    /mo
-                  </span>
+                  <span className="text-xs font-normal text-gray-400"> / month</span>
                 </div>
-                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-green-600 h-full w-[65%] rounded-full" />
+                <div className="h-2 w-full overflow-hidden rounded-full bg-[#E7EFE8]">
+                  <div className="h-full w-[65%] rounded-full bg-[#1E6B3C]" />
                 </div>
-                <p className="text-[11px] font-medium text-emerald-600">
-                  Saved +₦4,200 this week
+                <p className="text-[11px] font-medium text-[#1E6B3C]">
+                  ₦4,200 saved this week
                 </p>
               </motion.div>
 
-              {/* Dynamic Feature Wheel Visual Cluster */}
-              <div className="flex-1 min-h-[160px] relative border border-dashed border-gray-200 rounded-2xl p-3 flex flex-col justify-center gap-2 bg-gradient-to-b from-gray-50/50 to-white">
-                <div className="text-center font-bold text-xs text-gray-500 mb-1">
-                  ChopBeta System Core
+              <div className="relative flex min-h-40 flex-1 flex-col justify-center gap-2 rounded-2xl border border-[#E8EEE9] bg-[#FCFDFC] p-3">
+                <div className="mb-1 text-center text-xs font-bold text-[#1A2E35]">
+                  Everything in one place
                 </div>
                 {CORE_FEATURES.map((item, idx) => {
                   const IconComponent = item.icon;
                   return (
                     <div
                       key={idx}
-                      className="flex items-center gap-2.5 text-xs font-semibold p-1.5 rounded-lg border bg-white shadow-sm"
+                      className="flex items-center gap-2.5 rounded-lg border border-gray-100 bg-white p-1.5 text-xs font-semibold shadow-sm"
                     >
                       <div className={`p-1.5 rounded-md border ${item.color}`}>
                         <IconComponent size={14} />
@@ -270,41 +265,53 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Side: Schedule Feed Stack */}
-            <div className="md:col-span-7 flex flex-col justify-between">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-2">
-                <h3 className="font-bold text-sm text-[#1A2E35]">
-                  Weekly Generated Plan
-                </h3>
-                <span className="text-[11px] font-bold text-orange-500 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-md">
-                  Active Cycle
+            {/* Right Side: Weekly meal plan */}
+            <div className="flex flex-col justify-between md:col-span-7">
+              <div className="mb-2 flex items-start justify-between border-b border-gray-100 pb-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1E6B3C]">
+                    A look at your week
+                  </p>
+                  <h3 className="mt-1 text-sm font-bold text-[#1A2E35]">
+                    Meals that fit your pocket
+                  </h3>
+                </div>
+                <span className="rounded-full bg-[#FFF4E9] px-2.5 py-1 text-[10px] font-bold text-[#C96A24]">
+                  Sample plan
                 </span>
               </div>
 
-              {/* Mock Plan Structure */}
-              <div className="space-y-3 flex-1 flex flex-col justify-center">
+              <div className="flex flex-1 flex-col justify-center space-y-3">
                 {SAMPLE_MEALS.map((item, idx) => (
                   <motion.div
                     key={idx}
                     whileHover={{ scale: 1.02 }}
-                    className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:border-green-600/30 transition-all cursor-pointer"
+                    className="flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all hover:border-[#1E6B3C]/30 hover:shadow-md"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{item.img}</span>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-[#EFF5F0]">
+                        <Image
+                          src={item.img}
+                          alt={item.meal}
+                          fill
+                          sizes="44px"
+                          className="object-cover"
+                        />
+                      </div>
                       <div>
-                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+                        <div className="text-[10px] font-bold uppercase tracking-tight text-gray-400">
                           {item.day}
                         </div>
-                        <div className="text-xs font-bold text-[#1A2E35]">
+                        <div className="truncate text-xs font-bold text-[#1A2E35]">
                           {item.meal}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs font-extrabold text-green-700">
+                      <div className="text-xs font-extrabold text-[#1E6B3C]">
                         {item.cost}
                       </div>
-                      <span className="text-[9px] text-gray-400 block font-medium">
+                      <span className="block text-[9px] font-medium text-gray-400">
                         {item.status}
                       </span>
                     </div>
@@ -312,13 +319,12 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Micro Sticky Action Overlay Anchor */}
-              <div className="mt-4 pt-3 border-t border-gray-50 text-center">
+              <div className="mt-4 border-t border-gray-50 pt-3 text-center">
                 <Link
                   href="/signup"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-green-700 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1E6B3C] hover:underline"
                 >
-                  Generate customized matrix layout →
+                  Build your own weekly plan <FiArrowRight />
                 </Link>
               </div>
             </div>
