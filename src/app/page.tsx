@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 // import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,9 +16,14 @@ import {
   FiX,
 } from "react-icons/fi";
 import { CORE_FEATURES, SAMPLE_MEALS } from "@/constants/landing-data";
+import { warmUpApi } from "@/services/api-warmup";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    warmUpApi();
+  }, []);
   // const router = useRouter();
 
   // Motion Presets
