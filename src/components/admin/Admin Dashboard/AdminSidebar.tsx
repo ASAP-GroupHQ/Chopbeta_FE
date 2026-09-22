@@ -7,7 +7,7 @@ import { BarChart3, DollarSign, LayoutDashboard, Settings, Utensils, Users } fro
 
 const menuItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Meal Management", href: "/meals", icon: Utensils },
+  { label: "Meal Management", href: "/admin/meal-management", icon: Utensils },
   { label: "Price Management", href: "/pricing", icon: DollarSign },
   { label: "User Management", href: "/admin/users", icon: Users, badge: true },
   { label: "Analytics & Reports", href: "/analytics", icon: BarChart3 },
