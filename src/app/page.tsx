@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 // import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,14 +16,10 @@ import {
   FiX,
 } from "react-icons/fi";
 import { CORE_FEATURES, SAMPLE_MEALS } from "@/constants/landing-data";
-import { warmUpApi } from "@/services/api-warmup";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  useEffect(() => {
-    warmUpApi();
-  }, []);
   // const router = useRouter();
 
   // Motion Presets
@@ -373,7 +369,11 @@ export default function Home() {
         </motion.div>
       </section>
 
-      <motion.section id="features" className="border-t border-[#E6EFE8] bg-white px-6 py-24 scroll-mt-8" {...scrollReveal}>
+      <motion.section
+        id="features"
+        className="scroll-mt-8 border-t border-[#E6EFE8] bg-white px-6 py-24"
+        {...scrollReveal}
+      >
         <div className="mx-auto max-w-7xl">
           <div className="max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1E6B3C]">
@@ -388,7 +388,6 @@ export default function Home() {
               actually look forward to.
             </p>
           </div>
-
           <motion.div className="mt-12 grid gap-5 md:grid-cols-3" {...scrollStagger}>
             {[
               {
