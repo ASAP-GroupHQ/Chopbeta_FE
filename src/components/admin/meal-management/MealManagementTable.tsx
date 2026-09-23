@@ -3,6 +3,11 @@ import type { MealItem } from "./types";
 
 interface MealManagementTableProps {
   meals: MealItem[];
+  activeMenuMealId: string | null;
+  onView: (meal: MealItem) => void;
+  onEdit: (meal: MealItem) => void;
+  onDelete: (mealId: string) => void;
+  onToggleMenu: (mealId: string) => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -12,10 +17,17 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-export default function MealManagementTable({ meals }: MealManagementTableProps) {
+export default function MealManagementTable({
+  meals,
+  activeMenuMealId,
+  onView,
+  onEdit,
+  onDelete,
+  onToggleMenu,
+}: MealManagementTableProps) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_1fr_80px] gap-4 border-b border-slate-200 bg-slate-50 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+      <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_1fr_110px] gap-4 border-b border-slate-200 bg-slate-50 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
         <span>Meal</span>
         <span>Category</span>
         <span>Price</span>
@@ -29,7 +41,7 @@ export default function MealManagementTable({ meals }: MealManagementTableProps)
         <p className="px-5 py-12 text-center text-sm text-slate-500">No meals match your current filters.</p>
       ) : (
         meals.map((meal) => (
-          <div key={meal.id} className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_1fr_80px] items-center gap-4 border-b border-slate-100 px-5 py-4 last:border-b-0">
+          <div key={meal.id} className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_1fr_110px] items-center gap-4 border-b border-slate-100 px-5 py-5 last:border-b-0">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-sm font-bold text-emerald-800">
                 {meal.name.slice(0, 2).toUpperCase()}
@@ -52,19 +64,77 @@ export default function MealManagementTable({ meals }: MealManagementTableProps)
             </span>
             <span className="text-sm text-slate-500">{meal.dateAdded}</span>
 
-            <div className="flex items-center justify-end gap-1">
-              <button type="button" aria-label={`View ${meal.name}`} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+            <div className="relative flex items-center justify-end gap-2 pr-1">
+              <button
+                type="button"
+                aria-label={`View ${meal.name}`}
+                onClick={() => onView(meal)}
+                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
                 <Eye className="h-4 w-4" />
               </button>
-              <button type="button" aria-label={`Edit ${meal.name}`} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+              <button
+                type="button"
+                aria-label={`Edit ${meal.name}`}
+                onClick={() => onEdit(meal)}
+                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
                 <Edit2 className="h-4 w-4" />
               </button>
-              <button type="button" aria-label={`Delete ${meal.name}`} className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600">
+              <button
+                type="button"
+                aria-label={`Delete ${meal.name}`}
+                onClick={() => onDelete(meal.id)}
+                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
-              <button type="button" aria-label={`More actions for ${meal.name}`} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label={`More actions for ${meal.name}`}
+                  onClick={() => onToggleMenu(meal.id)}
+                  className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+
+                {activeMenuMealId === meal.id && (
+                  <div className="absolute right-0 top-full z-10 mt-2 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onView(meal);
+                        onToggleMenu(meal.id);
+                      }}
+                      className="block w-full rounded-lg px-2 py-1.5 text-left text-xs text-slate-600 transition hover:bg-slate-100"
+                    >
+                      View details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onEdit(meal);
+                        onToggleMenu(meal.id);
+                      }}
+                      className="block w-full rounded-lg px-2 py-1.5 text-left text-xs text-slate-600 transition hover:bg-slate-100"
+                    >
+                      Edit meal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onDelete(meal.id);
+                        onToggleMenu(meal.id);
+                      }}
+                      className="block w-full rounded-lg px-2 py-1.5 text-left text-xs text-rose-600 transition hover:bg-rose-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))

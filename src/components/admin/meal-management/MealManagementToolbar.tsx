@@ -10,6 +10,7 @@ interface MealManagementToolbarProps {
   onStatusChange: (value: string) => void;
   onSortChange: (value: string) => void;
   onReset: () => void;
+  onAddMeal: () => void;
 }
 
 const categories = ["All Categories", "Breakfast", "Lunch", "Dinner", "Snacks", "Drinks"];
@@ -26,6 +27,7 @@ export default function MealManagementToolbar({
   onStatusChange,
   onSortChange,
   onReset,
+  onAddMeal,
 }: MealManagementToolbarProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -77,6 +79,7 @@ export default function MealManagementToolbar({
 
           <button
             type="button"
+            onClick={onAddMeal}
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-800"
           >
             <Plus className="h-4 w-4" />
