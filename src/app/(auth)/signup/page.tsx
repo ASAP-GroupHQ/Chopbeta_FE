@@ -387,6 +387,7 @@ export default function SignUpPage() {
         <div className="grid grid-cols-1 gap-3">
           <button
             type="button"
+            onClick={() => window.location.assign(authService.googleLoginUrl())}
             disabled={isLoading}
             className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50 w-full"
           >

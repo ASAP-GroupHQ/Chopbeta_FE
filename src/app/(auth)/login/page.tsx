@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { FiMail, FiLock } from "react-icons/fi";
+import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
 import AuthInput from "@/components/auth/AuthInput";
@@ -9,6 +10,7 @@ import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 import LoadingState from "@/components/ui/LoadingState";
 import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/context/AuthContext";
+import { authService } from "@/services/auth";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -247,6 +249,24 @@ export default function LoginPage() {
                   Login
                 </button>
               </form>
+
+              <div className="relative my-7 w-full">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-100" />
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-[2px] text-gray-400">
+                  <span className="bg-white px-4">Or continue with</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => window.location.assign(authService.googleLoginUrl())}
+                disabled={isLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <FcGoogle size={18} /> Google
+              </button>
 
               <p className="mt-8 text-center text-sm text-gray-500">
                 Don&apos;t have an account yet?{" "}
