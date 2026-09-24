@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import { FiMail, FiArrowLeft, FiKey } from "react-icons/fi";
 import Link from "next/link";
@@ -72,17 +73,12 @@ function OtpVerificationFormContent() {
     if (finalCode.length === 6) {
       setIsVerifying(true);
       try {
-        await authService.verifyOtp({ email, otp: finalCode });
-
-        toast.success("OTP Code Verified!");
         router.push(
           `/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(finalCode)}`,
         );
-      } catch (error: any) {
-        toast.error(error?.response?.data?.message || "Invalid OTP");
-        setOtp(["", "", "", "", "", ""]);
+      } catch {
+        toast.error("Unable to continue. Please try again.");
         setIsVerifying(false);
-        if (inputRefs.current[0]) inputRefs.current[0].focus();
       }
     }
   };
@@ -142,9 +138,14 @@ function OtpVerificationFormContent() {
         <FiArrowLeft /> Go Back
       </button>
 
-      <div className="w-full max-w-md text-center space-y-6">
+      <motion.div
+        initial={{ opacity: 0, x: 24 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="w-full max-w-md text-center space-y-6"
+      >
         {isVerifying ? (
-          <LoadingState message="Verifying code security with server..." />
+          <LoadingState message="Confirming your verification code..." />
         ) : (
           <>
             <div className="inline-flex p-3 bg-gray-50 rounded-full border border-gray-100 shadow-sm mx-auto">
@@ -204,7 +205,7 @@ function OtpVerificationFormContent() {
             </div>
           </>
         )}
-      </div>
+      </motion.div>
     </main>
   );
 }

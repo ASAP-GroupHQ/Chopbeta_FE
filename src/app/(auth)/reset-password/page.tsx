@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { FiLock, FiCheckCircle } from "react-icons/fi";
 import Link from "next/link";
@@ -79,7 +80,12 @@ function ResetPasswordFormContent() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full pt-16">
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
+      className="flex flex-col items-center justify-center w-full pt-16"
+    >
       <section className="flex flex-col items-center w-full max-w-md space-y-6">
         {isLoading ? (
           <LoadingState message="Saving your new password secure and safe..." />
@@ -132,7 +138,7 @@ function ResetPasswordFormContent() {
           </>
         )}
       </section>
-    </div>
+    </motion.div>
   );
 }
 

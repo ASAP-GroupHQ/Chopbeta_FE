@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { FiMail, FiArrowLeft, FiCompass } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -66,7 +67,12 @@ export default function ForgotPasswordPage() {
         </Link>
       </div>
 
-      <div className="flex flex-col items-center justify-center w-full pt-16">
+      <motion.div
+        initial={{ opacity: 0, x: 24 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="flex flex-col items-center justify-center w-full pt-16"
+      >
         <section className="flex flex-col items-center w-full max-w-md space-y-6">
           {isLoading ? (
             <LoadingState message="Requesting your OTP verification code..." />
@@ -115,7 +121,7 @@ export default function ForgotPasswordPage() {
             </>
           )}
         </section>
-      </div>
+      </motion.div>
     </main>
   );
 }
