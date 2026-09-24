@@ -131,7 +131,7 @@ export default function SignUpPage() {
     return (
       <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
         <LoadingState
-          message="Setting up your ChopBeta journey..."
+          message="Setting up your ChopBeta account..."
           messageSteps={[
             { afterSeconds: 4, message: "Getting your kitchen ready..." },
             { afterSeconds: 9, message: "Adding the finishing touches..." },

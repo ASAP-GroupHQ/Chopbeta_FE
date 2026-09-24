@@ -120,7 +120,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   if (isVerifying) {
     return (
       <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
-        <LoadingState message="Processing..." />
+        <LoadingState message="Pairing your code with your account..." />
       </div>
     );
   }
