@@ -29,6 +29,8 @@ export interface QuickMealItem {
   _id: string;
   mealTitle: string;
   category: string;
+  description?: string;
+  type?: string;
   estimatedPrice: {
     $numberDecimal: string;
   };
