@@ -77,7 +77,14 @@ export default function LoginPage() {
       <div className="flex flex-col items-center justify-center h-full pt-20 sm:pt-24 lg:pt-32">
         <section className="flex flex-col items-center w-full max-w-md space-y-8">
           {isLoading ? (
-            <LoadingState message="Signing you in... hang tight!" />
+            <LoadingState
+              message="Welcoming you back to ChopBeta..."
+              messageSteps={[
+                { afterSeconds: 4, message: "Finding your place at the table..." },
+                { afterSeconds: 9, message: "Gathering your personalized experience..." },
+                { afterSeconds: 14, message: "Taking a moment to unlock your feast..." },
+              ]}
+            />
           ) : (
             <>
               <div className="inline-flex rounded-full mb-4">

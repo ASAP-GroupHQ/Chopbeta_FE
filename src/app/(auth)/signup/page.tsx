@@ -130,7 +130,14 @@ export default function SignUpPage() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
-        <LoadingState message="Creating account..." />
+        <LoadingState
+          message="Setting up your ChopBeta journey..."
+          messageSteps={[
+            { afterSeconds: 4, message: "Getting your kitchen ready..." },
+            { afterSeconds: 9, message: "Adding the finishing touches..." },
+            { afterSeconds: 14, message: "Good things take a moment..." },
+          ]}
+        />
       </div>
     );
   }
@@ -141,7 +148,7 @@ export default function SignUpPage() {
         message="Verification Successful 🎉"
         subMessage="Account verification and personalization complete."
         redirectTo="/login"
-        delaySeconds={2.5}
+        delaySeconds={2.0}
       />
     );
   }
