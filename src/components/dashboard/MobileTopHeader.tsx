@@ -84,11 +84,11 @@ export default function MobileTopHeader() {
 
   return (
     <>
-      <header className="lg:hidden w-full bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-40 select-none">
-        <div className="relative w-24 h-8">
+      <header className="lg:hidden sticky top-0 z-40 flex w-full items-center justify-between border-b border-white/70 bg-[#F8FAFC]/90 px-4 py-3 backdrop-blur-xl select-none">
+        <div className="relative h-8 w-24">
           <Link
             href="/dashboard"
-            className="relative w-24 h-8 block active:opacity-80 transition-opacity"
+            className="relative block h-8 w-24 active:opacity-80 transition-opacity"
             aria-label="Go to Dashboard"
           >
             <Image
@@ -102,11 +102,11 @@ export default function MobileTopHeader() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-1.5">
           {/* Help Button */}
           <button
             type="button"
-            className="p-1.5 text-gray-500 hover:text-green-800 transition-colors active:scale-90 cursor-pointer"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-white hover:text-green-800 active:scale-90 cursor-pointer"
             aria-label="Help and Support"
           >
             <svg
@@ -127,7 +127,7 @@ export default function MobileTopHeader() {
           <button
             type="button"
             onClick={() => setActiveSheet("notifications")}
-            className="p-1.5 text-[#1A2E35] active:scale-90 relative cursor-pointer"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl text-[#1A2E35] transition-all hover:bg-white active:scale-90 cursor-pointer"
             aria-label="Open Notifications Sheet"
           >
             <svg
@@ -144,7 +144,9 @@ export default function MobileTopHeader() {
             </svg>
 
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#E85D26] border-2 border-white rounded-full animate-pulse" />
+              <span className="absolute right-1.5 top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full border-2 border-[#F8FAFC] bg-[#E85D26] px-0.5 text-[7px] font-black text-white animate-pulse">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
             )}
           </button>
 
@@ -152,7 +154,7 @@ export default function MobileTopHeader() {
           <button
             type="button"
             onClick={() => setActiveSheet("profile")}
-            className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-200 shadow-sm active:scale-90 transition-transform cursor-pointer bg-gray-100 flex items-center justify-center"
+            className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-gray-100 shadow-[0_2px_8px_rgba(26,46,53,0.12)] ring-1 ring-gray-200 transition-transform active:scale-90 cursor-pointer"
             aria-label="Open User Account Sheet"
           >
             {avatarUrl ? (
@@ -160,7 +162,7 @@ export default function MobileTopHeader() {
                 src={avatarUrl}
                 alt="User Avatar"
                 fill
-                sizes="32px"
+                sizes="40px"
                 className="object-cover"
               />
             ) : (
@@ -190,7 +192,7 @@ export default function MobileTopHeader() {
                 transition={{ type: "spring", damping: 25, stiffness: 220 }}
                 className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[28px] max-h-[85vh] z-50 flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.1)] lg:hidden overflow-hidden"
               >
-                <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto my-3 flex-shrink-0" />
+                <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto my-3 shrink-0" />
 
                 <div className="flex items-center justify-between px-5 pb-4 border-b border-gray-50">
                   <div className="flex items-center gap-2">
@@ -247,7 +249,7 @@ export default function MobileTopHeader() {
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-700" />
                         )}
 
-                        <div className="flex-shrink-0 mt-0.5">
+                        <div className="shrink-0 mt-0.5">
                           {getIcon(notif.type)}
                         </div>
 
@@ -258,7 +260,7 @@ export default function MobileTopHeader() {
                             >
                               {notif.title}
                             </p>
-                            <span className="text-[10px] text-gray-400 font-semibold flex-shrink-0">
+                            <span className="text-[10px] text-gray-400 font-semibold shrink-0">
                               {notif.time}
                             </span>
                           </div>
@@ -282,7 +284,7 @@ export default function MobileTopHeader() {
                 transition={{ type: "spring", damping: 25, stiffness: 220 }}
                 className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[28px] z-50 flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.1)] lg:hidden overflow-hidden"
               >
-                <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto my-3 flex-shrink-0" />
+                <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto my-3 shrink-0" />
 
                 <div className="flex items-center justify-between px-5 pb-4 border-b border-gray-50">
                   <div>
@@ -305,9 +307,9 @@ export default function MobileTopHeader() {
                   <Link
                     href="/dashboard/history"
                     onClick={() => setActiveSheet(null)}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left block border-0 outline-none decoration-none"
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left border-0 outline-none decoration-none"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-white text-green-700 border border-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-white text-green-700 border border-gray-100 flex items-center justify-center shrink-0 shadow-sm">
                       <HistoryIcon className="w-5 h-5 text-green-700" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -323,9 +325,9 @@ export default function MobileTopHeader() {
                   <Link
                     href="/dashboard/setting"
                     onClick={() => setActiveSheet(null)}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left block border-0 outline-none decoration-none"
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left border-0 outline-none decoration-none"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center shrink-0 shadow-sm">
                       <SettingsIcon className="w-5 h-5 text-gray-500" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -345,7 +347,7 @@ export default function MobileTopHeader() {
                       disabled={isLoggingOut}
                       className="w-full flex items-center gap-4 p-4 rounded-2xl bg-red-50/40 active:bg-red-50 text-red-500 transition-colors text-left border-0 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0 shadow-sm">
                         <LogoutIcon className="w-5 h-5 text-red-600" />
                       </div>
                       <div className="flex-1 min-w-0">
