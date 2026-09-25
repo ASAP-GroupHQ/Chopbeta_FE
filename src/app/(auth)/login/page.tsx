@@ -270,12 +270,12 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => window.location.assign(authService.googleLoginUrl())}
                 disabled={isLoading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 <FcGoogle size={18} /> Google
               </button>
 
-              <p className="mt-8 text-center text-sm text-gray-500">
+              <p className="mb-8 text-center text-sm text-gray-500">
                 Don&apos;t have an account yet?{" "}
                 <Link
                   href="/signup"
