@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import LoadingState from "@/components/ui/LoadingState";
@@ -17,7 +17,7 @@ function parseJsonValue(value: string | null) {
   }
 }
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { completeGoogleLogin } = useAuth();
@@ -88,5 +88,19 @@ export default function GoogleCallbackPage() {
         messageSteps={[{ afterSeconds: 4, message: "Almost ready for you..." }]}
       />
     </main>
+  );
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-white font-sans">
+          <LoadingState message="Connecting your Google account..." />
+        </main>
+      }
+    >
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }
