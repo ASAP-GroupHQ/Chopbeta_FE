@@ -79,10 +79,10 @@ export default function AboutAsapPage() {
             visible: { transition: { staggerChildren: 0.08 } },
           }}
         >
+          {/* variants={cardVariants} */}
           {ASAP_TEAM.map((member) => (
             <motion.div
               key={member.id}
-              variants={cardVariants}
               whileHover={{ y: -4 }}
               className="group cursor-default"
             >
