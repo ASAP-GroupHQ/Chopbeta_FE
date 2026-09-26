@@ -3,15 +3,17 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FiRefreshCw, FiHelpCircle } from "react-icons/fi";
-import { toast } from "react-toastify";
 import HeroSlider from "@/components/dashboard/generate/HeroSlider";
 import MealCard from "@/components/dashboard/generate/MealCard";
 import InstructionModal from "@/components/dashboard/generate/InstructionModal";
 import HeaderActions from "@/components/dashboard/HeaderActions";
+import LoadingState from "@/components/ui/LoadingState";
 import { MealItem } from "@/types/meal";
 import { mealService } from "@/services/meal";
+import { useToast } from "@/context/ToastContext";
 
 export default function GeneratePage() {
+  const toast = useToast();
   const [budget, setBudget] = useState("");
   const [isReshuffling, setIsReshuffling] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -117,6 +119,7 @@ export default function GeneratePage() {
                 type="number"
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
+                disabled={isLoading}
                 placeholder="Enter amount e.g 1500"
                 className={`w-full p-4 bg-gray-50/50 rounded-xl border font-bold text-sm outline-none transition-all ${
                   budget
@@ -136,6 +139,7 @@ export default function GeneratePage() {
                     key={amt}
                     type="button"
                     onClick={() => setBudget(amt)}
+                    disabled={isLoading}
                     className={`py-2 px-4 rounded-full text-xs font-extrabold border transition-all cursor-pointer ${
                       budget === amt
                         ? "bg-green-700 border-green-700 text-white shadow-sm"
@@ -177,8 +181,25 @@ export default function GeneratePage() {
                   disabled={isLoading}
                   className="w-full py-4 bg-green-700 text-white hover:bg-green-800 font-extrabold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {isLoading ? "Analyzing..." : "Generate Meal"}
+                  {isLoading ? "Preparing your meal plan..." : "Generate Meal"}
                 </button>
+
+                {isLoading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl border border-green-100 bg-green-50/40"
+                  >
+                    <LoadingState
+                      message="Finding meals that fit your budget..."
+                      messageSteps={[
+                        { afterSeconds: 4, message: "Pairing delicious options for you..." },
+                        { afterSeconds: 9, message: "Balancing flavour, value, and variety..." },
+                        { afterSeconds: 14, message: "Putting the finishing touches on your plan..." },
+                      ]}
+                    />
+                  </motion.div>
+                )}
               </>
             )}
           </form>

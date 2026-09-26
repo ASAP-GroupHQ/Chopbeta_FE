@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { FiMail, FiArrowLeft, FiKey } from "react-icons/fi";
 import Link from "next/link";
-import { toast } from "react-toastify";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/context/ToastContext";
 import { authService } from "@/services/auth";
 
 interface OtpVerificationProps {
@@ -21,6 +21,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   onBackToSignup,
   onVerifySuccess,
 }) => {
+  const toast = useToast();
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState<number>(59);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
@@ -119,7 +120,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   if (isVerifying) {
     return (
       <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
-        <LoadingState message="Processing..." />
+        <LoadingState message="Pairing your code with your account..." />
       </div>
     );
   }
@@ -134,7 +135,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
             </div>
             <div className="flex flex-col text-left">
               <span className="text-[11px] uppercase tracking-wider text-green-700 font-bold">
-                Staging Auto-Fetch Code
+                Your ChopBeta Code Is Ready
               </span>
               <span className="text-xl font-black tracking-[4px] text-green-900">
                 {fetchedOtp}
@@ -185,7 +186,6 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
         <div className="flex justify-center items-center gap-2 sm:gap-4 my-8">
           {otp.map((digit, index) => (
             <input
-            placeholder="0" 
               key={index}
               type="text"
               inputMode="numeric"
@@ -220,6 +220,13 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
             </button>
           )}
         </div>
+
+        {fetchedOtp && (
+          <p className="mt-5 px-6 text-xs leading-relaxed text-gray-400">
+            Take a look at the top of your screen for your ChopBeta verification
+            code.
+          </p>
+        )}
       </div>
     </main>
   );

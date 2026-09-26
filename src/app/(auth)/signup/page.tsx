@@ -6,18 +6,19 @@ import { FiUser, FiMail, FiLock } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
-import { toast } from "react-toastify";
 import AuthInput from "@/components/auth/AuthInput";
 import OtpVerification from "@/components/auth/OtpVerification";
 import FoodSelectionStep from "@/components/onboarding/FoodSelectionStep";
 import { SLIDER_DATA } from "@/constants/auth-slider";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/context/ToastContext";
 import { authService } from "@/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
 export default function SignUpPage() {
   const { updateUserData } = useAuth();
+  const toast = useToast();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -129,7 +130,14 @@ export default function SignUpPage() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
-        <LoadingState message="Creating account..." />
+        <LoadingState
+          message="Setting up your ChopBeta account..."
+          messageSteps={[
+            { afterSeconds: 4, message: "Getting your kitchen ready..." },
+            { afterSeconds: 9, message: "Adding the finishing touches..." },
+            { afterSeconds: 14, message: "Good things take a moment..." },
+          ]}
+        />
       </div>
     );
   }
@@ -140,7 +148,7 @@ export default function SignUpPage() {
         message="Verification Successful 🎉"
         subMessage="Account verification and personalization complete."
         redirectTo="/login"
-        delaySeconds={2.5}
+        delaySeconds={2.0}
       />
     );
   }
@@ -386,6 +394,7 @@ export default function SignUpPage() {
         <div className="grid grid-cols-1 gap-3">
           <button
             type="button"
+            onClick={() => window.location.assign(authService.googleLoginUrl())}
             disabled={isLoading}
             className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50 w-full"
           >

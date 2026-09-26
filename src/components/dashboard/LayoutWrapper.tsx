@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import DashboardSidebar from "./DashboardSidebar";
 import MobileTopHeader from "./MobileTopHeader";
 import MobileBottomNav from "./MobileBottomNav";
@@ -10,6 +12,8 @@ export default function LayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-[#1A2E35]">
       {/* Desktop Column Panel View */}
@@ -21,8 +25,18 @@ export default function LayoutWrapper({
         <MobileTopHeader />
 
         {/* Global Content Viewport Port Window Canvas Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 overflow-y-auto max-w-7xl w-full mx-auto">
-          {children}
+        <main className="flex-1 overflow-y-auto p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8 lg:pb-8 max-w-7xl w-full mx-auto">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={pathname}
+              initial={{ y: 12 }}
+              animate={{ y: 0 }}
+              exit={{ y: -8 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Mobile App View Footer Dock Bar */}

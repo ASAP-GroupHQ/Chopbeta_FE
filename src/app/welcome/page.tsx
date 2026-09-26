@@ -70,6 +70,7 @@ export default function OnboardingFlow() {
           src={ONBOARDING_SLIDES[currentSlide]?.image || "/onboarding-1.jpg"}
           alt="Backdrop glow"
           fill
+          sizes="100vw"
           className="object-cover"
         />
       </div>
@@ -101,6 +102,7 @@ export default function OnboardingFlow() {
                 src="/chopbeta.png"
                 alt="ChopBeta Logo"
                 fill
+                sizes="224px"
                 className="object-contain"
                 priority
               />
@@ -159,6 +161,7 @@ export default function OnboardingFlow() {
                     src={ONBOARDING_SLIDES[currentSlide].image}
                     alt="Background Feature Layout"
                     fill
+                    sizes="(max-width: 768px) 100vw, 448px"
                     className="object-cover object-center opacity-85"
                     priority
                   />

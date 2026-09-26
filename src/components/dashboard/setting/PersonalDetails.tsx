@@ -37,6 +37,12 @@ export default function PersonalDetails() {
     lga: "",
     country: "",
     dob: "",
+    gender: "",
+    stateOfOrigin: "",
+    emergencyContact: "",
+    schoolName: "",
+    courseOfStudy: "",
+    academicLevel: "",
     profilePicture: "",
   });
 
@@ -52,6 +58,12 @@ export default function PersonalDetails() {
         lga: user.lga || "",
         country: user.country || "",
         dob: user.dob || "",
+        gender: user.gender || "",
+        stateOfOrigin: user.stateOfOrigin || "",
+        emergencyContact: user.emergencyContact || "",
+        schoolName: user.schoolName || "",
+        courseOfStudy: user.courseOfStudy || "",
+        academicLevel: user.academicLevel || "",
         profilePicture: user.profilePicture || user.avatar || "",
       });
     }
@@ -247,6 +259,26 @@ export default function PersonalDetails() {
         />
 
         <AuthInput
+          label="Gender"
+          placeholder="Male / Female / Prefer not to say"
+          Icon={FiUser}
+          value={formData.gender}
+          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+          disabled={!!user?.gender}
+        />
+
+        <AuthInput
+          label="State of Origin"
+          placeholder="State"
+          Icon={FiMapPin}
+          value={formData.stateOfOrigin}
+          onChange={(e) =>
+            setFormData({ ...formData, stateOfOrigin: e.target.value })
+          }
+          disabled={!!user?.stateOfOrigin}
+        />
+
+        <AuthInput
           label="House Address"
           placeholder="Physical address"
           Icon={FiMapPin}
@@ -284,6 +316,50 @@ export default function PersonalDetails() {
           value={formData.dob}
           onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
           disabled={!!user?.dob}
+        />
+
+        <AuthInput
+          label="School Name"
+          placeholder="University / Polytechnics"
+          Icon={FiFileText}
+          value={formData.schoolName}
+          onChange={(e) =>
+            setFormData({ ...formData, schoolName: e.target.value })
+          }
+          disabled={!!user?.schoolName}
+        />
+
+        <AuthInput
+          label="Course of Study"
+          placeholder="Course"
+          Icon={FiFileText}
+          value={formData.courseOfStudy}
+          onChange={(e) =>
+            setFormData({ ...formData, courseOfStudy: e.target.value })
+          }
+          disabled={!!user?.courseOfStudy}
+        />
+
+        <AuthInput
+          label="Academic Level"
+          placeholder="100 Level / 300 Level"
+          Icon={FiFileText}
+          value={formData.academicLevel}
+          onChange={(e) =>
+            setFormData({ ...formData, academicLevel: e.target.value })
+          }
+          disabled={!!user?.academicLevel}
+        />
+
+        <AuthInput
+          label="Emergency Contact"
+          placeholder="Name / Phone"
+          Icon={FiPhone}
+          value={formData.emergencyContact}
+          onChange={(e) =>
+            setFormData({ ...formData, emergencyContact: e.target.value })
+          }
+          disabled={!!user?.emergencyContact}
         />
       </div>
 

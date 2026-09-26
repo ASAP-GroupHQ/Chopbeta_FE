@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import HistoryTabs from "@/components/dashboard/history/HistoryTabs";
 import HistoryList, {
   MealHistoryItem,
@@ -8,49 +8,106 @@ import HistoryList, {
 import SpendingChart from "@/components/dashboard/history/SpendingChart";
 import TopMeals, { TopMealItem } from "@/components/dashboard/history/TopMeals";
 import HeaderActions from "@/components/dashboard/HeaderActions";
+import { mealService } from "@/services/meal";
+import {
+  CompletedMealHistoryItem,
+  ApiPartialMealItem,
+  PlannedMealsHistoryItem,
+} from "@/types/meal";
 
-const MOCK_HISTORY_DATA: MealHistoryItem[] = [
-  {
-    id: "1",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 2,
-    status: "Completed",
-    totalSpent: 1000,
-  },
-  {
-    id: "2",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 2,
-    status: "Completed",
-    totalSpent: 1000,
-  },
-  {
-    id: "3",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 2,
-    status: "Partial",
-    totalSpent: 1000,
-  },
-  {
-    id: "4",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 3,
-    status: "Completed",
-    totalSpent: 1000,
-  },
-  {
-    id: "5",
-    date: "May 13, 2026",
-    dayOfWeek: "Tuesday",
-    mealCount: 2,
-    status: "Partial",
-    totalSpent: 1000,
-  },
-];
+const toDateKey = (date: string) => new Date(date).toISOString().slice(0, 10);
+
+const formatDate = (dateKey: string) =>
+  new Date(`${dateKey}T00:00:00`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+const formatTime = (date: string) =>
+  new Date(date).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+const buildHistory = (
+  completedMeals: CompletedMealHistoryItem[],
+  partialMeals: ApiPartialMealItem[],
+  plannedMeals: PlannedMealsHistoryItem[],
+): MealHistoryItem[] => {
+  const grouped = new Map<string, MealHistoryItem>();
+
+  const addGroup = (
+    date: string,
+    status: MealHistoryItem["status"],
+    meal: NonNullable<MealHistoryItem["meals"]>[number],
+  ) => {
+    const dateKey = toDateKey(date);
+    const groupId = `${status}-${dateKey}`;
+    const existing = grouped.get(groupId);
+
+    if (existing) {
+      existing.meals = [...(existing.meals || []), meal];
+      existing.mealCount += 1;
+      existing.totalSpent += meal.price || 0;
+      return;
+    }
+
+    grouped.set(groupId, {
+      id: groupId,
+      date: formatDate(dateKey),
+      dayOfWeek: new Date(`${dateKey}T00:00:00`).toLocaleDateString("en-US", {
+        weekday: "long",
+      }),
+      mealCount: 1,
+      status,
+      totalSpent: meal.price || 0,
+      meals: [meal],
+    });
+  };
+
+  completedMeals.forEach((meal) => {
+    addGroup(meal.eatenAt, "Completed", {
+      id: meal.uniqueId,
+      time: formatTime(meal.eatenAt),
+      name: meal.mealTitle,
+      price: null,
+      status: "Completed",
+    });
+  });
+
+  partialMeals.forEach((meal) => {
+    const price = meal.estimatedPrice?.$numberDecimal
+      ? Number(meal.estimatedPrice.$numberDecimal)
+      : null;
+
+    addGroup(meal.addedAt, "Partial", {
+      id: meal.uniqueId,
+      time: formatTime(meal.addedAt),
+      name: meal.mealTitle,
+      price,
+      status: "Pending",
+    });
+  });
+
+  plannedMeals.forEach((meal) => {
+    const price = meal.estimatedPrice?.$numberDecimal
+      ? Number(meal.estimatedPrice.$numberDecimal)
+      : null;
+
+    addGroup(meal.addedAt, "Saved", {
+      id: meal.mealId,
+      time: formatTime(meal.addedAt),
+      name: meal.mealTitle,
+      price,
+      status: "Pending",
+    });
+  });
+
+  return Array.from(grouped.values()).sort(
+    (first, second) => second.id.localeCompare(first.id),
+  );
+};
 
 const CHART_DATA = [
   { day: "Mon", spent: 2100 },
@@ -70,6 +127,51 @@ const TOP_MEALS: TopMealItem[] = [
 
 export default function HistoryPage() {
   const [activeTab, setActiveTab] = useState<string>("All Plans");
+  const [history, setHistory] = useState<MealHistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const [completedResponse, partialResponse, plannedResponse] =
+          await Promise.all([
+            mealService.getAllCompletedMeals(1, 10),
+            mealService.getAllPartialMealsForHistory(1, 10),
+            mealService.getAllPlannedMealsForHistory(1, 10),
+          ]);
+
+        setHistory(
+          buildHistory(
+            completedResponse.data?.meals || [],
+            partialResponse.data?.data || [],
+            plannedResponse.data?.meals || [],
+          ),
+        );
+      } catch (loadError) {
+        console.error("Failed to load meal history:", loadError);
+        setError("Unable to load your meal history right now.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, []);
+
+  const filteredHistory =
+    activeTab === "All Plans"
+      ? history
+      : history.filter((item) => item.status === activeTab);
+
+  const totalSpent = history.reduce((sum, item) => sum + item.totalSpent, 0);
+  const totalMeals = history.reduce((sum, item) => sum + item.mealCount, 0);
+  const completedPlans = history.filter(
+    (item) => item.status === "Completed",
+  ).length;
 
   return (
     <div className="min-h-screen bg-[#F9F8FC] p-4 md:p-8 text-[#1A1A2E]">
@@ -84,7 +186,7 @@ export default function HistoryPage() {
         </div>
 
         <div className="flex items-center gap-3 self-start sm:self-center">
-          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm hover:bg-gray-50 transition text-sm font-medium">
+          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-xs hover:bg-gray-50 transition text-sm font-medium">
             <svg
               width="18"
               height="18"
@@ -111,7 +213,7 @@ export default function HistoryPage() {
             </svg>
           </button>
 
-          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm hover:bg-gray-50 transition text-sm font-medium">
+          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-xs hover:bg-gray-50 transition text-sm font-medium">
             <svg
               width="14"
               height="14"
@@ -138,31 +240,68 @@ export default function HistoryPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <HistoryTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-          <HistoryList items={MOCK_HISTORY_DATA} />
+          {isLoading ? (
+            <div className="rounded-2xl border border-gray-100 bg-white px-5 py-12 text-center text-sm text-gray-400 shadow-xs">
+              Loading meal history...
+            </div>
+          ) : error ? (
+            <div className="rounded-2xl border border-red-100 bg-white px-5 py-12 text-center text-sm text-red-500 shadow-xs">
+              {error}
+            </div>
+          ) : (
+            <HistoryList items={filteredHistory} />
+          )}
         </div>
 
         {/* RIGHT */}
         <div className="space-y-6">
-          {/* HISTORY SUMMARY CARD */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-base text-[#1A1A2E]">
                 History Summary
               </h3>
-              <select className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 outline-none font-medium text-gray-600 cursor-pointer">
+              <select className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 outline-hidden font-medium text-gray-600 cursor-pointer">
                 <option>This week</option>
               </select>
             </div>
-            <div className="h-28 flex items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-xl">
-              <span className="text-xs">No metrics context loaded</span>
-            </div>
+            {history.length === 0 ? (
+              <div className="h-28 flex items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-xl">
+                <span className="text-xs">No history summary available yet</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-5 pt-1">
+                <div>
+                  <p className="text-xs text-gray-400">Total plans</p>
+                  <p className="text-xl font-bold text-[#1A1A2E] mt-1">
+                    {history.length}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Meals recorded</p>
+                  <p className="text-xl font-bold text-[#1A1A2E] mt-1">
+                    {totalMeals}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Completed plans</p>
+                  <p className="text-xl font-bold text-[#0F623D] mt-1">
+                    {completedPlans}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Total spent</p>
+                  <p className="text-xl font-bold text-[#0F623D] mt-1">
+                    ₦{totalSpent.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <SpendingChart data={CHART_DATA} />
 
           <TopMeals meals={TOP_MEALS} />
 
-          {/* BUDGET ADVOCACY CARD */}
           <div className="bg-[#EAF4EF] rounded-2xl p-5 border border-[#D5ECE1] relative overflow-hidden">
             <h4 className="font-bold text-sm text-[#0F623D] mb-1">
               Save More, Eat Better

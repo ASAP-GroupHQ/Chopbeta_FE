@@ -29,21 +29,29 @@ export const SAMPLE_MEALS = [
     day: "Monday",
     meal: "Suya Rice",
     status: "High Energy",
-    img: "🍛",
+    img: "/images/meals/Fried-Rice.png",
     cost: "₦1,200",
   },
   {
     day: "Tuesday",
     meal: "Akara & Giwa",
     status: "Budget Friendly",
-    img: "🧆",
+    img: "/images/meals/beans and plantain.png",
     cost: "₦600",
   },
   {
     day: "Wednesday",
     meal: "Fufu & Egusi",
     status: "Heavy / Solid",
-    img: "🍲",
+    img: "/images/meals/Egusi_soup.jpg",
     cost: "₦1,500",
+  },
+
+  {
+    day: "Thursday",
+    meal: "Pepper Soup",
+    status: "Light & Warming",
+    img: "/images/meals/Peppersoup.png",
+    cost: "₦900",
   },
 ];
