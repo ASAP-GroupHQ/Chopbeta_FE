@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FiActivity, FiX, FiPlus } from "react-icons/fi";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiActivity, FiPlus, FiX } from "react-icons/fi";
 import { MealItem } from "@/types/meal";
 import { mealService } from "@/services/meal";
 import { useToast } from "@/context/ToastContext";
@@ -18,186 +18,179 @@ export default function MealCard({ meal }: MealCardProps) {
   const toast = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
-  const [showNutrition, setShowNutrition] = useState(false);
-
+  const [showDetails, setShowDetails] = useState(false);
   const nutrition = meal.averageNutritionalInfo || {};
-
-  const macros =
-    (nutrition as any).estimatedMacronutrients ||
-    (nutrition as any).macronutrients ||
-    {};
-
+  const macros = nutrition.estimatedMacronutrients || nutrition.macronutrients || {};
   const calories = nutrition.estimatedCalories || "0";
-  const carbs = macros.carbohydrates || "0";
-  const proteins = macros.proteins || "0";
-  const fats = macros.fats || "0";
-
-  const rawPrice = meal.estimatedPrice?.$numberDecimal;
-  const priceDisplay = rawPrice ? parseFloat(rawPrice).toLocaleString() : "0";
+  const price = meal.estimatedPrice?.$numberDecimal
+    ? parseFloat(meal.estimatedPrice.$numberDecimal).toLocaleString()
+    : "0";
 
   const handleAddMealPlan = async () => {
-    if (isAdding) return;
-
+    if (isAdding || isAdded) return;
     setIsAdding(true);
-
     try {
       const response = await mealService.addToPlanned(meal._id);
-
       if (response.success) {
         setIsAdded(true);
-        toast.success(`${meal.mealTitle} added to your plan successfully! 🍽️`);
+        toast.success(`${meal.mealTitle} added to your plan successfully!`);
       } else {
         toast.error(response.message || "Failed to add meal to planner.");
       }
     } catch (error: any) {
-      toast.error(
-        error.message || "Error adding meal to planner. Please try again.",
-      );
+      toast.error(error.message || "Error adding meal to planner.");
     } finally {
       setIsAdding(false);
     }
   };
 
+  const openDetails = () => setShowDetails(true);
+
   return (
     <>
-      <motion.div
+      <motion.article
         layout
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="bg-white border border-gray-100 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow relative group flex flex-col justify-between"
+        onClick={openDetails}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openDetails();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        className="group relative flex cursor-pointer flex-col justify-between rounded-2xl border border-gray-100 bg-white p-3 shadow-[0_4px_16px_rgba(26,46,53,0.05)] transition-all hover:-translate-y-1 hover:border-green-100 hover:shadow-[0_12px_24px_rgba(30,107,60,0.12)]"
       >
         <div>
-          <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-50">
+          <div className="relative mb-3 aspect-4/3 w-full overflow-hidden rounded-xl bg-gray-50">
             <img
               src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
               alt={meal.mealTitle}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = DEFAULT_MEAL_IMAGE;
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={(event) => {
+                event.currentTarget.src = DEFAULT_MEAL_IMAGE;
               }}
             />
-
             <button
               type="button"
-              onClick={handleAddMealPlan}
-              disabled={isAdding}
-              className={`absolute top-2 right-2 p-2 rounded-xl shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer z-10 ${
+              aria-label={`Add ${meal.mealTitle} to your plan`}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleAddMealPlan();
+              }}
+              disabled={isAdding || isAdded}
+              className={`absolute right-2 top-2 z-10 rounded-xl p-2 shadow-sm transition-all hover:scale-110 active:scale-95 ${
                 isAdded
                   ? "bg-green-700 text-white"
-                  : "bg-white/90 backdrop-blur-sm text-[#1A2E35] hover:bg-green-50 hover:text-green-700"
-              } ${isAdding ? "opacity-75 pointer-events-none" : ""}`}
+                  : "bg-white/90 text-[#1A2E35] backdrop-blur-sm hover:bg-green-50 hover:text-green-700"
+              }`}
             >
               {isAdding ? (
-                <div className="w-4 h-4 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
+                <span className="block h-4 w-4 animate-spin rounded-full border-2 border-green-700 border-t-transparent" />
               ) : (
-                <FiPlus
-                  size={16}
-                  className={`stroke-[3] transition-colors ${
-                    isAdded
-                      ? "text-white"
-                      : "text-[#1A2E35] group-hover:text-green-700"
-                  }`}
-                />
+                <FiPlus size={16} className="stroke-3" />
               )}
             </button>
           </div>
-
-          <h3 className="font-bold text-[#1A2E35] text-sm px-1 line-clamp-1 mb-1">
+          <h3 className="mb-1 line-clamp-2 px-1 text-sm font-bold text-[#1A2E35]">
             {meal.mealTitle}
           </h3>
         </div>
 
-        <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50 px-1">
-          <span className="font-extrabold text-green-700 text-sm">
-            ₦{priceDisplay}
+        <div className="mt-2 flex items-center justify-between border-t border-gray-50 px-1 pt-2">
+          <span className="text-sm font-extrabold text-green-700">₦{price}</span>
+          <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-gray-400">
+            <FiActivity size={12} /> Details
           </span>
-
-          <button
-            type="button"
-            onClick={() => setShowNutrition(true)}
-            className="flex items-center gap-1 text-[11px] font-black text-gray-400 hover:text-green-700 transition-colors cursor-pointer uppercase tracking-wider"
-          >
-            <FiActivity size={12} /> Nutrition
-          </button>
         </div>
-      </motion.div>
+      </motion.article>
 
       <AnimatePresence>
-        {showNutrition && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {showDetails && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-[#1A2E35]/40 pb-24 backdrop-blur-sm sm:items-center sm:p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setShowDetails(false);
+            }}
+          >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowNutrition(false)}
-              className="absolute inset-0 bg-[#1A2E35]/40 backdrop-blur-xs"
-            />
-
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl relative z-10 space-y-4"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`meal-title-${meal._id}`}
+              initial={{ opacity: 0, scale: 0.96, y: 14 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 14 }}
+              className="relative max-h-[calc(100dvh-7rem)] w-full max-w-lg space-y-5 overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-h-[90vh] sm:rounded-3xl sm:p-6"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-bold tracking-widest text-green-700 uppercase block mb-0.5">
-                    Macro Breakdown
-                  </span>
-                  <h4 className="font-black text-base text-[#1A2E35]">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-green-700">
+                    {meal.category} · {meal.type || "meal"}
+                  </p>
+                  <h4 id={`meal-title-${meal._id}`} className="text-lg font-black leading-tight text-[#1A2E35]">
                     {meal.mealTitle}
                   </h4>
                 </div>
                 <button
-                  onClick={() => setShowNutrition(false)}
-                  className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 transition-colors cursor-pointer"
+                  type="button"
+                  aria-label="Close meal details"
+                  onClick={() => setShowDetails(false)}
+                  className="shrink-0 rounded-full bg-gray-50 p-2 text-gray-400 transition hover:bg-gray-100"
                 >
                   <FiX size={16} />
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="p-3 bg-gray-50/70 rounded-xl text-center">
-                  <span className="text-[10px] block font-bold text-gray-400 uppercase tracking-wider">
-                    Calories
-                  </span>
-                  <span className="text-base font-black text-[#1A2E35]">
-                    {calories.toString().includes("kcal")
-                      ? calories
-                      : `${calories} kcal`}
-                  </span>
-                </div>
-                <div className="p-3 bg-gray-50/70 rounded-xl text-center">
-                  <span className="text-[10px] block font-bold text-gray-400 uppercase tracking-wider">
-                    Carbs
-                  </span>
-                  <span className="text-base font-black text-blue-600">
-                    {carbs.toString().includes("g") ? carbs : `${carbs} g`}
-                  </span>
-                </div>
-                <div className="p-3 bg-gray-50/70 rounded-xl text-center">
-                  <span className="text-[10px] block font-bold text-gray-400 uppercase tracking-wider">
-                    Proteins
-                  </span>
-                  <span className="text-base font-black text-emerald-600">
-                    {proteins.toString().includes("g")
-                      ? proteins
-                      : `${proteins} g`}
-                  </span>
-                </div>
-                <div className="p-3 bg-gray-50/70 rounded-xl text-center">
-                  <span className="text-[10px] block font-bold text-gray-400 uppercase tracking-wider">
-                    Fats
-                  </span>
-                  <span className="text-base font-black text-amber-500">
-                    {fats.toString().includes("g") ? fats : `${fats} g`}
-                  </span>
-                </div>
+              <div className="relative aspect-video overflow-hidden rounded-2xl bg-gray-100">
+                <img
+                  src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
+                  alt={meal.mealTitle}
+                  className="h-full w-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.src = DEFAULT_MEAL_IMAGE;
+                  }}
+                />
               </div>
+
+              <div className="flex items-start justify-between gap-4">
+                <p className="text-sm leading-relaxed text-gray-500">
+                  {meal.description || "A delicious meal selected for your budget."}
+                </p>
+                <span className="shrink-0 text-lg font-black text-green-700">₦{price}</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  ["Calories", calories, "text-[#1A2E35]"],
+                  ["Carbs", macros.carbohydrates || "0", "text-blue-600"],
+                  ["Proteins", macros.proteins || "0", "text-emerald-600"],
+                  ["Fats", macros.fats || "0", "text-amber-500"],
+                ].map(([label, value, color]) => (
+                  <div key={label} className="rounded-xl bg-gray-50/80 p-3 text-center">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}</span>
+                    <span className={`text-base font-black ${color}`}>
+                      {value}{label === "Calories" && !value.toString().includes("kcal") ? " kcal" : label !== "Calories" && !value.toString().includes("g") ? " g" : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddMealPlan}
+                disabled={isAdding || isAdded}
+                className="sticky bottom-0 flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 py-3.5 text-sm font-extrabold text-white shadow-[0_-8px_18px_rgba(255,255,255,0.95)] transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isAdded ? "Added to your plan" : isAdding ? "Adding to your plan..." : <><FiPlus /> Add to plan</>}
+              </button>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
