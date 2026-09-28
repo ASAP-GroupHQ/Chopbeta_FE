@@ -73,6 +73,25 @@ export interface MealsEatenTodayResponse {
   };
 }
 
+export interface PlannedTodayResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    plannedMeals: Array<{
+      estimatedPrice?: { $numberDecimal: string };
+      addedAt?: string;
+      mealId?: string;
+      uniqueId?: string;
+      _id?: string;
+      mealTitle?: string;
+      category?: string;
+      isEaten?: boolean;
+    }>;
+    count: number;
+  };
+}
+
 export interface MarkAsEatenData {
   mealId: string;
   uniqueId: string;
