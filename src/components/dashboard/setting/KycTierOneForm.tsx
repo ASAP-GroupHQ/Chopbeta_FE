@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { SettingSectionCard, StatPill } from "@/components/dashboard/setting/SettingSection";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiCheck, FiClock } from "react-icons/fi";
+import { SettingSectionCard } from "@/components/dashboard/setting/SettingSection";
 
 const initialForm = {
   school: "",
@@ -36,9 +38,24 @@ export default function KycTierOneForm() {
     <div className="space-y-6">
       <SettingSectionCard
         title="Tier 1 Student KYC"
-        description="We use this to understand who our students are, where they study, and how we can tailor offers, budget insights, and product recommendations to the right communities."
+        description="Share your school details to help tailor meal suggestions and student-focused insights."
         badge="Tier 1"
-        action={<StatPill label="Status" value="In Progress" />}
+        action={
+          <span
+            className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 text-[10px] font-bold sm:text-xs ${
+              submitted
+                ? "border-sky-100 bg-sky-50 text-sky-800"
+                : "border-emerald-100 bg-emerald-50 text-emerald-800"
+            }`}
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                submitted ? "bg-sky-500" : "animate-pulse bg-emerald-500"
+              }`}
+            />
+            {submitted ? "Under review" : "In progress"}
+          </span>
+        }
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
@@ -174,27 +191,56 @@ export default function KycTierOneForm() {
           </div>
 
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-            <p className="text-sm font-semibold text-emerald-900">Why this matters</p>
-            <p className="mt-1 text-sm text-emerald-800">
-              Tier 1 verification helps us group user insights by school, faculty,
-              department, and student segment so we can make smarter product,
-              budgeting, and culinary recommendations for our student audience.
+            <p className="text-sm font-semibold text-emerald-900">How we use these details</p>
+            <p className="mt-1 text-xs leading-relaxed text-emerald-800 sm:text-sm">
+              Your school and study information helps us understand student needs
+              and improve relevant meal and budget recommendations.
             </p>
           </div>
 
-          <div className="flex items-center justify-between gap-3 pt-2">
-            <p className="text-sm text-gray-500">
-              {submitted
-                ? "Tier 1 KYC is ready for review."
-                : "Add your student profile to unlock segment-level insights."}
-            </p>
-            <button
-              type="submit"
-              className="rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800"
-            >
-              Save Tier 1 KYC
-            </button>
-          </div>
+          <AnimatePresence mode="wait" initial={false}>
+            {submitted ? (
+              <motion.div
+                key="under-review-banner"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                role="status"
+                className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50 p-4 text-sky-900"
+              >
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-sky-700 shadow-sm">
+                  <FiClock size={18} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold">Your details are under review</span>
+                  <span className="mt-1 block text-xs leading-relaxed text-sky-800 sm:text-sm">
+                    We&apos;ll review your Tier 1 information within 24 hours.
+                  </span>
+                </span>
+                <FiCheck className="ml-auto mt-1 shrink-0 text-sky-700" aria-hidden="true" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="submit-kyc"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <p className="text-sm leading-relaxed text-gray-500">
+                  Add your student profile to unlock segment-level insights.
+                </p>
+                <button
+                  type="submit"
+                  className="w-full rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 active:scale-[0.99] sm:w-auto sm:py-2.5"
+                >
+                  Save Tier 1 KYC
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </form>
       </SettingSectionCard>
     </div>

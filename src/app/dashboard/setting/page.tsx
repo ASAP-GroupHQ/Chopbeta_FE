@@ -4,13 +4,14 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PersonalDetails from "@/components/dashboard/setting/PersonalDetails";
 import KycTierOneForm from "@/components/dashboard/setting/KycTierOneForm";
+import DietaryPreferences from "@/components/dashboard/setting/DietaryPreferences";
 import { SettingsIcons } from "@/components/dashboard/setting/SettingsIcons";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 
 type TabId =
   | "personal"
   | "kyc"
-  | "limits"
+  | "dietary"
   | "support"
   | "referral"
   | "contact"
@@ -43,10 +44,10 @@ export default function SettingsPage() {
       icon: SettingsIcons.KYCVerification,
     },
     {
-      id: "limits",
-      label: "Transaction Limits",
+      id: "dietary",
+      label: "Dietary Preferences",
       category: "Personal",
-      icon: SettingsIcons.TransactionLimits,
+      icon: SettingsIcons.PersonalDetails,
     },
     {
       id: "support",
@@ -188,6 +189,8 @@ export default function SettingsPage() {
                   <PersonalDetails />
                 ) : activeTab === "kyc" ? (
                   <KycTierOneForm />
+                ) : activeTab === "dietary" ? (
+                  <DietaryPreferences />
                 ) : (
                   <div className="flex flex-col items-center justify-center min-h-70 rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center p-8">
                     <p className="text-lg font-semibold text-gray-700">This section is being prepared.</p>

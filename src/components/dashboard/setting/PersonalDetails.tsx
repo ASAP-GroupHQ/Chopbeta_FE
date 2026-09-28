@@ -14,9 +14,16 @@ import {
   FiFileText,
   FiCamera,
   FiLoader,
+  FiChevronDown,
 } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { uploadProfilePicture } from "@/services/settings";
+import nigeriaLocations from "@/data/nigeria-states-lgas.json";
+
+interface NigeriaState {
+  state: string;
+  lgas: string[];
+}
 
 export default function PersonalDetails() {
   // Destructure updateUserData instead of setUser
@@ -45,6 +52,19 @@ export default function PersonalDetails() {
     academicLevel: "",
     profilePicture: "",
   });
+  const nigeriaStates = nigeriaLocations as NigeriaState[];
+  const selectedState = nigeriaStates.find(
+    (state) => state.state === formData.stateOfOrigin,
+  );
+
+  const updateState = (stateName: string) => {
+    const nextState = nigeriaStates.find((state) => state.state === stateName);
+    setFormData((previous) => ({
+      ...previous,
+      stateOfOrigin: stateName,
+      lga: nextState?.lgas.includes(previous.lga) ? previous.lga : "",
+    }));
+  };
 
   // Sync state when user data is fetched/available from AuthContext
   useEffect(() => {
@@ -228,17 +248,6 @@ export default function PersonalDetails() {
         />
 
         <AuthInput
-          label="Username"
-          placeholder="username"
-          Icon={FiUser}
-          value={formData.userName}
-          onChange={(e) =>
-            setFormData({ ...formData, userName: e.target.value })
-          }
-          disabled={!!user?.userName}
-        />
-
-        <AuthInput
           label="Email Address"
           type="email"
           placeholder="example@domain.com"
@@ -258,56 +267,29 @@ export default function PersonalDetails() {
           disabled={!!user?.phoneNumber}
         />
 
-        <AuthInput
-          label="Gender"
-          placeholder="Male / Female / Prefer not to say"
-          Icon={FiUser}
-          value={formData.gender}
-          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-          disabled={!!user?.gender}
-        />
-
-        <AuthInput
-          label="State of Origin"
-          placeholder="State"
-          Icon={FiMapPin}
-          value={formData.stateOfOrigin}
-          onChange={(e) =>
-            setFormData({ ...formData, stateOfOrigin: e.target.value })
-          }
-          disabled={!!user?.stateOfOrigin}
-        />
-
-        <AuthInput
-          label="House Address"
-          placeholder="Physical address"
-          Icon={FiMapPin}
-          value={formData.address}
-          onChange={(e) =>
-            setFormData({ ...formData, address: e.target.value })
-          }
-          disabled={!!user?.address}
-        />
-
-        <AuthInput
-          label="LGA"
-          placeholder="Local Government Area"
-          Icon={FiFileText}
-          value={formData.lga}
-          onChange={(e) => setFormData({ ...formData, lga: e.target.value })}
-          disabled={!!user?.lga}
-        />
-
-        <AuthInput
-          label="Country Of Residence"
-          placeholder="Country"
-          Icon={FiGlobe}
-          value={formData.country}
-          onChange={(e) =>
-            setFormData({ ...formData, country: e.target.value })
-          }
-          disabled={!!user?.country}
-        />
+        <div className="w-full space-y-1.5 text-left">
+          <label htmlFor="personal-gender" className="ml-1 text-sm font-medium text-gray-700">
+            Gender
+          </label>
+          <div className="group relative">
+            <FiUser className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-green-600" size={18} />
+            <select
+              id="personal-gender"
+              value={formData.gender}
+              onChange={(event) =>
+                setFormData({ ...formData, gender: event.target.value })
+              }
+              disabled={!!user?.gender}
+              className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
+            >
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+            <FiChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          </div>
+        </div>
 
         <AuthInput
           label="Date Of Birth"
@@ -318,49 +300,58 @@ export default function PersonalDetails() {
           disabled={!!user?.dob}
         />
 
-        <AuthInput
-          label="School Name"
-          placeholder="University / Polytechnics"
-          Icon={FiFileText}
-          value={formData.schoolName}
-          onChange={(e) =>
-            setFormData({ ...formData, schoolName: e.target.value })
-          }
-          disabled={!!user?.schoolName}
-        />
+        <div className="w-full space-y-1.5 text-left">
+          <label htmlFor="personal-state" className="ml-1 text-sm font-medium text-gray-700">
+            State
+          </label>
+          <div className="group relative">
+            <FiMapPin className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-green-600" size={18} />
+            <select
+              id="personal-state"
+              value={formData.stateOfOrigin}
+              onChange={(event) => updateState(event.target.value)}
+              disabled={!!user?.stateOfOrigin}
+              className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
+            >
+              <option value="">Select state</option>
+              {nigeriaStates.map((state) => (
+                <option key={state.state} value={state.state}>
+                  {state.state}
+                </option>
+              ))}
+            </select>
+            <FiChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          </div>
+        </div>
 
-        <AuthInput
-          label="Course of Study"
-          placeholder="Course"
-          Icon={FiFileText}
-          value={formData.courseOfStudy}
-          onChange={(e) =>
-            setFormData({ ...formData, courseOfStudy: e.target.value })
-          }
-          disabled={!!user?.courseOfStudy}
-        />
+        <div className="w-full space-y-1.5 text-left">
+          <label htmlFor="personal-lga" className="ml-1 text-sm font-medium text-gray-700">
+            Local Government Area
+          </label>
+          <div className="group relative">
+            <FiFileText className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-green-600" size={18} />
+            <select
+              id="personal-lga"
+              value={formData.lga}
+              onChange={(event) =>
+                setFormData({ ...formData, lga: event.target.value })
+              }
+              disabled={!selectedState || !!user?.lga}
+              className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
+            >
+              <option value="">
+                {selectedState ? "Select LGA" : "Select a state first"}
+              </option>
+              {selectedState?.lgas.map((lga) => (
+                <option key={lga} value={lga}>
+                  {lga}
+                </option>
+              ))}
+            </select>
+            <FiChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          </div>
+        </div>
 
-        <AuthInput
-          label="Academic Level"
-          placeholder="100 Level / 300 Level"
-          Icon={FiFileText}
-          value={formData.academicLevel}
-          onChange={(e) =>
-            setFormData({ ...formData, academicLevel: e.target.value })
-          }
-          disabled={!!user?.academicLevel}
-        />
-
-        <AuthInput
-          label="Emergency Contact"
-          placeholder="Name / Phone"
-          Icon={FiPhone}
-          value={formData.emergencyContact}
-          onChange={(e) =>
-            setFormData({ ...formData, emergencyContact: e.target.value })
-          }
-          disabled={!!user?.emergencyContact}
-        />
       </div>
 
       {/* Save Trigger Option Footer */}
