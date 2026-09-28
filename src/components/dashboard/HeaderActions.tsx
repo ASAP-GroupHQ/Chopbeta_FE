@@ -106,12 +106,14 @@ export default function HeaderActions() {
   return (
     <div className="hidden lg:flex items-center gap-3 relative z-40">
       {/* Help & Support Button */}
-      <button
-        type="button"
+      <Link
+        href="/dashboard/chat"
         className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.02)] text-[#1A2E35] hover:bg-gray-50 transition-all cursor-pointer active:scale-95"
+        aria-label="Chat with KIRA, ChopBeta assistant"
+        title="Chat with KIRA"
       >
         <FiHelpCircle size={20} className="stroke-[2.2]" />
-      </button>
+      </Link>
 
       {/* Notifications Wrapper */}
       <div className="relative" ref={notifRef}>

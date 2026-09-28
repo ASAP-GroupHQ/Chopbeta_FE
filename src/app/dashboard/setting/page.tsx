@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import PersonalDetails from "@/components/dashboard/setting/PersonalDetails";
 import KycTierOneForm from "@/components/dashboard/setting/KycTierOneForm";
 import DietaryPreferences from "@/components/dashboard/setting/DietaryPreferences";
+import ServiceSettings from "@/components/dashboard/setting/ServiceSettings";
+import LegalDocumentContent from "@/components/legal/LegalDocumentContent";
 import { SettingsIcons } from "@/components/dashboard/setting/SettingsIcons";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 
@@ -191,6 +193,18 @@ export default function SettingsPage() {
                   <KycTierOneForm />
                 ) : activeTab === "dietary" ? (
                   <DietaryPreferences />
+                ) : activeTab === "support" ||
+                  activeTab === "referral" ||
+                  activeTab === "contact" ||
+                  activeTab === "faq" ? (
+                  <ServiceSettings section={activeTab} />
+                ) : activeTab === "terms" ||
+                  activeTab === "privacy" ||
+                  activeTab === "about" ? (
+                  <LegalDocumentContent
+                    document={activeTab === "terms" ? "terms" : activeTab === "privacy" ? "privacy" : "about"}
+                    embedded
+                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center min-h-70 rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center p-8">
                     <p className="text-lg font-semibold text-gray-700">This section is being prepared.</p>

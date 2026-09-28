@@ -104,10 +104,11 @@ export default function MobileTopHeader() {
 
         <div className="flex shrink-0 items-center gap-1.5">
           {/* Help Button */}
-          <button
-            type="button"
+          <Link
+            href="/dashboard/chat"
             className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-white hover:text-green-800 active:scale-90 cursor-pointer"
-            aria-label="Help and Support"
+            aria-label="Chat with KIRA, ChopBeta assistant"
+            title="Chat with KIRA"
           >
             <svg
               width="22"
@@ -121,7 +122,7 @@ export default function MobileTopHeader() {
                 fill="currentColor"
               />
             </svg>
-          </button>
+          </Link>
 
           {/* Notification Bell */}
           <button
