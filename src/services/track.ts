@@ -5,6 +5,7 @@ import {
   DailySpentResponse,
   MarkAsEatenResponse,
   MealsEatenTodayResponse,
+  PlannedTodayResponse,
 } from "@/types/track";
 
 export const trackService = {
@@ -36,6 +37,12 @@ export const trackService = {
   getMealsEatenToday: async (): Promise<MealsEatenTodayResponse> => {
     const response =
       await apiClient.get<MealsEatenTodayResponse>("/track/eaten-today");
+    return response.data;
+  },
+
+  getPlannedToday: async (): Promise<PlannedTodayResponse> => {
+    const response =
+      await apiClient.get<PlannedTodayResponse>("/track/planned-today");
     return response.data;
   },
 };

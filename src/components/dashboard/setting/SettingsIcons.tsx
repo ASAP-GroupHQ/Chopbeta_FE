@@ -251,7 +251,7 @@ export const SettingsIcons = {
       </defs>
     </svg>
   ),
-  ReferAndEarn: () => (
+  Feedback: () => (
     <svg
       width="27"
       height="27"

@@ -17,21 +17,22 @@ export function SettingSectionCard({
 }: SettingSectionCardProps) {
   return (
     <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-center justify-between gap-3 sm:justify-start">
             {badge ? (
-              <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">
+              <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">
                 {badge}
               </span>
             ) : null}
-            <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+            <div className="sm:hidden">{action}</div>
           </div>
+          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
           {description ? (
             <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
           ) : null}
         </div>
-        {action}
+        <div className="hidden shrink-0 sm:block">{action}</div>
       </div>
       {children}
     </section>

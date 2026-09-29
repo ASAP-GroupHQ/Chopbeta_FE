@@ -28,6 +28,14 @@ const parseDecimal = (val: unknown): number => {
   return 0;
 };
 
+const getLocalDateParam = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const getMealIdentifier = (
   item:
     | { uniqueId?: string | null; _id?: string | null; mealId?: string | null | { _id?: string | null } }
@@ -105,7 +113,6 @@ const mapSpentToMealLog = (item: SpentMealEntry): MealLog | null => {
 export default function TrackMealPage() {
   const toast = useToast();
   const [meals, setMeals] = useState<PlannedMealData[]>([]);
-  const [partialMeals, setPartialMeals] = useState<MealLog[]>([]);
   const [spentMeals, setSpentMeals] = useState<SpentMealEntry[]>([]);
   const [activeTab, setActiveTab] = useState<"planned" | "eaten">("planned");
   const [waterGlasses, setWaterGlasses] = useState(4);
@@ -116,6 +123,7 @@ export default function TrackMealPage() {
 
   // Tracking Stats
   const [eatenTodayCount, setEatenTodayCount] = useState<number>(0);
+  const [plannedTodayCount, setPlannedTodayCount] = useState<number>(0);
   const [eatenTodayLoading, setEatenTodayLoading] = useState<boolean>(true);
 
   const [streak, setStreak] = useState<StreakData | null>(null);
@@ -129,8 +137,7 @@ export default function TrackMealPage() {
 
   const safeMeals = Array.isArray(meals) ? meals : [];
 
-  const eatenCount = safeMeals.filter((m) => m && m.isEaten).length;
-  const totalCount = safeMeals.length + partialMeals.length;
+  const totalCount = plannedTodayCount;
 
   const spentPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
@@ -146,7 +153,6 @@ export default function TrackMealPage() {
     setTogglingId(uniqueId);
 
     const previousMeals = [...meals];
-    const previousPartialMeals = [...partialMeals];
     const previousSpentMeals = [...spentMeals];
 
     setMeals((prev) => {
@@ -157,13 +163,6 @@ export default function TrackMealPage() {
           : m,
       );
     });
-    setPartialMeals((prev) =>
-      prev.map((meal) =>
-        meal.uniqueId === uniqueId
-          ? { ...meal, eaten: nextEaten }
-          : meal,
-      ),
-    );
     if (!nextEaten) {
       setSpentMeals((prev) =>
         prev.filter(
@@ -186,14 +185,12 @@ export default function TrackMealPage() {
         await fetchTrackerData(true);
       } else {
         setMeals(previousMeals);
-        setPartialMeals(previousPartialMeals);
         setSpentMeals(previousSpentMeals);
         toast.error(res?.message || "Failed to update meal status.");
       }
     } catch (error) {
       console.error("Failed to update meal status:", error);
       setMeals(previousMeals);
-      setPartialMeals(previousPartialMeals);
       setSpentMeals(previousSpentMeals);
       toast.error("Failed to update meal status. Please try again.");
     } finally {
@@ -229,14 +226,14 @@ export default function TrackMealPage() {
 
     const [
       mealsRes,
-      partialRes,
+      plannedTodayRes,
       eatenTodayRes,
       streakRes,
       budgetRes,
       spentRes,
     ] = await Promise.allSettled([
-      mealService.getPlannedMeals(),
-      mealService.getAllPartialMeals(1, 10),
+      mealService.getPlannedMeals(1, 10, getLocalDateParam()),
+      trackService.getPlannedToday(),
       trackService.getMealsEatenToday(),
       trackService.getStreak(),
       trackService.getDailyBudget(),
@@ -254,11 +251,15 @@ export default function TrackMealPage() {
       setMeals([]);
     }
 
-    // Partial Meals
-    if (partialRes.status === "fulfilled" && partialRes.value?.meals) {
-      setPartialMeals(partialRes.value.meals);
+    // Today's planned meal count is authoritative for the daily progress total.
+    if (
+      plannedTodayRes.status === "fulfilled" &&
+      plannedTodayRes.value?.success &&
+      typeof plannedTodayRes.value.data?.count === "number"
+    ) {
+      setPlannedTodayCount(plannedTodayRes.value.data.count);
     } else if (!silent) {
-      setPartialMeals([]);
+      setPlannedTodayCount(0);
     }
     setMealsLoading(false);
 
@@ -315,20 +316,18 @@ export default function TrackMealPage() {
         .map(mapToMealLog)
         .filter((item): item is MealLog => item !== null);
 
-      return [...plannedMapped, ...partialMeals];
+      return plannedMapped;
     }
 
     const eatenFromPlanned = safeMeals
       .filter((m) => m && m.isEaten)
       .map(mapToMealLog);
-    const eatenFromPartial = partialMeals.filter((pm) => pm.eaten);
     const eatenFromSpent = spentMeals.map((item) => {
       return mapSpentToMealLog(item);
     });
 
     const merged = [
       ...eatenFromPlanned,
-      ...eatenFromPartial,
       ...eatenFromSpent,
     ].filter((item): item is MealLog => item !== null);
 
@@ -375,8 +374,8 @@ export default function TrackMealPage() {
           <StatCard
             icon={<MealEatenIcon />}
             label="Meal Eaten"
-            value={`${eatenTodayCount}`}
-            subtext="Keep it up!"
+            value={`${eatenTodayCount}/${totalCount}`}
+            subtext="Eaten / planned today"
             progressColor="#1E6B3C"
             progressWidth={
               totalCount > 0 ? (eatenTodayCount / totalCount) * 100 : 0
@@ -477,7 +476,7 @@ export default function TrackMealPage() {
 
             <button
               onClick={handleMarkNextMealAsEaten}
-              disabled={isLoading || mealsLoading || eatenCount === totalCount}
+              disabled={isLoading || mealsLoading || eatenTodayCount >= totalCount}
               className="w-full h-14 bg-[#1E6B3C] hover:bg-[#154d2b] disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 shadow-sm text-base tracking-wide"
             >
               {isLoading ? (

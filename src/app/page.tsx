@@ -85,10 +85,16 @@ export default function Home() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <Link href="#features" className="hover:text-green-700 transition-colors">
+          <Link
+            href="#features"
+            className="hover:text-green-700 transition-colors"
+          >
             Features
           </Link>
-          <Link href="#pricing" className="hover:text-green-700 transition-colors">
+          <Link
+            href="#pricing"
+            className="hover:text-green-700 transition-colors"
+          >
             Pricing
           </Link>
           <Link
@@ -271,7 +277,10 @@ export default function Home() {
                 </div>
                 <div className="text-2xl font-black text-[#1A2E35]">
                   ₦30,000
-                  <span className="text-xs font-normal text-gray-400"> / month</span>
+                  <span className="text-xs font-normal text-gray-400">
+                    {" "}
+                    / month
+                  </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-[#E7EFE8]">
                   <div className="h-full w-[65%] rounded-full bg-[#1E6B3C]" />
@@ -384,11 +393,14 @@ export default function Home() {
             </h2>
             <p className="mt-4 text-base leading-relaxed text-gray-600 sm:text-lg">
               Planning food should feel practical, not like another task to
-              figure out. ChopBeta turns your budget into meals you can
-              actually look forward to.
+              figure out. ChopBeta turns your budget into meals you can actually
+              look forward to.
             </p>
           </div>
-          <motion.div className="mt-12 grid gap-5 md:grid-cols-3" {...scrollStagger}>
+          <motion.div
+            className="mt-12 grid gap-5 md:grid-cols-3"
+            {...scrollStagger}
+          >
             {[
               {
                 number: "01",
@@ -420,15 +432,21 @@ export default function Home() {
                   className="rounded-2xl border border-[#E6EDE8] bg-[#FBFDFC] p-6"
                 >
                   <div className="flex items-center justify-between">
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.tone}`}>
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.tone}`}
+                    >
                       <Icon size={20} />
                     </div>
                     <span className="text-xs font-bold tracking-[0.16em] text-gray-300">
                       {item.number}
                     </span>
                   </div>
-                  <h3 className="mt-8 text-lg font-bold text-[#1A2E35]">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-500">{item.text}</p>
+                  <h3 className="mt-8 text-lg font-bold text-[#1A2E35]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                    {item.text}
+                  </p>
                 </motion.article>
               );
             })}
@@ -436,7 +454,11 @@ export default function Home() {
         </div>
       </motion.section>
 
-      <motion.section id="pricing" className="bg-[#F4FAF6] px-6 py-24 scroll-mt-8" {...scrollReveal}>
+      <motion.section
+        id="pricing"
+        className="bg-[#F4FAF6] px-6 py-24 scroll-mt-8"
+        {...scrollReveal}
+      >
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1E6B3C]">
@@ -466,8 +488,12 @@ export default function Home() {
           >
             <div className="flex items-start justify-between gap-5 border-b border-gray-100 pb-6">
               <div>
-                <p className="text-sm font-bold text-[#1A2E35]">Student-friendly access</p>
-                <p className="mt-1 text-sm text-gray-500">Everything you need to plan with confidence.</p>
+                <p className="text-sm font-bold text-[#1A2E35]">
+                  Student-friendly access
+                </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Everything you need to plan with confidence.
+                </p>
               </div>
               <FiCalendar className="mt-1 shrink-0 text-[#1E6B3C]" size={22} />
             </div>
@@ -478,7 +504,10 @@ export default function Home() {
                 "Local meal discovery",
                 "Spending and meal tracking",
               ].map((feature) => (
-                <div key={feature} className="flex items-center gap-2 text-sm font-medium text-gray-600">
+                <div
+                  key={feature}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-600"
+                >
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E5F3E8] text-[#1E6B3C]">
                     <FiCheck size={12} strokeWidth={3} />
                   </span>
@@ -490,7 +519,10 @@ export default function Home() {
         </div>
       </motion.section>
 
-      <motion.section className="bg-[#1E6B3C] px-6 py-20 text-center text-white" {...scrollReveal}>
+      <motion.section
+        className="bg-[#1E6B3C] px-6 py-20 text-center text-white"
+        {...scrollReveal}
+      >
         <div className="mx-auto max-w-2xl">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/65">
             Your next good meal starts here
@@ -499,7 +531,8 @@ export default function Home() {
             Plan better. Spend wiser. Eat well.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-            Build a meal routine that works for your pocket and your everyday life.
+            Build a meal routine that works for your pocket and your everyday
+            life.
           </p>
           <Link
             href="/signup"
@@ -512,6 +545,20 @@ export default function Home() {
 
       <footer className="bg-[#1E6B3C] px-6 pb-7 text-center text-white">
         <div className="mx-auto max-w-7xl border-t border-white/20 pt-6">
+          <nav
+            aria-label="Legal and company links"
+            className="mb-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-semibold text-white/80"
+          >
+            <Link href="#" className="transition hover:text-white">
+              Terms of Service
+            </Link>
+            <Link href="#" className="transition hover:text-white">
+              Privacy Policy
+            </Link>
+            <Link href="#" className="transition hover:text-white">
+              About ChopBeta
+            </Link>
+          </nav>
           <p className="text-xs font-medium text-white/65">
             © 2026 ChopBeta. All rights reserved.
           </p>
