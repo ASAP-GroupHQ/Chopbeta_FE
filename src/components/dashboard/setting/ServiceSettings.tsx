@@ -12,12 +12,15 @@ import {
   FiMail,
   FiMessageCircle,
   FiPhone,
+  FiSend,
   FiShield,
+  FiStar,
+  FiUser,
   FiUsers,
 } from "react-icons/fi";
 import { useToast } from "@/context/ToastContext";
 
-type ServiceSection = "support" | "referral" | "contact" | "faq";
+type ServiceSection = "support" | "contact" | "faq" | "feedback";
 
 const SUPPORT_TOPICS = [
   {
@@ -157,112 +160,112 @@ function SupportSection() {
   );
 }
 
-function ReferralSection() {
-  const toast = useToast();
-  const referralCode = "CHOP-BETA-2026";
+// function ReferralSection() {
+//   const toast = useToast();
+//   const referralCode = "CHOP-BETA-2026";
 
-  const copyReferralCode = async () => {
-    try {
-      await navigator.clipboard.writeText(referralCode);
-      toast.success(
-        "Referral code copied",
-        "Share it with friends and classmates.",
-      );
-    } catch {
-      toast.error(
-        "Could not copy the code",
-        "Please select and copy it manually.",
-      );
-    }
-  };
+//   const copyReferralCode = async () => {
+//     try {
+//       await navigator.clipboard.writeText(referralCode);
+//       toast.success(
+//         "Referral code copied",
+//         "Share it with friends and classmates.",
+//       );
+//     } catch {
+//       toast.error(
+//         "Could not copy the code",
+//         "Please select and copy it manually.",
+//       );
+//     }
+//   };
 
-  return (
-    <div>
-      <ServiceHeading
-        eyebrow="Refer & earn"
-        title="Invite friends, share good food!"
-        description="Share ChopBeta with your network and help more people plan meals around their budget."
-      />
+//   return (
+//     <div>
+//       <ServiceHeading
+//         eyebrow="Refer & earn"
+//         title="Invite friends, share good food!"
+//         description="Share ChopBeta with your network and help more people plan meals around their budget."
+//       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        {[
-          {
-            number: "01",
-            title: "Share your code",
-            description:
-              "Send your referral code to friends, family, or coursemates.",
-          },
-          {
-            number: "02",
-            title: "They join ChopBeta",
-            description:
-              "Your friends create an account and explore budget-friendly meal planning.",
-          },
-          {
-            number: "03",
-            title: "Rewards are coming",
-            description:
-              "Referral discounts will appear here when the rewards program is available.",
-          },
-        ].map((step, index) => (
-          <motion.div
-            key={step.number}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: index * 0.06 }}
-            className="rounded-2xl border border-gray-100 p-4"
-          >
-            <span className="text-xs font-black text-[#1E6B3C]">
-              {step.number}
-            </span>
-            <h3 className="mt-3 text-sm font-bold text-[#1A2E35]">
-              {step.title}
-            </h3>
-            <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
-              {step.description}
-            </p>
-          </motion.div>
-        ))}
-      </div>
+//       <div className="grid gap-3 sm:grid-cols-3">
+//         {[
+//           {
+//             number: "01",
+//             title: "Share your code",
+//             description:
+//               "Send your referral code to friends, family, or coursemates.",
+//           },
+//           {
+//             number: "02",
+//             title: "They join ChopBeta",
+//             description:
+//               "Your friends create an account and explore budget-friendly meal planning.",
+//           },
+//           {
+//             number: "03",
+//             title: "Rewards are coming",
+//             description:
+//               "Referral discounts will appear here when the rewards program is available.",
+//           },
+//         ].map((step, index) => (
+//           <motion.div
+//             key={step.number}
+//             initial={{ opacity: 0, y: 10 }}
+//             animate={{ opacity: 1, y: 0 }}
+//             transition={{ duration: 0.25, delay: index * 0.06 }}
+//             className="rounded-2xl border border-gray-100 p-4"
+//           >
+//             <span className="text-xs font-black text-[#1E6B3C]">
+//               {step.number}
+//             </span>
+//             <h3 className="mt-3 text-sm font-bold text-[#1A2E35]">
+//               {step.title}
+//             </h3>
+//             <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
+//               {step.description}
+//             </p>
+//           </motion.div>
+//         ))}
+//       </div>
 
-      <div className="mt-5 rounded-2xl border border-emerald-100 bg-[#F3F8F4] p-4 sm:p-5">
-        <div className="flex items-center gap-2 text-[#1E6B3C]">
-          <FiUsers />
-          <h3 className="text-sm font-bold text-[#1A2E35]">
-            Your referral code
-          </h3>
-        </div>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <code className="flex min-h-12 flex-1 items-center rounded-xl border border-dashed border-emerald-200 bg-white px-4 text-base font-black tracking-wide text-[#1E6B3C]">
-            {referralCode}
-          </code>
-          <button
-            type="button"
-            onClick={copyReferralCode}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-5 text-sm font-bold text-white transition hover:bg-[#185A31] active:scale-[0.98]"
-          >
-            <FiClipboard /> Copy code
-          </button>
-        </div>
-      </div>
+//       <div className="mt-5 rounded-2xl border border-emerald-100 bg-[#F3F8F4] p-4 sm:p-5">
+//         <div className="flex items-center gap-2 text-[#1E6B3C]">
+//           <FiUsers />
+//           <h3 className="text-sm font-bold text-[#1A2E35]">
+//             Your referral code
+//           </h3>
+//         </div>
+//         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+//           <code className="flex min-h-12 flex-1 items-center rounded-xl border border-dashed border-emerald-200 bg-white px-4 text-base font-black tracking-wide text-[#1E6B3C]">
+//             {referralCode}
+//           </code>
+//           <button
+//             type="button"
+//             onClick={copyReferralCode}
+//             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-5 text-sm font-bold text-white transition hover:bg-[#185A31] active:scale-[0.98]"
+//           >
+//             <FiClipboard /> Copy code
+//           </button>
+//         </div>
+//       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-gray-100 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-            Earned credits
-          </p>
-          <p className="mt-1 text-lg font-black text-[#1A2E35]">₦0.00</p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-            Friends referred
-          </p>
-          <p className="mt-1 text-lg font-black text-[#1A2E35]">0</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+//       <div className="mt-4 grid grid-cols-2 gap-3">
+//         <div className="rounded-2xl border border-gray-100 p-4">
+//           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+//             Earned credits
+//           </p>
+//           <p className="mt-1 text-lg font-black text-[#1A2E35]">₦0.00</p>
+//         </div>
+//         <div className="rounded-2xl border border-gray-100 p-4">
+//           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+//             Friends referred
+//           </p>
+//           <p className="mt-1 text-lg font-black text-[#1A2E35]">0</p>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 
 function ContactSection() {
   return (
@@ -274,7 +277,7 @@ function ContactSection() {
       />
       <div className="divide-y divide-gray-100">
         <a
-          href="tel:+2349077770573"
+          href="tel:+2347074357521"
           className="group flex items-center gap-4 py-4 transition-colors hover:text-[#1E6B3C]"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-[#1E6B3C]">
@@ -400,6 +403,188 @@ function FaqSection() {
   );
 }
 
+function FeedbackSection() {
+  const toast = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rating, setRating] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.message.trim()
+    ) {
+      toast.error("Missing fields", "Please fill in all required fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Simulate API submission delay
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success(
+        "Feedback submitted",
+        "Thank you for helping us make ChopBeta better!",
+      );
+      setFormData({ name: "", email: "", message: "" });
+      setRating(null);
+    } catch {
+      toast.error(
+        "Submission failed",
+        "Could not send feedback. Please try again later.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div>
+      <ServiceHeading
+        eyebrow="Feedback"
+        title="We value your input"
+        description="Have a feature idea, spotted an issue, or just want to tell us how ChopBeta is helping you? Let us know!"
+      />
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Rating Selector */}
+        <div className="rounded-2xl border border-gray-100 bg-white p-4">
+          <p className="text-xs font-semibold text-gray-500">
+            How would you rate your overall experience?
+          </p>
+          <div className="mt-2.5 flex items-center gap-1.5">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                className={`flex h-9 w-9 items-center justify-center rounded-xl transition active:scale-95 ${
+                  rating && rating >= star
+                    ? "bg-amber-50 text-amber-500"
+                    : "bg-gray-50 text-gray-300 hover:bg-gray-100 hover:text-gray-400"
+                }`}
+                aria-label={`Rate ${star} out of 5 stars`}
+              >
+                <FiStar size={18} className="fill-current" />
+              </button>
+            ))}
+            {rating && (
+              <span className="ml-2 text-xs font-bold text-[#1A2E35]">
+                {rating}/5
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Inputs Grid */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {/* Name Input */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="feedback-name"
+              className="text-xs font-bold text-[#1A2E35]"
+            >
+              Full name <span className="text-emerald-600">*</span>
+            </label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                <FiUser size={16} />
+              </span>
+              <input
+                id="feedback-name"
+                name="name"
+                type="text"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="e.g. Emmanuel Ozo"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-[#1A2E35] placeholder:text-gray-400 focus:border-[#1E6B3C] focus:outline-none focus:ring-1 focus:ring-[#1E6B3C]"
+              />
+            </div>
+          </div>
+
+          {/* Email Input */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="feedback-email"
+              className="text-xs font-bold text-[#1A2E35]"
+            >
+              Email address <span className="text-emerald-600">*</span>
+            </label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                <FiMail size={16} />
+              </span>
+              <input
+                id="feedback-email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="e.g. ebuka@example.com"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-[#1A2E35] placeholder:text-gray-400 focus:border-[#1E6B3C] focus:outline-none focus:ring-1 focus:ring-[#1E6B3C]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Message Input */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="feedback-message"
+            className="text-xs font-bold text-[#1A2E35]"
+          >
+            Your message <span className="text-emerald-600">*</span>
+          </label>
+          <textarea
+            id="feedback-message"
+            name="message"
+            rows={4}
+            required
+            value={formData.message}
+            onChange={handleChange}
+            placeholder="Tell us what you like, what we can improve, or any feature you'd love to see..."
+            className="w-full resize-none rounded-xl border border-gray-200 bg-white p-3.5 text-sm font-medium text-[#1A2E35] placeholder:text-gray-400 focus:border-[#1E6B3C] focus:outline-none focus:ring-1 focus:ring-[#1E6B3C]"
+          />
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end pt-2">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-6 text-sm font-bold text-white transition hover:bg-[#185A31] active:scale-[0.98] disabled:opacity-60"
+          >
+            {isSubmitting ? (
+              <>Submitting...</>
+            ) : (
+              <>
+                <FiSend /> Submit feedback
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function ServiceSettings({
   section,
 }: {
@@ -414,9 +599,9 @@ export default function ServiceSettings({
       className="min-h-80"
     >
       {section === "support" ? <SupportSection /> : null}
-      {section === "referral" ? <ReferralSection /> : null}
       {section === "contact" ? <ContactSection /> : null}
       {section === "faq" ? <FaqSection /> : null}
+      {section === "feedback" ? <FeedbackSection /> : null}
     </motion.div>
   );
 }

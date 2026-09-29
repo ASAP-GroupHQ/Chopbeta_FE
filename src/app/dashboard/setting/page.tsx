@@ -15,7 +15,7 @@ type TabId =
   | "kyc"
   | "dietary"
   | "support"
-  | "referral"
+  | "feedback"
   | "contact"
   | "faq"
   | "terms"
@@ -58,10 +58,10 @@ export default function SettingsPage() {
       icon: SettingsIcons.Support,
     },
     {
-      id: "referral",
-      label: "Refer and Earn",
+      id: "feedback",
+      label: "Feedback",
       category: "Services",
-      icon: SettingsIcons.ReferAndEarn,
+      icon: SettingsIcons.Feedback,
     },
     {
       id: "contact",
@@ -194,24 +194,33 @@ export default function SettingsPage() {
                 ) : activeTab === "dietary" ? (
                   <DietaryPreferences />
                 ) : activeTab === "support" ||
-                  activeTab === "referral" ||
                   activeTab === "contact" ||
+                  activeTab === "feedback" ||
                   activeTab === "faq" ? (
                   <ServiceSettings section={activeTab} />
                 ) : activeTab === "terms" ||
                   activeTab === "privacy" ||
                   activeTab === "about" ? (
                   <LegalDocumentContent
-                    document={activeTab === "terms" ? "terms" : activeTab === "privacy" ? "privacy" : "about"}
+                    document={
+                      activeTab === "terms"
+                        ? "terms"
+                        : activeTab === "privacy"
+                          ? "privacy"
+                          : "about"
+                    }
                     embedded
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center min-h-70 rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center p-8">
-                    <p className="text-lg font-semibold text-gray-700">This section is being prepared.</p>
+                    <p className="text-lg font-semibold text-gray-700">
+                      This section is being prepared.
+                    </p>
                     <p className="mt-2 text-sm text-gray-500 max-w-md">
-                      The content for this settings area is not ready yet, but the
-                      rest of the account experience has already been expanded to
-                      support richer profile and verification details.
+                      The content for this settings area is not ready yet, but
+                      the rest of the account experience has already been
+                      expanded to support richer profile and verification
+                      details.
                     </p>
                   </div>
                 )}
