@@ -181,14 +181,14 @@ export default function MealCard({ meal }: MealCardProps) {
                 ))}
               </div>
 
-              <button
+              {/* <button
                 type="button"
                 onClick={handleAddMealPlan}
                 disabled={isAdding || isAdded}
                 className="sticky bottom-0 flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 py-3.5 text-sm font-extrabold text-white shadow-[0_-8px_18px_rgba(255,255,255,0.95)] transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isAdded ? "Added to your plan" : isAdding ? "Adding to your plan..." : <><FiPlus /> Add to plan</>}
-              </button>
+              </button> */}
             </motion.div>
           </motion.div>
         )}

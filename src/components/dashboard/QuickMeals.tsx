@@ -376,14 +376,14 @@ export default function QuickMeals() {
                   </div>
                 </div>
 
-                <button
+                {/* <button
                   type="button"
                   onClick={handleAddToPlan}
                   disabled={isAdding}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] py-3.5 text-sm font-bold text-white shadow-lg shadow-green-900/10 transition hover:bg-[#185a31] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isAdding ? "Adding to your plan..." : <><FiPlus /> Add to plan</>}
-                </button>
+                </button> */}
               </div>
             </motion.div>
           </motion.div>
