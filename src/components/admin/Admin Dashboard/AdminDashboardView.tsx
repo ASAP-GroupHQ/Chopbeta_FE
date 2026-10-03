@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart3, DollarSign, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
 import {
   CartesianGrid,
   Line,
@@ -27,10 +28,10 @@ const mealsPlanData = [
 ];
 
 const quickActions = [
-  { label: "Add new meals", desc: "Add a new meal to the database", icon: "➕", color: "bg-indigo-50 border-indigo-100" },
-  { label: "Update Meal Prices", desc: "Update prices of existing foods", icon: "💵", color: "bg-teal-50 border-teal-100" },
-  { label: "View Users", desc: "View and manage user accounts", icon: "👤", color: "bg-blue-50 border-blue-100" },
-  { label: "View Analytics", desc: "See detailed platform analytics", icon: "📊", color: "bg-green-50 border-green-100" },
+  { label: "Add new meals", desc: "Add a new meal to the database", href: "/admin/meal-management", icon: "➕", color: "bg-indigo-50 border-indigo-100" },
+  { label: "Update Meal Prices", desc: "Update prices of existing foods", href: "/admin/meal-management", icon: "💵", color: "bg-teal-50 border-teal-100" },
+  { label: "View Users", desc: "View and manage user accounts", href: "/admin/users", icon: "👤", color: "bg-blue-50 border-blue-100" },
+  { label: "View Analytics", desc: "See detailed platform analytics", href: "/admin/analytics", icon: "📊", color: "bg-green-50 border-green-100" },
 ];
 
 function QuickActions() {
@@ -39,8 +40,9 @@ function QuickActions() {
       <h3 className="mb-5 text-sm font-bold text-gray-900">Quick Actions</h3>
       <div className="grid grid-cols-2 gap-4">
         {quickActions.map((act, i) => (
-          <button
+          <Link
             key={i}
+            href={act.href}
             className={`flex flex-col items-center justify-center rounded-xl border p-4 text-center transition-all hover:shadow-md ${act.color}`}
           >
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg shadow-sm">
@@ -48,7 +50,7 @@ function QuickActions() {
             </div>
             <h4 className="mb-1 text-xs font-bold text-gray-900">{act.label}</h4>
             <p className="max-w-[120px] text-[10px] leading-tight text-gray-400">{act.desc}</p>
-          </button>
+          </Link>
         ))}
       </div>
     </div>
@@ -84,7 +86,7 @@ export default function AdminDashboardView() {
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-          <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+          <section id="analytics" className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-800">Meals Plan Generated</h2>
               <span className="rounded border border-gray-100 bg-gray-50 px-2 py-1 text-xs text-gray-400">This Week</span>

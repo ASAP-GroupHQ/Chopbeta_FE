@@ -9,9 +9,9 @@ import { BarChart3, DollarSign, LayoutDashboard, Menu, Settings, Utensils, Users
 const menuItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Meal Management", href: "/admin/meal-management", icon: Utensils },
-  { label: "Price Management", href: "/pricing", icon: DollarSign },
+  { label: "Price Management", href: "/admin/price-management", icon: DollarSign },
   { label: "User Management", href: "/admin/users", icon: Users, badge: true },
-  { label: "Analytics & Reports", href: "/analytics", icon: BarChart3 },
+  { label: "Analytics & Reports", href: "/admin/analytics", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
