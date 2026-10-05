@@ -79,6 +79,7 @@ export interface AddToPlannedResponse {
 export interface PlannedMealData {
   _id?: string;
   uniqueId?: string;
+  UniqueId?: string;
   mealId: string;
   mealTitle: string;
   category?: string;
@@ -166,7 +167,7 @@ export interface AllCompletedMealsResponse {
 // Clean Client-Side Meal Model (No image property)
 export interface MealLog {
   id: string;
-  uniqueId: string;
+  uniqueId?: string;
   time: string;
   name: string;
   tag?: string;

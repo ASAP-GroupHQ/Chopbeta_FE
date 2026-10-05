@@ -38,43 +38,27 @@ const getLocalDateParam = () => {
 
 const getMealIdentifier = (
   item:
-    | { uniqueId?: string | null; _id?: string | null; mealId?: string | null | { _id?: string | null } }
+    | { UniqueId?: string | null; uniqueId?: string | null }
     | null
     | undefined,
 ): string | null => {
   if (!item) return null;
 
+  if (typeof item.UniqueId === "string" && item.UniqueId.trim()) {
+    return item.UniqueId;
+  }
+
   if (typeof item.uniqueId === "string" && item.uniqueId.trim()) {
     return item.uniqueId;
-  }
-
-  if (typeof item._id === "string" && item._id.trim()) {
-    return item._id;
-  }
-
-  if (typeof item.mealId === "string" && item.mealId.trim()) {
-    return item.mealId;
-  }
-
-  if (
-    typeof item.mealId === "object" &&
-    item.mealId !== null &&
-    typeof item.mealId._id === "string" &&
-    item.mealId._id.trim()
-  ) {
-    return item.mealId._id;
   }
 
   return null;
 };
 
-const mapToMealLog = (item: PlannedMealData): MealLog | null => {
-  const uniqueId = getMealIdentifier(item);
-  if (!uniqueId) return null;
-
+const mapToMealLog = (item: PlannedMealData): MealLog => {
   return {
     id: item._id || item.mealId,
-    uniqueId,
+    uniqueId: getMealIdentifier(item) ?? undefined,
     time: item.addedAt
       ? new Date(item.addedAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -143,7 +127,9 @@ export default function TrackMealPage() {
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
   const handleToggleEaten = async (uniqueId: string) => {
-    const targetMeal = safeMeals.find((m) => m.uniqueId === uniqueId);
+    const targetMeal = safeMeals.find(
+      (meal) => getMealIdentifier(meal) === uniqueId,
+    );
     const targetLog = displayedMeals.find(
       (meal) => meal.uniqueId === uniqueId,
     );
@@ -158,17 +144,14 @@ export default function TrackMealPage() {
     setMeals((prev) => {
       const prevArray = Array.isArray(prev) ? prev : [];
       return prevArray.map((m) =>
-        m && m.uniqueId === uniqueId
+        m && getMealIdentifier(m) === uniqueId
           ? { ...m, isEaten: nextEaten }
           : m,
       );
     });
     if (!nextEaten) {
       setSpentMeals((prev) =>
-        prev.filter(
-          (meal) =>
-            meal.uniqueId !== uniqueId,
-        ),
+        prev.filter((meal) => getMealIdentifier(meal) !== uniqueId),
       );
     }
 
@@ -200,12 +183,14 @@ export default function TrackMealPage() {
 
   const handleMarkNextMealAsEaten = async () => {
     const firstUnchecked = safeMeals.find((m) => m && !m.isEaten);
-    const fallbackId = firstUnchecked?.uniqueId ?? firstUnchecked?._id ?? null;
+    const uniqueId = getMealIdentifier(firstUnchecked);
 
-    if (fallbackId) {
+    if (uniqueId) {
       setIsLoading(true);
-      await handleToggleEaten(fallbackId);
+      await handleToggleEaten(uniqueId);
       setIsLoading(false);
+    } else if (firstUnchecked) {
+      toast.error("This meal is missing its unique ID and cannot be marked.");
     } else {
       toast.info("All planned meals are marked as eaten!");
     }
@@ -240,13 +225,33 @@ export default function TrackMealPage() {
       trackService.getDailySpent(),
     ]);
 
+    const plannedTodayByMealId = new Map<string, string>();
+    if (
+      plannedTodayRes.status === "fulfilled" &&
+      plannedTodayRes.value?.success &&
+      Array.isArray(plannedTodayRes.value.data?.plannedMeals)
+    ) {
+      plannedTodayRes.value.data.plannedMeals.forEach((plannedMeal) => {
+        const uniqueId = getMealIdentifier(plannedMeal);
+        if (plannedMeal.mealId && uniqueId) {
+          plannedTodayByMealId.set(plannedMeal.mealId, uniqueId);
+        }
+      });
+    }
+
     // Planned Meals
     if (
       mealsRes.status === "fulfilled" &&
       mealsRes.value?.data?.meals &&
       Array.isArray(mealsRes.value.data.meals)
     ) {
-      setMeals(mealsRes.value.data.meals);
+      setMeals(
+        mealsRes.value.data.meals.map((meal) => ({
+          ...meal,
+          uniqueId:
+            getMealIdentifier(meal) ?? plannedTodayByMealId.get(meal.mealId),
+        })),
+      );
     } else if (!silent) {
       setMeals([]);
     }
@@ -314,7 +319,6 @@ export default function TrackMealPage() {
     if (activeTab === "planned") {
       const plannedMapped = safeMeals
         .map(mapToMealLog)
-        .filter((item): item is MealLog => item !== null);
 
       return plannedMapped;
     }
@@ -332,7 +336,7 @@ export default function TrackMealPage() {
     ].filter((item): item is MealLog => item !== null);
 
     const uniqueMap = new Map<string, MealLog>();
-    merged.forEach((item) => uniqueMap.set(item.uniqueId, item));
+    merged.forEach((item) => uniqueMap.set(item.uniqueId ?? item.id, item));
     return Array.from(uniqueMap.values());
   };
 
@@ -461,7 +465,7 @@ export default function TrackMealPage() {
               ) : displayedMeals.length > 0 ? (
                 displayedMeals.map((meal) => (
                   <MealLogCard
-                    key={meal.uniqueId}
+                    key={meal.uniqueId ?? meal.id}
                     meal={meal}
                     onToggleEaten={handleToggleEaten}
                     isLoading={togglingId === meal.uniqueId}
@@ -474,7 +478,7 @@ export default function TrackMealPage() {
               )}
             </div>
 
-            <button
+            {/* <button
               onClick={handleMarkNextMealAsEaten}
               disabled={isLoading || mealsLoading || eatenTodayCount >= totalCount}
               className="w-full h-14 bg-[#1E6B3C] hover:bg-[#154d2b] disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 shadow-sm text-base tracking-wide"
@@ -487,7 +491,7 @@ export default function TrackMealPage() {
                   <span>Mark a Meal as Eaten</span>
                 </>
               )}
-            </button>
+            </button> */}
 
             <div className="flex items-center gap-1.5 text-[11px] text-gray-400 pl-1 font-medium select-none">
               <span className="font-semibold text-gray-500">Tip:</span>
