@@ -36,6 +36,7 @@ export interface QuickMealItem {
   };
   averageNutritionalInfo?: AverageNutritionalInfo;
   imageUrl?: string;
+  isActive?: boolean;
 }
 
 export interface QuickMealsResponse {
@@ -43,7 +44,8 @@ export interface QuickMealsResponse {
   statusCode: number;
   message: string;
   data: {
-    meals: QuickMealItem[];
+    safetoreturn?: QuickMealItem[];
+    meals?: QuickMealItem[];
     count: number;
   };
 }
@@ -119,6 +121,7 @@ export interface AllPlannedMealsResponse {
     currentPage: number;
   };
 }
+
 // Raw item shape returned from backend
 export interface ApiPartialMealItem {
   mealTitle: string;

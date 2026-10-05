@@ -41,7 +41,6 @@ const TIME_OPTIONS = [
   },
 ];
 
-// Global default fallback asset if database returns an empty url
 const DEFAULT_MEAL_IMAGE =
   "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=500";
 
@@ -130,18 +129,17 @@ export default function QuickMeals() {
       setLoading(true);
       setError(null);
       try {
-        const filterVal = activeOption?.apiFilter || "morning";
+        const filterVal = activeOption?.apiFilter || "breakfast";
         const response = await mealService.getQuickMeals(filterVal);
 
-        // Safe resolution of the nested meals array
-        if (response) {
-          if (response.data && Array.isArray(response.data.meals)) {
+        // Safe resolution of safetoreturn, meals, or raw data array
+        if (response && response.data) {
+          if (Array.isArray(response.data.safetoreturn)) {
+            setMeals(response.data.safetoreturn);
+          } else if (Array.isArray(response.data.meals)) {
             setMeals(response.data.meals);
-          } else if (
-            (response as any).meals &&
-            Array.isArray((response as any).meals)
-          ) {
-            setMeals((response as any).meals);
+          } else if (Array.isArray(response.data)) {
+            setMeals(response.data as any);
           } else {
             setMeals([]);
           }
@@ -246,7 +244,6 @@ export default function QuickMeals() {
                   className="object-cover"
                   unoptimized
                   onError={(e) => {
-                    // Safety handler if the live cloud image breaks
                     const target = e.target as HTMLImageElement;
                     if (target.src !== DEFAULT_MEAL_IMAGE) {
                       target.src = DEFAULT_MEAL_IMAGE;
@@ -254,7 +251,6 @@ export default function QuickMeals() {
                   }}
                 />
 
-                {/* Safe render for calories as a numeric/string value */}
                 {meal.averageNutritionalInfo?.estimatedCalories && (
                   <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs px-1.5 py-0.5 rounded-md flex items-center gap-0.5 text-[8px] font-black text-white">
                     <FiActivity size={8} className="text-emerald-400" />
@@ -324,7 +320,10 @@ export default function QuickMeals() {
                   <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
                     {selectedMeal.category} · {selectedMeal.type || "meal"}
                   </p>
-                  <h2 id="quick-meal-title" className="text-2xl font-black leading-tight">
+                  <h2
+                    id="quick-meal-title"
+                    className="text-2xl font-black leading-tight"
+                  >
                     {selectedMeal.mealTitle}
                   </h2>
                 </div>
@@ -333,7 +332,8 @@ export default function QuickMeals() {
               <div className="space-y-5 p-5 sm:p-6">
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm leading-relaxed text-gray-500">
-                    {selectedMeal.description || "A delicious meal for your plan."}
+                    {selectedMeal.description ||
+                      "A delicious meal for your plan."}
                   </p>
                   <p className="shrink-0 text-lg font-black text-[#1E6B3C]">
                     ₦{formatPrice(selectedMeal)}
@@ -356,13 +356,28 @@ export default function QuickMeals() {
                         Calories
                       </p>
                       <p className="mt-1 text-sm font-black text-[#1A2E35]">
-                        {formatNutrition(selectedMeal.averageNutritionalInfo?.estimatedCalories)}
+                        {formatNutrition(
+                          selectedMeal.averageNutritionalInfo
+                            ?.estimatedCalories,
+                        )}
                       </p>
                     </div>
                     {[
-                      ["Carbs", selectedMeal.averageNutritionalInfo?.estimatedMacronutrients?.carbohydrates],
-                      ["Protein", selectedMeal.averageNutritionalInfo?.estimatedMacronutrients?.proteins],
-                      ["Fats", selectedMeal.averageNutritionalInfo?.estimatedMacronutrients?.fats],
+                      [
+                        "Carbs",
+                        selectedMeal.averageNutritionalInfo
+                          ?.estimatedMacronutrients?.carbohydrates,
+                      ],
+                      [
+                        "Protein",
+                        selectedMeal.averageNutritionalInfo
+                          ?.estimatedMacronutrients?.proteins,
+                      ],
+                      [
+                        "Fats",
+                        selectedMeal.averageNutritionalInfo
+                          ?.estimatedMacronutrients?.fats,
+                      ],
                     ].map(([label, value]) => (
                       <div key={label} className="rounded-2xl bg-gray-50 p-3">
                         <p className="mb-4 text-[10px] font-bold uppercase tracking-wide text-gray-500">
@@ -382,7 +397,13 @@ export default function QuickMeals() {
                   disabled={isAdding}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] py-3.5 text-sm font-bold text-white shadow-lg shadow-green-900/10 transition hover:bg-[#185a31] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isAdding ? "Adding to your plan..." : <><FiPlus /> Add to plan</>}
+                  {isAdding ? (
+                    "Adding to your plan..."
+                  ) : (
+                    <>
+                      <FiPlus /> Add to plan
+                    </>
+                  )}
                 </button> */}
               </div>
             </motion.div>
