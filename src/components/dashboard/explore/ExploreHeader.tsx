@@ -32,7 +32,7 @@ export default function ExploreHeader({ searchValue, onSearchChange }: ExploreHe
           type="text"
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search meals, categories, ingredients..."
+          placeholder="Search meals by name..."
           className="w-full bg-white pl-12 pr-4 py-3.5 rounded-xl border border-transparent shadow-sm text-sm focus:outline-none focus:border-emerald-600 transition-all placeholder-gray-400"
         />
       </div>
