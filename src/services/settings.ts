@@ -39,18 +39,24 @@ export const sendFeedback = async (
 };
 
 export interface UpdateProfileRequest {
-  gender: string;
-  dateOfBirth: string;
-  LGA: string;
-  countryOfResidence: string;
-  houseAddress: string;
-  stateOfOrigin: string;
+  gender?: string;
+  dateOfBirth?: string;
+  LGA?: string;
+  countryOfResidence?: string;
+  houseAddress?: string;
+  stateOfOrigin?: string;
+  allergies?: string[];
+  disLikes?: string[];
 }
 
 export interface UpdateProfileResponse {
   success: boolean;
   statusCode: number;
   message: string;
+  data?: {
+    allergies?: string[];
+    disLikes?: string[];
+  };
 }
 
 export const updateProfile = async (

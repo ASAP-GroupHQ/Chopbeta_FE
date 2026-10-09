@@ -79,23 +79,6 @@ export const authService = {
     return response.data;
   },
 
-  addAllergiesAndDislikes: async (
-    userId: string,
-    data: {
-      allergies: string[];
-      dislikes: string[];
-    },
-  ) => {
-    const response = await apiClient.post<ApiResponse>(
-      `/auth/user/add-allergies/${userId}`,
-      {
-        allergies: data.allergies,
-        disLikes: data.dislikes,
-      },
-    );
-    return response.data;
-  },
-
   regenerateToken: async (
     refreshToken: string,
   ): Promise<RegenerateTokenResponse> => {
