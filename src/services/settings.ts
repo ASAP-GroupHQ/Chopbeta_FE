@@ -38,6 +38,36 @@ export const sendFeedback = async (
   return response.data;
 };
 
+export interface UpdateProfileRequest {
+  gender: string;
+  dateOfBirth: string;
+  LGA: string;
+  countryOfResidence: string;
+  houseAddress: string;
+  stateOfOrigin: string;
+}
+
+export interface UpdateProfileResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+}
+
+export const updateProfile = async (
+  profile: UpdateProfileRequest,
+): Promise<UpdateProfileResponse> => {
+  const response = await apiClient.put<UpdateProfileResponse>(
+    "/auth/user/update-profile",
+    profile,
+  );
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || "Could not update your profile.");
+  }
+
+  return response.data;
+};
+
 export const uploadProfilePicture = async (
   file: File,
 ): Promise<UploadProfilePictureResponse> => {

@@ -7,7 +7,6 @@ import AuthInput from "@/components/auth/AuthInput";
 import {
   FiUser,
   FiMail,
-  FiPhone,
   FiMapPin,
   FiGlobe,
   FiCalendar,
@@ -17,7 +16,8 @@ import {
   FiChevronDown,
 } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
-import { uploadProfilePicture } from "@/services/settings";
+import { useToast } from "@/context/ToastContext";
+import { updateProfile, uploadProfilePicture } from "@/services/settings";
 import nigeriaLocations from "@/data/nigeria-states-lgas.json";
 
 interface NigeriaState {
@@ -28,9 +28,11 @@ interface NigeriaState {
 export default function PersonalDetails() {
   // Destructure updateUserData instead of setUser
   const { user, updateUserData } = useAuth();
+  const toast = useToast();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
@@ -39,10 +41,9 @@ export default function PersonalDetails() {
     fullName: "",
     userName: "",
     email: "",
-    phone: "",
-    address: "",
+    homeAddress: "",
     lga: "",
-    country: "",
+    countryOfResidence: "",
     dob: "",
     gender: "",
     stateOfOrigin: "",
@@ -73,11 +74,10 @@ export default function PersonalDetails() {
         fullName: user.fullName || "",
         userName: user.userName || "",
         email: user.email || "",
-        phone: user.phone || user.phoneNumber || "",
-        address: user.address || "",
-        lga: user.lga || "",
-        country: user.country || "",
-        dob: user.dob || "",
+        homeAddress: user.houseAddress || user.address || "",
+        lga: user.LGA || user.lga || "",
+        countryOfResidence: user.countryOfResidence || user.country || "",
+        dob: (user.dateOfBirth || user.dob || "").slice(0, 10),
         gender: user.gender || "",
         stateOfOrigin: user.stateOfOrigin || "",
         emergencyContact: user.emergencyContact || "",
@@ -88,6 +88,42 @@ export default function PersonalDetails() {
       });
     }
   }, [user]);
+
+  const handleSaveProfile = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSaving(true);
+
+    const profile = {
+      gender: formData.gender,
+      dateOfBirth: formData.dob,
+      LGA: formData.lga,
+      countryOfResidence: formData.countryOfResidence.trim(),
+      houseAddress: formData.homeAddress.trim(),
+      stateOfOrigin: formData.stateOfOrigin,
+    };
+
+    try {
+      const response = await updateProfile(profile);
+      updateUserData({
+        gender: profile.gender,
+        dateOfBirth: profile.dateOfBirth,
+        LGA: profile.LGA,
+        countryOfResidence: profile.countryOfResidence,
+        houseAddress: profile.houseAddress,
+        stateOfOrigin: profile.stateOfOrigin,
+      });
+      toast.success(response.message);
+    } catch (error) {
+      toast.error(
+        "Profile update failed",
+        error instanceof Error
+          ? error.message
+          : "Could not update your profile. Please try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Handle Image Selection and Upload
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,6 +271,7 @@ export default function PersonalDetails() {
       </div>
 
       {/* Grid Inputs Using AuthInput */}
+      <form onSubmit={handleSaveProfile}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
         <AuthInput
           label="Full Name"
@@ -257,16 +294,6 @@ export default function PersonalDetails() {
           disabled={true}
         />
 
-        <AuthInput
-          label="Phone Number"
-          type="tel"
-          placeholder="Phone number"
-          Icon={FiPhone}
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          disabled={!!user?.phoneNumber}
-        />
-
         <div className="w-full space-y-1.5 text-left">
           <label htmlFor="personal-gender" className="ml-1 text-sm font-medium text-gray-700">
             Gender
@@ -279,13 +306,12 @@ export default function PersonalDetails() {
               onChange={(event) =>
                 setFormData({ ...formData, gender: event.target.value })
               }
-              disabled={!!user?.gender}
               className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
             >
               <option value="">Select gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Prefer not to say">Prefer not to say</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="prefer-not-to-say">Prefer not to say</option>
             </select>
             <FiChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           </div>
@@ -297,12 +323,24 @@ export default function PersonalDetails() {
           Icon={FiCalendar}
           value={formData.dob}
           onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-          disabled={!!user?.dob}
+        />
+
+        <AuthInput
+          label="Country of Residence"
+          placeholder="e.g. Nigeria"
+          Icon={FiGlobe}
+          value={formData.countryOfResidence}
+          onChange={(event) =>
+            setFormData({
+              ...formData,
+              countryOfResidence: event.target.value,
+            })
+          }
         />
 
         <div className="w-full space-y-1.5 text-left">
           <label htmlFor="personal-state" className="ml-1 text-sm font-medium text-gray-700">
-            State
+            State of Origin
           </label>
           <div className="group relative">
             <FiMapPin className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-green-600" size={18} />
@@ -310,7 +348,6 @@ export default function PersonalDetails() {
               id="personal-state"
               value={formData.stateOfOrigin}
               onChange={(event) => updateState(event.target.value)}
-              disabled={!!user?.stateOfOrigin}
               className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
             >
               <option value="">Select state</option>
@@ -336,7 +373,7 @@ export default function PersonalDetails() {
               onChange={(event) =>
                 setFormData({ ...formData, lga: event.target.value })
               }
-              disabled={!selectedState || !!user?.lga}
+              disabled={!selectedState}
               className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
             >
               <option value="">
@@ -352,14 +389,44 @@ export default function PersonalDetails() {
           </div>
         </div>
 
+        <div className="w-full space-y-1.5 text-left sm:col-span-2">
+          <label
+            htmlFor="personal-home-address"
+            className="ml-1 text-sm font-medium text-gray-700"
+          >
+            Home Address
+          </label>
+          <div className="group relative">
+            <FiMapPin
+              className="pointer-events-none absolute left-4 top-4 text-gray-400 transition-colors group-focus-within:text-green-600"
+              size={18}
+            />
+            <textarea
+              id="personal-home-address"
+              value={formData.homeAddress}
+              onChange={(event) =>
+                setFormData({ ...formData, homeAddress: event.target.value })
+              }
+              rows={3}
+              placeholder="Enter your home address"
+              className="w-full resize-y rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-[#1A2E35] outline-none transition-all placeholder:text-gray-400 focus:border-green-600 focus:ring-2 focus:ring-green-500/20"
+            />
+          </div>
+        </div>
+
       </div>
 
       {/* Save Trigger Option Footer */}
       <div className="flex justify-end pt-4">
-        <button className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-medium transition-all shadow-sm shadow-emerald-700/10 active:scale-95 cursor-pointer">
-          Save Changes
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-medium transition-all shadow-sm shadow-emerald-700/10 active:scale-95 cursor-pointer disabled:cursor-wait disabled:opacity-60"
+        >
+          {isSaving ? "Saving..." : "Save Changes"}
         </button>
       </div>
+      </form>
     </motion.div>
   );
 }
