@@ -83,6 +83,7 @@ export interface PlannedTodayResponse {
       addedAt?: string;
       mealId?: string;
       uniqueId?: string;
+      UniqueId?: string;
       _id?: string;
       mealTitle?: string;
       category?: string;

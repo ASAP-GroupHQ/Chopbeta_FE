@@ -67,13 +67,19 @@ export const MealLogCard: React.FC<MealLogCardProps> = ({
         </div>
 
         <button
-          onClick={() => onToggleEaten(meal.uniqueId)}
-          disabled={isLoading}
+          onClick={() => {
+            if (meal.uniqueId) onToggleEaten(meal.uniqueId);
+          }}
+          disabled={isLoading || !meal.uniqueId}
           aria-label={
-            meal.eaten ? "Mark meal as not eaten" : "Mark meal as eaten"
+            !meal.uniqueId
+              ? "Meal tracking ID unavailable"
+              : meal.eaten
+                ? "Mark meal as not eaten"
+                : "Mark meal as eaten"
           }
           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none border-2 ${
-            isLoading
+            isLoading || !meal.uniqueId
               ? "opacity-50 cursor-not-allowed border-gray-300"
               : "cursor-pointer"
           } ${

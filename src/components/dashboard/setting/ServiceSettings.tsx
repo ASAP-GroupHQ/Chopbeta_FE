@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -19,6 +19,9 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
+import { sendFeedback } from "@/services/settings";
+import FeedbackSuccessModal from "@/components/dashboard/setting/FeedbackSuccessModal";
 
 type ServiceSection = "support" | "contact" | "faq" | "feedback";
 
@@ -405,13 +408,24 @@ function FaqSection() {
 
 function FeedbackSection() {
   const toast = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [rating, setRating] = useState<number | null>(null);
+  const [rating, setRating] = useState(0);
+  const [successFeedback, setSuccessFeedback] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: user?.fullName ?? "",
     email: "",
     message: "",
   });
+
+  useEffect(() => {
+    if (!user) return;
+    setFormData((previous) => ({
+      ...previous,
+      fullName: previous.fullName || user.fullName || "",
+      email: previous.email || user.email || "",
+    }));
+  }, [user]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -424,7 +438,7 @@ function FeedbackSection() {
     e.preventDefault();
 
     if (
-      !formData.name.trim() ||
+      !formData.fullName.trim() ||
       !formData.email.trim() ||
       !formData.message.trim()
     ) {
@@ -433,25 +447,38 @@ function FeedbackSection() {
     }
 
     setIsSubmitting(true);
-
-    // Simulate API submission delay
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(
-        "Feedback submitted",
-        "Thank you for helping us make ChopBeta better!",
-      );
-      setFormData({ name: "", email: "", message: "" });
-      setRating(null);
-    } catch {
+      const submittedFullName = formData.fullName.trim();
+      const submittedRating = rating;
+      await sendFeedback({
+        fullName: submittedFullName,
+        email: formData.email.trim(),
+        message: formData.message.trim(),
+        rating: Number.isFinite(submittedRating) ? submittedRating : 0,
+      });
+      setSuccessFeedback(submittedFullName);
+      setFormData({
+        fullName: user?.fullName ?? "",
+        email: user?.email ?? "",
+        message: "",
+      });
+      setRating(0);
+    } catch (error) {
       toast.error(
         "Submission failed",
-        "Could not send feedback. Please try again later.",
+        error instanceof Error
+          ? error.message
+          : "Could not send feedback. Please try again later.",
       );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const closeSuccessModal = useCallback(
+    () => setSuccessFeedback(null),
+    [],
+  );
 
   return (
     <div>
@@ -473,8 +500,9 @@ function FeedbackSection() {
                 key={star}
                 type="button"
                 onClick={() => setRating(star)}
-                className={`flex h-9 w-9 items-center justify-center rounded-xl transition active:scale-95 ${
-                  rating && rating >= star
+                aria-pressed={rating >= star}
+                className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl transition active:scale-95 ${
+                  rating >= star
                     ? "bg-amber-50 text-amber-500"
                     : "bg-gray-50 text-gray-300 hover:bg-gray-100 hover:text-gray-400"
                 }`}
@@ -483,10 +511,21 @@ function FeedbackSection() {
                 <FiStar size={18} className="fill-current" />
               </button>
             ))}
-            {rating && (
+            {rating > 0 ? (
               <span className="ml-2 text-xs font-bold text-[#1A2E35]">
                 {rating}/5
               </span>
+            ) : (
+              <span className="ml-2 text-xs text-gray-400">No rating</span>
+            )}
+            {rating > 0 && (
+              <button
+                type="button"
+                onClick={() => setRating(0)}
+                className="ml-auto rounded-lg px-2 py-1 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+              >
+                Clear
+              </button>
             )}
           </div>
         </div>
@@ -507,10 +546,10 @@ function FeedbackSection() {
               </span>
               <input
                 id="feedback-name"
-                name="name"
+                name="fullName"
                 type="text"
                 required
-                value={formData.name}
+                value={formData.fullName}
                 onChange={handleChange}
                 placeholder="e.g. Emmanuel Ozo"
                 className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-[#1A2E35] placeholder:text-gray-400 focus:border-[#1E6B3C] focus:outline-none focus:ring-1 focus:ring-[#1E6B3C]"
@@ -569,7 +608,7 @@ function FeedbackSection() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-6 text-sm font-bold text-white transition hover:bg-[#185A31] active:scale-[0.98] disabled:opacity-60"
+            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-6 text-sm font-bold text-white transition hover:bg-[#185A31] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
           >
             {isSubmitting ? (
               <>Submitting...</>
@@ -581,6 +620,11 @@ function FeedbackSection() {
           </button>
         </div>
       </form>
+      <FeedbackSuccessModal
+        isOpen={successFeedback !== null}
+        fullName={successFeedback ?? ""}
+        onClose={closeSuccessModal}
+      />
     </div>
   );
 }

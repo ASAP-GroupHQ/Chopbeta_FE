@@ -6,7 +6,7 @@ import { FiCheck, FiLoader, FiPlus } from "react-icons/fi";
 import { ALLERGY_OPTIONS, DISLIKE_OPTIONS } from "@/constants/onboarding-slider";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { authService } from "@/services/auth";
+import { updateProfile } from "@/services/settings";
 
 const normalize = (items?: string[]) =>
   Array.isArray(items) ? items.filter((item) => item.toLowerCase() !== "none") : [];
@@ -86,14 +86,21 @@ export default function DietaryPreferences() {
     const savedDislikes = valuesForSave(dislikes, dislikeCustom);
     setIsSaving(true);
     try {
-      const response = await authService.addAllergiesAndDislikes(user._id, {
+      const response = await updateProfile({
         allergies: savedAllergies,
-        dislikes: savedDislikes,
+        disLikes: savedDislikes,
       });
-      updateUserData({ allergies: savedAllergies, disLikes: savedDislikes });
+      updateUserData({
+        allergies: response.data?.allergies ?? savedAllergies,
+        disLikes: response.data?.disLikes ?? savedDislikes,
+      });
       toast.success(response.message || "Dietary preferences saved.");
-    } catch (error: any) {
-      toast.error(error.message || "Could not save your dietary preferences.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not save your dietary preferences.",
+      );
     } finally {
       setIsSaving(false);
     }

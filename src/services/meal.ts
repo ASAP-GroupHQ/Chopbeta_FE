@@ -71,7 +71,6 @@ export const mealService = {
     return response.data;
   },
 
-  // Fetches partial meals for a given page, pageSize, and optional date (YYYY-MM-DD)
   getAllPartialMeals: async (
     page: number = 1,
     pageSize: number = 10,
@@ -93,7 +92,6 @@ export const mealService = {
 
     const rawData = response.data.data;
 
-    // Transform backend decimal objects and ISO dates into client-friendly structure
     const mappedMeals: MealLog[] = (rawData.data || []).map((item) => ({
       id: item.uniqueId,
       uniqueId: item.uniqueId,

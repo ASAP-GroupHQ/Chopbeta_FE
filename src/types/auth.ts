@@ -46,12 +46,6 @@ export interface ResendOtpData {
   email: string;
 }
 
-// Add Allergies and Dislikes Data
-export interface AddAllergiesData {
-  allergies: string[];
-  dislikes: string[];
-}
-
 export interface RegenerateTokenRequest {
   refreshToken: string;
 }
