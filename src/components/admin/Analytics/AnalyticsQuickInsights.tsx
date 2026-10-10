@@ -14,23 +14,23 @@ export default function AnalyticsQuickInsights({
   const insights = [
     {
       icon: UtensilsCrossed,
-      label: "Leading category",
+      label: "Leading meal category",
       value: audienceLeader.name,
-      detail: `${audienceLeader.value}% of audience mix`,
+      detail: `${audienceLeader.value}% of listed meals`,
       color: "bg-emerald-50 text-emerald-700",
     },
     {
       icon: TrendingUp,
-      label: "Meal plan peak",
+      label: "Meal generation peak",
       value: mealPlanPeak.name,
-      detail: `${mealPlanPeak.value} plans created`,
+      detail: `${mealPlanPeak.value} meals generated`,
       color: "bg-sky-50 text-sky-700",
     },
     {
       icon: Users,
-      label: "User growth peak",
+      label: "Active-user peak",
       value: userGrowthPeak.name,
-      detail: `${userGrowthPeak.value} new users`,
+      detail: `${userGrowthPeak.value} active users`,
       color: "bg-violet-50 text-violet-700",
     },
   ];

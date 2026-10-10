@@ -34,11 +34,13 @@ export default function LoginPage() {
       // Determine destination path dynamically based on role
       const userRole = userData?.role || userData?.user?.role || "user";
       const redirectPath =
-        userRole === "admin" ? "/admin/dashboard" : "/dashboard";
+        String(userRole).toLowerCase() === "admin"
+          ? "/Admin/dashboard"
+          : "/dashboard";
 
       setTargetPath(redirectPath);
       setShowSuccess(true);
-    } catch (error) {
+    } catch {
       // Handled by AuthContext toast
     } finally {
       setIsLoading(false);

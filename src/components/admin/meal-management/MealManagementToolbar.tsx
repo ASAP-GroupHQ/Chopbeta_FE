@@ -2,6 +2,7 @@ import { Download, Filter, Plus, RotateCcw, Search } from "lucide-react";
 
 interface MealManagementToolbarProps {
   searchTerm: string;
+  categories: string[];
   categoryFilter: string;
   statusFilter: string;
   sortBy: string;
@@ -13,12 +14,12 @@ interface MealManagementToolbarProps {
   onAddMeal: () => void;
 }
 
-const categories = ["All Categories", "Breakfast", "Lunch", "Dinner", "Snacks", "Drinks"];
 const statuses = ["All Status", "Active", "Inactive"];
 const sortOptions = ["Latest", "Price: Low to High", "Price: High to Low"];
 
 export default function MealManagementToolbar({
   searchTerm,
+  categories,
   categoryFilter,
   statusFilter,
   sortBy,
@@ -46,7 +47,7 @@ export default function MealManagementToolbar({
           <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600">
             <Filter className="h-3.5 w-3.5 text-slate-400" />
             <select value={categoryFilter} onChange={(event) => onCategoryChange(event.target.value)} className="bg-transparent outline-none">
-              {categories.map((item) => (
+              {["All Categories", ...categories].map((item) => (
                 <option key={item} value={item}>{item}</option>
               ))}
             </select>

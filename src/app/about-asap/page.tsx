@@ -1,7 +1,7 @@
 // ==========================================
 // 1. TYPES DEFINITION (types.ts)
 // ==========================================
-export interface MetricCardProps {
+interface MetricCardProps {
   title: string;
   value: string;
   trend: string;
@@ -11,7 +11,7 @@ export interface MetricCardProps {
   iconColor: string;
 }
 
-export interface ActivityItem {
+interface ActivityItem {
   id: string;
   userName: string;
   avatar: string;
@@ -20,7 +20,7 @@ export interface ActivityItem {
   statusColor: string;
 }
 
-export interface PopularMeal {
+interface PopularMeal {
   id: string;
   name: string;
   category: string;
@@ -33,7 +33,7 @@ export interface PopularMeal {
 // ==========================================
 // 2. MOCK DATA INITIALIZATION (mockData.ts)
 // ==========================================
-export const mockMetrics: MetricCardProps[] = [
+const mockMetrics: MetricCardProps[] = [
   { title: 'Total Users', value: '48,325', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '👤' },
   { title: 'Daily Active Users', value: '12,325', trend: '↑ 8%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '👥' },
   { title: 'Completed Meals', value: '23,325', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '🍲' },
@@ -43,14 +43,14 @@ export const mockMetrics: MetricCardProps[] = [
   { title: 'Completed Meals', value: '23,325', trend: '↑ 20%', trendText: 'vs last week', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', icon: '🍲' },
 ];
 
-export const mockActivities: ActivityItem[] = [
+const mockActivities: ActivityItem[] = [
   { id: '1', userName: 'Esther', avatar: 'https://unsplash.com', action: 'updated the price of Jollof Rice', time: '2 minutes ago', statusColor: 'bg-emerald-600' },
   { id: '2', userName: 'Marvelous Admin', avatar: 'https://unsplash.com', action: 'added a new meal Pancake', time: '15 minutes ago', statusColor: 'bg-orange-500' },
   { id: '3', userName: 'Emmanuel O.', avatar: 'https://unsplash.com', action: 'exported user activity report', time: '35 minutes ago', statusColor: 'bg-purple-600' },
   { id: '4', userName: 'Oluwaseyi', avatar: 'https://unsplash.com', action: 'exported user activity report', time: '1 hour ago', statusColor: 'bg-emerald-600' },
 ];
 
-export const mockPopularMeals: PopularMeal[] = [
+const mockPopularMeals: PopularMeal[] = [
   { id: '1', name: 'Bread & Egg', category: 'African Dish', count: '2,432', trend: '↑ 8%', percentage: 85, image: 'https://unsplash.com' },
   { id: '2', name: 'Pap & Akara', category: 'African Dish', count: '2,432', trend: '↑ 8%', percentage: 70, image: 'https://unsplash.com' },
   { id: '3', name: 'Noodles & Egg', category: 'African Dish', count: '2,432', trend: '↑ 8%', percentage: 60, image: 'https://unsplash.com' },

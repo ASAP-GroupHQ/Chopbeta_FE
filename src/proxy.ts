@@ -6,8 +6,9 @@ export function proxy(request: NextRequest) {
   const userRole = request.cookies.get("role")?.value; // "admin" or "user"
   const { pathname } = request.nextUrl;
 
-  const isUserDashboard = pathname.startsWith("/dashboard");
-  const isAdminDashboard = pathname.startsWith("/admin/dashboard");
+  const normalizedPathname = pathname.toLowerCase();
+  const isUserDashboard = normalizedPathname.startsWith("/dashboard");
+  const isAdminDashboard = normalizedPathname.startsWith("/admin/dashboard");
 
   // Unauthenticated access guard
   if ((isUserDashboard || isAdminDashboard) && !token) {
@@ -28,5 +29,9 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/dashboard/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/Admin/dashboard/:path*",
+    "/admin/dashboard/:path*",
+  ],
 };

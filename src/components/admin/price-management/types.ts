@@ -1,4 +1,4 @@
-export type PriceMealCategory = "Local Dish" | "Breakfast" | "Quick meal";
+export type PriceMealCategory = string;
 export type PriceMealStatus = "Active" | "Inactive";
 
 export interface PriceMeal {

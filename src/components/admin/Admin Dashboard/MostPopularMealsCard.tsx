@@ -1,124 +1,46 @@
-"use client";
+import type { PopularMeal } from "./types";
 
-import React from 'react';
-import Image from 'next/image';
-
-// TypeScript interfaces for type safety
-interface PopularMealItem {
-  id: string;
-  name: string;
-  category: string;
-  timesChosen: string;
-  progressPercentage: number;
-  trendValue: string;
-  imageSrc: string;
+interface MostPopularMealsProps {
+  meals: PopularMeal[];
 }
 
-// Data exactly matching the details in the design
-const popularMealsData: PopularMealItem[] = [
-  {
-    id: '1',
-    name: 'Bread & Egg',
-    category: 'African Dish',
-    timesChosen: '2,432',
-    progressPercentage: 85,
-    trendValue: '8%',
-    imageSrc: '/images/bread-egg.jpg', // Replace with your asset paths
-  },
-  {
-    id: '2',
-    name: 'Pap & Akara',
-    category: 'African Dish',
-    timesChosen: '2,432',
-    progressPercentage: 60,
-    trendValue: '0%',
-    imageSrc: '/images/pap-akara.jpg',
-  },
-  {
-    id: '3',
-    name: 'Noodles & Egg',
-    category: 'African Dish',
-    timesChosen: '2,432',
-    progressPercentage: 75,
-    trendValue: '8%',
-    imageSrc: '/images/noodles-egg.jpg',
-  },
-  {
-    id: '4',
-    name: 'Rice & Beans',
-    category: 'African Dish',
-    timesChosen: '2,432',
-    progressPercentage: 45,
-    trendValue: '8%',
-    imageSrc: '/images/rice-beans.jpg',
-  },
-];
-
-export default function MostPopularMeals() {
+export default function MostPopularMeals({ meals }: MostPopularMealsProps) {
   return (
-    <div className="w-full bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-6">
+    <section className="w-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="mb-6 flex items-center justify-between">
         <h3 className="text-base font-bold text-gray-900">Most Popular Meals</h3>
-        <button className="text-xs font-semibold text-emerald-600 hover:underline transition-all">
-          View all
-        </button>
+        <span className="text-xs font-medium text-gray-400">This week</span>
       </div>
 
-      <div className="space-y-5">
-        {popularMealsData.map((meal) => (
-          <div key={meal.id} className="flex items-center space-x-3">
-            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
-              <Image
-                src={meal.imageSrc}
-                alt={meal.name}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900 leading-tight">{meal.name}</h4>
-                  <p className="text-xs text-gray-400 font-medium mt-0.5">{meal.category}</p>
-                </div>
-
-                <div className="text-left min-w-[90px]">
-                  <span className="text-sm font-bold text-gray-900 block leading-tight">
-                    {meal.timesChosen}
-                  </span>
-                  <span className="text-[11px] text-gray-400 font-normal block">
-                    times chosen
-                  </span>
-                </div>
+      {meals.length === 0
+        ? <p className="py-6 text-center text-sm text-slate-500">No meal activity for this week.</p>
+        : <div className="space-y-5">
+          {meals.map((meal) => (
+            <div key={meal.id} className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-sm font-bold text-emerald-800">
+                {meal.name.slice(0, 2).toUpperCase()}
               </div>
-
-              <div className="flex items-center space-x-4 mt-2">
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div
-                    className="bg-emerald-800 h-1.5 rounded-full transition-all duration-500"
-                    style={{ width: `${meal.progressPercentage}%` }}
-                  />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h4 className="truncate text-sm font-bold leading-tight text-gray-900">{meal.name}</h4>
+                    <p className="mt-0.5 text-xs font-medium text-gray-400">{meal.category}</p>
+                  </div>
+                  <div className="min-w-[90px] text-left">
+                    <span className="block text-sm font-bold leading-tight text-gray-900">{meal.timesChosen.toLocaleString()}</span>
+                    <span className="block text-[11px] text-gray-400">times generated</span>
+                  </div>
                 </div>
-
-                <div className="flex items-center text-xs font-semibold text-emerald-600 flex-shrink-0">
-                  <svg
-                    className="w-3 h-3 mr-0.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2.5"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                  </svg>
-                  <span>{meal.trendValue}</span>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="h-1.5 w-full rounded-full bg-gray-100">
+                    <div className="h-1.5 rounded-full bg-emerald-800" style={{ width: `${meal.percentage}%` }} />
+                  </div>
+                  <span className="shrink-0 text-xs font-semibold text-emerald-600">{meal.trend}</span>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
+          ))}
+        </div>}
+    </section>
   );
 }

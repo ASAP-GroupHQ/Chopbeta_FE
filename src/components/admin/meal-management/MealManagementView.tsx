@@ -1,7 +1,9 @@
 "use client";
 
 import { Bell, HelpCircle, Plus, ChevronDown, Save, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import { adminService, toAmount } from "@/services/admin";
 import AdminSidebar from "@/components/admin/Admin Dashboard/AdminSidebar";
 import AdminHeader from "@/components/admin/Admin Dashboard/AdminHeader";
 import MealManagementStats from "./MealManagementStats";
@@ -9,91 +11,25 @@ import MealManagementTable from "./MealManagementTable";
 import MealManagementToolbar from "./MealManagementToolbar";
 import type { MealItem } from "./types";
 
-const INITIAL_MEALS: MealItem[] = [
-  {
-    id: "1",
-    name: "Jollof Rice",
-    description: "Delicious party jollof rice cooked to perfection.",
-    category: "Breakfast",
-    price: 1200,
-    calories: 420,
-    status: "Active",
-    dateAdded: "Aug 15, 2025 10:30 AM",
-  },
-  {
-    id: "2",
-    name: "Bread & Egg",
-    description: "Fresh bread served with perfect seasoned scrambled eggs.",
-    category: "Lunch",
-    price: 3500,
-    calories: 320,
-    status: "Active",
-    dateAdded: "May 18, 2025 10:30 AM",
-  },
-  {
-    id: "3",
-    name: "Pap & Akara",
-    description: "Smooth creamy pap paired with crispy golden akara.",
-    category: "Dinner",
-    price: 3500,
-    calories: 610,
-    status: "Inactive",
-    dateAdded: "May 18, 2025 10:30 AM",
-  },
-  {
-    id: "4",
-    name: "Chicken Pasta",
-    description: "Creamy pasta with grilled chicken and veggies.",
-    category: "Lunch",
-    price: 3500,
-    calories: 720,
-    status: "Active",
-    dateAdded: "May 18, 2025 10:30 AM",
-  },
-  {
-    id: "5",
-    name: "Noodles & Egg",
-    description: "Savory noodles tossed with vegetables and served with fried egg.",
-    category: "Breakfast",
-    price: 3500,
-    calories: 220,
-    status: "Inactive",
-    dateAdded: "May 18, 2025 10:30 AM",
-  },
-  {
-    id: "6",
-    name: "Beef Suya Bowl",
-    description: "Spicy suya beef served with rice and plantain.",
-    category: "Dinner",
-    price: 5200,
-    calories: 780,
-    status: "Active",
-    dateAdded: "Jun 02, 2025 08:40 AM",
-  },
-  {
-    id: "7",
-    name: "Fruit Smoothie",
-    description: "Cold mixed fruit smoothie with yogurt and chia seeds.",
-    category: "Drinks",
-    price: 1800,
-    calories: 250,
-    status: "Active",
-    dateAdded: "Jun 02, 2025 08:40 AM",
-  },
-  {
-    id: "8",
-    name: "Yam & Egg Sauce",
-    description: "Boiled yam with a rich and savory egg sauce.",
-    category: "Snacks",
-    price: 2600,
-    calories: 480,
-    status: "Inactive",
-    dateAdded: "Jun 10, 2025 11:45 AM",
-  },
-];
+const mapApiMeal = (meal: Awaited<ReturnType<typeof adminService.getMeals>>[number]): MealItem => {
+  const category = meal.category.trim();
+  const calories = Number.parseFloat(String(meal.averageNutritionalInfo?.estimatedCalories ?? 0));
+
+  return {
+    id: meal._id,
+    name: meal.mealTitle,
+    description: meal.description ?? "",
+    category: category ? `${category[0].toUpperCase()}${category.slice(1)}` : "Other",
+    price: toAmount(meal.estimatedPrice),
+    calories: Number.isFinite(calories) ? calories : 0,
+    nutritionalInfo: meal.averageNutritionalInfo,
+    status: meal.isActive === false ? "Inactive" : "Active",
+    dateAdded: meal.createdAt ? new Date(meal.createdAt).toLocaleString() : "—",
+  };
+};
 
 export default function MealManagementView() {
-  const [meals, setMeals] = useState(INITIAL_MEALS);
+  const [meals, setMeals] = useState<MealItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -102,6 +38,28 @@ export default function MealManagementView() {
   const [modalMode, setModalMode] = useState<"view" | "edit" | "create" | null>(null);
   const [activeMenuMealId, setActiveMenuMealId] = useState<string | null>(null);
   const [draftMeal, setDraftMeal] = useState<MealItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    adminService.getMeals()
+      .then((apiMeals) => {
+        if (isCurrent) setMeals(apiMeals.map(mapApiMeal));
+      })
+      .catch((loadError: Error) => {
+        if (isCurrent) setError(loadError.message);
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   const selectedMeal = meals.find((meal) => meal.id === selectedMealId) ?? null;
 
@@ -180,55 +138,72 @@ export default function MealManagementView() {
     setModalMode("edit");
   };
 
-  const handleDeleteMeal = (mealId: string) => {
-    setMeals((currentMeals) => currentMeals.filter((meal) => meal.id !== mealId));
-    if (selectedMealId === mealId) {
-      setSelectedMealId(null);
-    }
-    if (modalMode) {
+  const handleDeleteMeal = async (mealId: string) => {
+    setError(null);
+    try {
+      await adminService.deleteMeal(mealId);
+      setMeals((currentMeals) => currentMeals.filter((meal) => meal.id !== mealId));
+      if (selectedMealId === mealId) setSelectedMealId(null);
       setModalMode(null);
+      setDraftMeal(null);
+      setActiveMenuMealId(null);
+      toast.success("Meal deleted.");
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : "Unable to delete the meal.";
+      setError(message);
+      toast.error(message);
     }
-    setDraftMeal(null);
-    setActiveMenuMealId(null);
   };
 
-  const handleSaveMeal = () => {
-    if (!draftMeal) return;
-
-    if (modalMode === "create") {
-      const mealToCreate: MealItem = {
-        ...draftMeal,
-        id: draftMeal.id || `meal-${Date.now()}`,
-        name: draftMeal.name.trim() || "New Meal",
-        description: draftMeal.description.trim() || "Freshly added meal.",
-        category: draftMeal.category || "Breakfast",
-        price: Number(draftMeal.price) || 0,
-        calories: Number(draftMeal.calories) || 0,
-        status: draftMeal.status || "Active",
-        dateAdded: draftMeal.dateAdded || new Date().toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }),
-      };
-
-      setMeals((currentMeals) => [mealToCreate, ...currentMeals]);
-    } else {
-      setMeals((currentMeals) =>
-        currentMeals.map((meal) =>
-          meal.id === draftMeal.id
-            ? {
-                ...meal,
-                name: draftMeal.name,
-                description: draftMeal.description,
-                category: draftMeal.category,
-                price: Number(draftMeal.price),
-                calories: Number(draftMeal.calories),
-                status: draftMeal.status,
-              }
-            : meal,
-        ),
-      );
+  const handleSaveMeal = async () => {
+    if (!draftMeal || isSaving) return;
+    if (!draftMeal.name.trim()) {
+      setError("Meal name is required.");
+      return;
     }
 
-    setModalMode(null);
-    setDraftMeal(null);
+    const nutritionalInfo = {
+      ...draftMeal.nutritionalInfo,
+      estimatedCalories: Number(draftMeal.calories),
+      macronutrients: draftMeal.nutritionalInfo?.macronutrients ?? {
+        carbohydrates: 0,
+        proteins: 0,
+        fats: 0,
+      },
+    };
+    const writeData = {
+      mealTitle: draftMeal.name.trim(),
+      category: draftMeal.category.toLowerCase(),
+      estimatedPrice: Number(draftMeal.price),
+      description: draftMeal.description.trim(),
+      averageNutritionalInfo: nutritionalInfo,
+    };
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      if (modalMode === "create") {
+        const id = await adminService.createMeal(writeData);
+        if (draftMeal.status === "Inactive") await adminService.toggleMealStatus(id);
+      } else {
+        const existingMeal = meals.find((meal) => meal.id === draftMeal.id);
+        await adminService.updateMeal(draftMeal.id, writeData);
+        if (existingMeal && existingMeal.status !== draftMeal.status) {
+          await adminService.toggleMealStatus(draftMeal.id);
+        }
+      }
+
+      setMeals((await adminService.getMeals()).map(mapApiMeal));
+      toast.success(modalMode === "create" ? "Meal added." : "Meal updated.");
+      setModalMode(null);
+      setDraftMeal(null);
+    } catch (saveError) {
+      const message = saveError instanceof Error ? saveError.message : "Unable to save the meal.";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleToggleMenu = (mealId: string) => {
@@ -241,11 +216,12 @@ export default function MealManagementView() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 lg:pl-64">
+    <div className="admin-page-background min-h-screen lg:pl-64">
       <AdminSidebar />
       <AdminHeader title="Meal Management" subtitle="Add, edit and manage all meals in your menu." />
 
       <main className="space-y-6 px-4 pb-10 pt-16 sm:px-8 lg:pt-6">
+        {error && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Menu overview</p>
@@ -276,25 +252,30 @@ export default function MealManagementView() {
           </div>
         </div>
 
-        <MealManagementStats
-          total={metrics.total}
-          active={metrics.active}
-          inactive={metrics.inactive}
-          categories={metrics.categories}
-        />
+        {isLoading
+          ? <p className="rounded-xl border border-slate-200 bg-white px-5 py-10 text-center text-sm text-slate-500">Loading meals...</p>
+          : <>
+            <MealManagementStats
+              total={metrics.total}
+              active={metrics.active}
+              inactive={metrics.inactive}
+              categories={metrics.categories}
+            />
 
-        <MealManagementToolbar
-          searchTerm={searchTerm}
-          categoryFilter={categoryFilter}
-          statusFilter={statusFilter}
-          sortBy={sortBy}
-          onSearchChange={setSearchTerm}
-          onCategoryChange={setCategoryFilter}
-          onStatusChange={setStatusFilter}
-          onSortChange={setSortBy}
-          onReset={resetFilters}
-          onAddMeal={handleAddMeal}
-        />
+            <MealManagementToolbar
+              searchTerm={searchTerm}
+              categories={[...new Set(meals.map((meal) => meal.category))]}
+              categoryFilter={categoryFilter}
+              statusFilter={statusFilter}
+              sortBy={sortBy}
+              onSearchChange={setSearchTerm}
+              onCategoryChange={setCategoryFilter}
+              onStatusChange={setStatusFilter}
+              onSortChange={setSortBy}
+              onReset={resetFilters}
+              onAddMeal={handleAddMeal}
+            />
+          </>}
 
         {modalMode && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[2px]">
@@ -444,10 +425,11 @@ export default function MealManagementView() {
                     <button
                       type="button"
                       onClick={handleSaveMeal}
+                      disabled={isSaving}
                       className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800"
                     >
                       <Save className="h-4 w-4" />
-                      {modalMode === "create" ? "Add meal" : "Save changes"}
+                      {isSaving ? "Saving..." : modalMode === "create" ? "Add meal" : "Save changes"}
                     </button>
                   </div>
                 </div>
@@ -456,14 +438,14 @@ export default function MealManagementView() {
           </div>
         )}
 
-        <MealManagementTable
+        {!isLoading && <MealManagementTable
           meals={filteredMeals}
           activeMenuMealId={activeMenuMealId}
           onView={handleViewMeal}
           onEdit={handleEditMeal}
           onDelete={handleDeleteMeal}
           onToggleMenu={handleToggleMenu}
-        />
+        />}
       </main>
     </div>
   );

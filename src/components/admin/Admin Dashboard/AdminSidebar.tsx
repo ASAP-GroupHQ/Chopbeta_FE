@@ -7,11 +7,11 @@ import { useState } from "react";
 import { BarChart3, DollarSign, LayoutDashboard, Menu, Settings, Utensils, Users, X } from "lucide-react";
 
 const menuItems = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Meal Management", href: "/admin/meal-management", icon: Utensils },
-  { label: "Price Management", href: "/admin/price-management", icon: DollarSign },
-  { label: "User Management", href: "/admin/users", icon: Users, badge: true },
-  { label: "Analytics & Reports", href: "/admin/analytics", icon: BarChart3 },
+  { label: "Dashboard", href: "/Admin/dashboard", icon: LayoutDashboard },
+  { label: "Meal Management", href: "/Admin/meal-management", icon: Utensils },
+  { label: "Price Management", href: "/Admin/price-management", icon: DollarSign },
+  { label: "User Management", href: "/Admin/users", icon: Users, badge: true },
+  { label: "Analytics & Reports", href: "/Admin/analytics", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

@@ -3,6 +3,7 @@ import type { PriceMealCategory, PriceMealStatus } from "./types";
 
 interface PriceManagementToolbarProps {
   searchTerm: string;
+  categories: PriceMealCategory[];
   category: PriceMealCategory | "All Categories";
   status: PriceMealStatus | "All Status";
   onSearchChange: (value: string) => void;
@@ -11,11 +12,11 @@ interface PriceManagementToolbarProps {
   onReset: () => void;
 }
 
-const categories: Array<PriceMealCategory | "All Categories"> = ["All Categories", "Local Dish", "Breakfast", "Quick meal"];
 const statuses: Array<PriceMealStatus | "All Status"> = ["All Status", "Active", "Inactive"];
 
 export default function PriceManagementToolbar({
   searchTerm,
+  categories,
   category,
   status,
   onSearchChange,
@@ -43,7 +44,7 @@ export default function PriceManagementToolbar({
           onChange={(event) => onCategoryChange(event.target.value as PriceMealCategory | "All Categories")}
           className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-emerald-600"
         >
-          {categories.map((item) => <option key={item}>{item}</option>)}
+          {["All Categories", ...categories].map((item) => <option key={item}>{item}</option>)}
         </select>
         <select
           aria-label="Filter by status"
