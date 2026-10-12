@@ -106,3 +106,49 @@ export interface MarkAsEatenResponse {
   message: string;
   data: MarkAsEatenData | null;
 }
+
+export type WeeklyHistoryAmount =
+  | number
+  | string
+  | { $numberDecimal: string };
+
+export interface WeeklyHistoryMeal {
+  _id?: string;
+  mealId?:
+    | string
+    | {
+        _id?: string;
+        mealTitle?: string;
+        estimatedPrice?: WeeklyHistoryAmount;
+      };
+  uniqueId?: string;
+  mealTitle?: string;
+  price?: WeeklyHistoryAmount;
+  estimatedPrice?: WeeklyHistoryAmount;
+  generatedAt?: string;
+  eatenAt?: string;
+  addedAt?: string;
+  createdAt?: string;
+}
+
+export interface WeeklyHistoryData {
+  _id: string;
+  budget?: Array<{
+    _id?: string;
+    amount: WeeklyHistoryAmount;
+    createdAt: string;
+  }>;
+  generatedMeals?: WeeklyHistoryMeal[];
+  eatenMeals?: WeeklyHistoryMeal[];
+  plannedMeals?: WeeklyHistoryMeal[];
+  createdAt: string;
+  newWeekDate: string;
+  updatedAt: string;
+}
+
+export interface WeeklyHistoryResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: WeeklyHistoryData | null;
+}
