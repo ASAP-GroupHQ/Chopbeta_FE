@@ -104,8 +104,8 @@ const buildHistory = (
     });
   });
 
-  return Array.from(grouped.values()).sort(
-    (first, second) => second.id.localeCompare(first.id),
+  return Array.from(grouped.values()).sort((first, second) =>
+    second.id.localeCompare(first.id),
   );
 };
 
@@ -213,26 +213,6 @@ export default function HistoryPage() {
             </svg>
           </button>
 
-          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-xs hover:bg-gray-50 transition text-sm font-medium">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M15.25 7.63711H5.56635M2.14827 7.63711H0.75M2.14827 7.63711C2.14827 7.18395 2.32829 6.74934 2.64872 6.42891C2.96916 6.10848 3.40376 5.92846 3.85692 5.92846C4.31008 5.92846 4.74468 6.10848 5.06512 6.42891C5.38555 6.74934 5.56557 7.18395 5.56557 7.63711C5.56557 8.09027 5.38555 8.52487 5.06512 8.8453C4.74468 9.16574 4.31008 9.34576 3.85692 9.34576C3.40376 9.34576 2.96916 9.16574 2.64872 8.8453C2.32829 8.52487 2.14827 8.09027 2.14827 7.63711ZM15.25 12.8156H10.7448M10.7448 12.8156C10.7448 13.2688 10.5644 13.7039 10.2439 14.0244C9.92335 14.3449 9.48864 14.525 9.03538 14.525C8.58222 14.525 8.14762 14.3442 7.82718 14.0238C7.50675 13.7033 7.32673 13.2687 7.32673 12.8156M10.7448 12.8156C10.7448 12.3623 10.5644 11.928 10.2439 11.6075C9.92335 11.287 9.48864 11.1069 9.03538 11.1069C8.58222 11.1069 8.14762 11.2869 7.82718 11.6074C7.50675 11.9278 7.32673 12.3624 7.32673 12.8156M7.32673 12.8156H0.75M15.25 2.45865H12.8164M9.39827 2.45865H0.75M9.39827 2.45865C9.39827 2.00549 9.57829 1.57089 9.89872 1.25045C10.2192 0.930018 10.6538 0.75 11.1069 0.75C11.3313 0.75 11.5535 0.794196 11.7608 0.880063C11.9681 0.965931 12.1565 1.09179 12.3151 1.25045C12.4738 1.40911 12.5996 1.59747 12.6855 1.80478C12.7714 2.01208 12.8156 2.23427 12.8156 2.45865C12.8156 2.68303 12.7714 2.90522 12.6855 3.11252C12.5996 3.31982 12.4738 3.50818 12.3151 3.66685C12.1565 3.82551 11.9681 3.95137 11.7608 4.03723C11.5535 4.1231 11.3313 4.1673 11.1069 4.1673C10.6538 4.1673 10.2192 3.98728 9.89872 3.66685C9.57829 3.34641 9.39827 2.91181 9.39827 2.45865Z"
-                stroke="#1A1A2E"
-                strokeOpacity="0.7"
-                strokeWidth="1.5"
-                strokeMiterlimit="10"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span>Filter</span>
-          </button>
-
           <HeaderActions />
         </div>
       </div>
@@ -266,7 +246,9 @@ export default function HistoryPage() {
             </div>
             {history.length === 0 ? (
               <div className="h-28 flex items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-xl">
-                <span className="text-xs">No history summary available yet</span>
+                <span className="text-xs">
+                  No history summary available yet
+                </span>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-x-4 gap-y-5 pt-1">
