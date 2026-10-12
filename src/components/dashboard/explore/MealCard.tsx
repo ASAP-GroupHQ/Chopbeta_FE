@@ -19,6 +19,11 @@ function formatPrice(price: ExploreMeal["estimatedPrice"]): string {
 
 export default function MealCard({ meal, onSelect }: MealCardProps) {
   const calories = meal.averageNutritionalInfo?.estimatedCalories;
+  const caloriesLabel = calories
+    ? /\bkcal\b/i.test(String(calories))
+      ? calories
+      : `${calories} kcal`
+    : "Nutrition details";
 
   return (
     <button
@@ -58,7 +63,7 @@ export default function MealCard({ meal, onSelect }: MealCardProps) {
             ₦{formatPrice(meal.estimatedPrice)}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            {calories ? `${calories} kcal` : "Nutrition details"}
+            {caloriesLabel}
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-3 py-2 text-[11px] font-semibold text-white shadow-sm shadow-emerald-900/15 transition-all duration-200 group-hover:bg-orange-500 group-hover:shadow-orange-500/20">
