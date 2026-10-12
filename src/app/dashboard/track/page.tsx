@@ -99,7 +99,6 @@ export default function TrackMealPage() {
   const [meals, setMeals] = useState<PlannedMealData[]>([]);
   const [spentMeals, setSpentMeals] = useState<SpentMealEntry[]>([]);
   const [activeTab, setActiveTab] = useState<"planned" | "eaten">("planned");
-  const [waterGlasses, setWaterGlasses] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [mealsLoading, setMealsLoading] = useState<boolean>(true);
@@ -194,10 +193,6 @@ export default function TrackMealPage() {
     } else {
       toast.info("All planned meals are marked as eaten!");
     }
-  };
-
-  const incrementWater = () => {
-    setWaterGlasses((prev) => (prev < 6 ? prev + 1 : 0));
   };
 
   const fetchTrackerData = async (silent = false) => {
@@ -505,8 +500,6 @@ export default function TrackMealPage() {
             <ProgressSidebar
               eatenCount={eatenTodayCount}
               totalCount={totalCount}
-              waterGlasses={waterGlasses}
-              onAddWater={incrementWater}
             />
           </div>
         </div>
