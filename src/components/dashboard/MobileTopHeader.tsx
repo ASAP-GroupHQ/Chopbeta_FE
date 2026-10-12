@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
+  FiBarChart2,
   FiCheckSquare,
   FiInfo,
   FiTrendingDown,
@@ -124,8 +125,17 @@ export default function MobileTopHeader() {
             </svg>
           </Link>
 
+          <Link
+            href="/dashboard/history"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-white hover:text-green-800 active:scale-90 cursor-pointer"
+            aria-label="View spending insights"
+            title="Spending insights"
+          >
+            <FiBarChart2 size={20} aria-hidden="true" />
+          </Link>
+
           {/* Notification Bell */}
-          <button
+          {/* <button
             type="button"
             onClick={() => setActiveSheet("notifications")}
             className="relative flex h-10 w-10 items-center justify-center rounded-xl text-[#1A2E35] transition-all hover:bg-white active:scale-90 cursor-pointer"
@@ -149,7 +159,7 @@ export default function MobileTopHeader() {
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
-          </button>
+          </button> */}
 
           {/* Profile Avatar */}
           <button
