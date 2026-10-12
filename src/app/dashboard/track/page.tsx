@@ -356,13 +356,13 @@ export default function TrackMealPage() {
           </div>
 
           <div className="flex items-center self-end sm:self-auto gap-4">
-            <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold text-gray-700 select-none">
+            {/* <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold text-gray-700 select-none">
               <button className="hover:text-black transition-colors">‹</button>
               <span className="px-1 min-w-17.5 text-center">
                 {currentDate || "Loading..."}
               </span>
               <button className="hover:text-black transition-colors">›</button>
-            </div>
+            </div> */}
 
             <HeaderActions />
           </div>
