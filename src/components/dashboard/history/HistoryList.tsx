@@ -14,6 +14,7 @@ export interface MealDetail {
 export interface MealHistoryItem {
   id: string;
   date: string;
+  dateKey?: string;
   dayOfWeek: string;
   mealCount: number;
   status: "Completed" | "Partial" | "Saved";

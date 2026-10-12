@@ -18,6 +18,7 @@ interface ChartDataPoint {
 
 interface SpendingChartProps {
   data: ChartDataPoint[];
+  weekLabel: string;
 }
 
 // Custom Tooltip component to handle clean custom hover designs natively
@@ -37,21 +38,21 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function SpendingChart({ data }: SpendingChartProps) {
+export default function SpendingChart({
+  data,
+  weekLabel,
+}: SpendingChartProps) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold text-base text-[#1A1A2E]">
           Spending Insights
         </h3>
-        <select className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 outline-none font-medium cursor-pointer text-gray-600">
-          <option>This week</option>
-        </select>
+        <span className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 font-medium text-gray-600">
+          {weekLabel}
+        </span>
       </div>
-      <p className="text-xs text-gray-400 mb-6">
-        You spent <span className="text-[#0F623D] font-semibold">12% less</span>{" "}
-        compared to last week
-      </p>
+      <p className="text-xs text-gray-400 mb-6">Daily spending for this week</p>
 
       {/* Chart wrapper container */}
       <div className="w-full h-48 text-xs">

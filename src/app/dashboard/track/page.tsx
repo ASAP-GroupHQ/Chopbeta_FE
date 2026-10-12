@@ -99,7 +99,6 @@ export default function TrackMealPage() {
   const [meals, setMeals] = useState<PlannedMealData[]>([]);
   const [spentMeals, setSpentMeals] = useState<SpentMealEntry[]>([]);
   const [activeTab, setActiveTab] = useState<"planned" | "eaten">("planned");
-  const [waterGlasses, setWaterGlasses] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [mealsLoading, setMealsLoading] = useState<boolean>(true);
@@ -130,9 +129,7 @@ export default function TrackMealPage() {
     const targetMeal = safeMeals.find(
       (meal) => getMealIdentifier(meal) === uniqueId,
     );
-    const targetLog = displayedMeals.find(
-      (meal) => meal.uniqueId === uniqueId,
-    );
+    const targetLog = displayedMeals.find((meal) => meal.uniqueId === uniqueId);
     const wasEaten = targetMeal?.isEaten ?? targetLog?.eaten ?? false;
     const nextEaten = !wasEaten;
 
@@ -194,10 +191,6 @@ export default function TrackMealPage() {
     } else {
       toast.info("All planned meals are marked as eaten!");
     }
-  };
-
-  const incrementWater = () => {
-    setWaterGlasses((prev) => (prev < 6 ? prev + 1 : 0));
   };
 
   const fetchTrackerData = async (silent = false) => {
@@ -317,8 +310,7 @@ export default function TrackMealPage() {
 
   const getDisplayedMeals = (): MealLog[] => {
     if (activeTab === "planned") {
-      const plannedMapped = safeMeals
-        .map(mapToMealLog)
+      const plannedMapped = safeMeals.map(mapToMealLog);
 
       return plannedMapped;
     }
@@ -330,10 +322,9 @@ export default function TrackMealPage() {
       return mapSpentToMealLog(item);
     });
 
-    const merged = [
-      ...eatenFromPlanned,
-      ...eatenFromSpent,
-    ].filter((item): item is MealLog => item !== null);
+    const merged = [...eatenFromPlanned, ...eatenFromSpent].filter(
+      (item): item is MealLog => item !== null,
+    );
 
     const uniqueMap = new Map<string, MealLog>();
     merged.forEach((item) => uniqueMap.set(item.uniqueId ?? item.id, item));
@@ -361,14 +352,6 @@ export default function TrackMealPage() {
           </div>
 
           <div className="flex items-center self-end sm:self-auto gap-4">
-            <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold text-gray-700 select-none">
-              <button className="hover:text-black transition-colors">‹</button>
-              <span className="px-1 min-w-17.5 text-center">
-                {currentDate || "Loading..."}
-              </span>
-              <button className="hover:text-black transition-colors">›</button>
-            </div>
-
             <HeaderActions />
           </div>
         </div>
@@ -505,8 +488,6 @@ export default function TrackMealPage() {
             <ProgressSidebar
               eatenCount={eatenTodayCount}
               totalCount={totalCount}
-              waterGlasses={waterGlasses}
-              onAddWater={incrementWater}
             />
           </div>
         </div>

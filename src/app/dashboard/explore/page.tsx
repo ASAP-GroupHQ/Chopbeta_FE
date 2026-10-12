@@ -34,18 +34,10 @@ export default function ExplorePage() {
   const [selectedMeal, setSelectedMeal] = useState<ExploreMeal | null>(null);
   const [activeType, setActiveType] = useState<ExploreMealType | null>(null);
   const [searchValue, setSearchValue] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedSearch(searchValue.trim());
-    }, 350);
-
-    return () => window.clearTimeout(timer);
-  }, [searchValue]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +49,7 @@ export default function ExplorePage() {
       try {
         const response = await exploreService.getMeals({
           page: currentPage,
-          mealTitle: debouncedSearch,
+          mealTitle: submittedSearch,
           type: activeType ?? undefined,
         });
 
@@ -81,15 +73,21 @@ export default function ExplorePage() {
     return () => {
       cancelled = true;
     };
-  }, [activeType, currentPage, debouncedSearch]);
+  }, [activeType, currentPage, submittedSearch]);
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value);
+  };
+
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setCurrentPage(1);
+    setSubmittedSearch(searchValue.trim());
   };
 
   const handleTypeChange = (type: ExploreMealType | null) => {
     setActiveType(type);
+    setSubmittedSearch(searchValue.trim());
     setCurrentPage(1);
   };
 
@@ -105,7 +103,11 @@ export default function ExplorePage() {
       <ExploreHeader
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
+        onSearchSubmit={handleSearchSubmit}
       />
+      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">
+        Browse by meal type
+      </p>
       <FilterTags
         tags={QUICK_FILTERS}
         activeTag={activeType}
@@ -153,7 +155,7 @@ export default function ExplorePage() {
           </motion.div>
         ) : mealsPage && mealsPage.meals.length > 0 ? (
           <motion.div
-            key={`meals-${currentPage}-${activeType ?? "all"}-${debouncedSearch}`}
+            key={`meals-${currentPage}-${activeType ?? "all"}-${submittedSearch}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -182,7 +184,7 @@ export default function ExplorePage() {
             exit={{ opacity: 0 }}
             className="mt-4 rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center text-sm text-gray-500"
           >
-            No meals match your search yet. Try another name or quick filter.
+            No meals match your search yet. Try another name or meal type.
           </motion.div>
         )}
       </AnimatePresence>

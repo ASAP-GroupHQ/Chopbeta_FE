@@ -47,7 +47,13 @@ export interface AllExploreMealsResponse extends ExploreApiResponse {
 }
 
 export interface SearchExploreMealsResponse extends ExploreApiResponse {
-  data: ExploreMeal[];
+  data: {
+    meals: ExploreMeal[];
+    count: number;
+    totalPages: number;
+    currentPage: number;
+    countPerPage: number;
+  };
 }
 
 export interface ExploreMealsPage {

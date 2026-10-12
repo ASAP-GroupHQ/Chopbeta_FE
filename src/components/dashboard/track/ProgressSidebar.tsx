@@ -1,22 +1,50 @@
 "use client";
 
-import React from "react";
-import { DropIcon, WaterCupIcon, SmallTipIcon } from "./TrackMealIcons";
+import React, { useCallback, useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiDroplet } from "react-icons/fi";
+import trackMealTips from "@/data/track-meal-tips.json";
+import { getHydrationFeedback, type WaterUnit } from "@/lib/hydration";
+import HydrationFeedbackModal from "./HydrationFeedbackModal";
+import { DropIcon, SmallTipIcon } from "./TrackMealIcons";
 
 interface ProgressSidebarProps {
   eatenCount: number;
   totalCount: number;
-  waterGlasses: number;
-  onAddWater: () => void;
 }
 
 export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
   eatenCount,
   totalCount,
-  waterGlasses,
-  onAddWater,
 }) => {
+  const [tipIndex, setTipIndex] = useState(0);
+  const [waterCount, setWaterCount] = useState("");
+  const [waterUnit, setWaterUnit] = useState<WaterUnit>("glasses");
+  const [hydrationFeedback, setHydrationFeedback] = useState<
+    ReturnType<typeof getHydrationFeedback> | null
+  >(null);
   const completionPercentage = Math.round((eatenCount / totalCount) * 100) || 0;
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setTipIndex((currentIndex) => (currentIndex + 1) % trackMealTips.length);
+    }, 35_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const closeHydrationFeedback = useCallback(() => {
+    setHydrationFeedback(null);
+  }, []);
+
+  const handleHydrationSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const count = Number(waterCount);
+
+    if (!Number.isInteger(count) || count < 0 || count > 99) return;
+
+    setHydrationFeedback(getHydrationFeedback(count, waterUnit));
+  };
 
   return (
     <div className="space-y-6">
@@ -71,10 +99,21 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
             <h4 className="text-xs font-bold text-[#1E6B3C] tracking-wide uppercase">
               Small Tip
             </h4>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              Try to complete all your meals to stay energized and focused
-              throughout the day
-            </p>
+            <div className="relative min-h-[52px]">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.p
+                  key={tipIndex}
+                  aria-live="polite"
+                  className="text-xs text-gray-500 leading-relaxed"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                >
+                  {trackMealTips[tipIndex]}
+                </motion.p>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
@@ -121,25 +160,73 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
           </h3>
         </div>
         <p className="text-xs text-gray-500 leading-relaxed">
-          Drink at least 6-8 glasses of water today to stay healthy and focused.
+          A common guide is about 8 glasses today. Your needs can vary, so sip
+          steadily and listen to your body.
         </p>
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2.5 py-1">
-            {[...Array(6)].map((_, idx) => (
-              <button
-                key={idx}
-                onClick={onAddWater}
-                className="transform hover:scale-110 active:scale-95 transition-transform duration-150 focus:outline-none"
-              >
-                <WaterCupIcon filled={idx < waterGlasses} />
-              </button>
-            ))}
+        <form onSubmit={handleHydrationSubmit} className="space-y-3">
+          <label
+            htmlFor="water-count"
+            className="block text-xs font-semibold text-gray-700"
+          >
+            How much water have you had today?
+          </label>
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-2">
+            <input
+              id="water-count"
+              name="waterCount"
+              type="number"
+              min="0"
+              max="99"
+              step="1"
+              required
+              value={waterCount}
+              onChange={(event) => setWaterCount(event.target.value)}
+              placeholder="0"
+              aria-describedby="water-entry-note"
+              className="h-11 min-w-0 rounded-xl border border-gray-200 px-3 text-sm text-gray-800 outline-none transition focus:border-[#1E6B3C] focus:ring-2 focus:ring-[#1E6B3C]/15"
+            />
+            <select
+              id="water-unit"
+              name="waterUnit"
+              value={waterUnit}
+              onChange={(event) => {
+                const unit = event.target.value;
+                if (
+                  unit === "glasses" ||
+                  unit === "bottles" ||
+                  unit === "sachets"
+                ) {
+                  setWaterUnit(unit);
+                }
+              }}
+              aria-label="Water type"
+              className="h-11 min-w-0 rounded-xl border border-gray-200 bg-white px-2 text-xs font-medium text-gray-700 outline-none transition focus:border-[#1E6B3C] focus:ring-2 focus:ring-[#1E6B3C]/15 sm:px-3 sm:text-sm"
+            >
+              <option value="glasses">Glasses</option>
+              <option value="bottles">Bottles</option>
+              <option value="sachets">Sachets</option>
+            </select>
           </div>
-          <span className="text-xs font-bold text-[#72B2F3] mt-1">
-            {waterGlasses} / 6 glasses
-          </span>
-        </div>
+          <p
+            id="water-entry-note"
+            className="text-[11px] leading-relaxed text-gray-400"
+          >
+            Bottles and sachets are
+            estimated as 2 glasses each.
+          </p>
+          <button
+            type="submit"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-4 text-sm font-bold text-white transition hover:bg-[#185A31] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
+          >
+            <FiDroplet aria-hidden="true" size={16} />
+            Check my hydration
+          </button>
+        </form>
       </div>
+      <HydrationFeedbackModal
+        feedback={hydrationFeedback}
+        onClose={closeHydrationFeedback}
+      />
     </div>
   );
 };

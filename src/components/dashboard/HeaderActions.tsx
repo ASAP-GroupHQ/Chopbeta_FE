@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FiChevronDown,
   FiBell,
+  FiBarChart2,
   FiHelpCircle,
   FiCheckSquare,
   FiInfo,
@@ -115,8 +116,17 @@ export default function HeaderActions() {
         <FiHelpCircle size={20} className="stroke-[2.2]" />
       </Link>
 
+      <Link
+        href="/dashboard/history"
+        className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.02)] text-[#1A2E35] hover:bg-gray-50 transition-all cursor-pointer active:scale-95"
+        aria-label="View spending insights"
+        title="Spending insights"
+      >
+        <FiBarChart2 size={20} className="stroke-[2.2]" />
+      </Link>
+
       {/* Notifications Wrapper */}
-      <div className="relative" ref={notifRef}>
+      {/* <div className="relative" ref={notifRef}>
         <button
           type="button"
           onClick={() => {
@@ -216,7 +226,7 @@ export default function HeaderActions() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </div> */}
 
       {/* Interactive User Profile Menu Panel */}
       <div className="relative" ref={profileRef}>

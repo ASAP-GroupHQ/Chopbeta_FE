@@ -6,16 +6,48 @@ import HistoryList, {
   MealHistoryItem,
 } from "@/components/dashboard/history/HistoryList";
 import SpendingChart from "@/components/dashboard/history/SpendingChart";
-import TopMeals, { TopMealItem } from "@/components/dashboard/history/TopMeals";
 import HeaderActions from "@/components/dashboard/HeaderActions";
-import { mealService } from "@/services/meal";
+import { trackService } from "@/services/track";
 import {
-  CompletedMealHistoryItem,
-  ApiPartialMealItem,
-  PlannedMealsHistoryItem,
-} from "@/types/meal";
+  WeeklyHistoryAmount,
+  WeeklyHistoryData,
+  WeeklyHistoryMeal,
+} from "@/types/track";
 
 const toDateKey = (date: string) => new Date(date).toISOString().slice(0, 10);
+
+const getLocalDateKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+
+const parseDateKey = (dateKey: string) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day, 12);
+};
+
+const getSundayDateKey = (date: Date) => {
+  const sunday = new Date(date);
+  sunday.setDate(sunday.getDate() - sunday.getDay());
+  return getLocalDateKey(sunday);
+};
+
+const getWeekDateKey = (weekStart: string, offset: number) => {
+  const date = parseDateKey(weekStart);
+  date.setDate(date.getDate() + offset * 7);
+  return getLocalDateKey(date);
+};
+
+const formatWeekRange = (weekStart: string) => {
+  const start = parseDateKey(weekStart);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const format = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  return `${format.format(start)} - ${format.format(end)}, ${end.getFullYear()}`;
+};
 
 const formatDate = (dateKey: string) =>
   new Date(`${dateKey}T00:00:00`).toLocaleDateString("en-US", {
@@ -30,137 +62,206 @@ const formatTime = (date: string) =>
     minute: "2-digit",
   });
 
-const buildHistory = (
-  completedMeals: CompletedMealHistoryItem[],
-  partialMeals: ApiPartialMealItem[],
-  plannedMeals: PlannedMealsHistoryItem[],
+const parseAmount = (amount?: WeeklyHistoryAmount) => {
+  if (typeof amount === "number") return Number.isFinite(amount) ? amount : null;
+  if (typeof amount === "string") {
+    const parsedAmount = Number(amount);
+    return Number.isFinite(parsedAmount) ? parsedAmount : null;
+  }
+  if (amount && typeof amount.$numberDecimal === "string") {
+    const parsedAmount = Number(amount.$numberDecimal);
+    return Number.isFinite(parsedAmount) ? parsedAmount : null;
+  }
+  return null;
+};
+
+const getWeeklyMealId = (meal: WeeklyHistoryMeal, fallbackId: string) => {
+  if (meal.uniqueId) return meal.uniqueId;
+  if (meal._id) return meal._id;
+  if (typeof meal.mealId === "string") return meal.mealId;
+  if (typeof meal.mealId === "object" && meal.mealId?._id) {
+    return meal.mealId._id;
+  }
+  return fallbackId;
+};
+
+const getWeeklyMealName = (meal: WeeklyHistoryMeal, mealId: string) => {
+  if (meal.mealTitle) return meal.mealTitle;
+  if (typeof meal.mealId === "object" && meal.mealId?.mealTitle) {
+    return meal.mealId.mealTitle;
+  }
+  return `Meal #${mealId.slice(-6)}`;
+};
+
+const getWeeklyMealPrice = (meal: WeeklyHistoryMeal) =>
+  parseAmount(
+    meal.price ??
+      meal.estimatedPrice ??
+      (typeof meal.mealId === "object"
+        ? meal.mealId?.estimatedPrice
+        : undefined),
+  );
+
+const getWeeklyMealTimestamp = (meal: WeeklyHistoryMeal) =>
+  meal.eatenAt || meal.addedAt || meal.generatedAt || meal.createdAt || null;
+
+const buildWeeklyHistory = (
+  data: WeeklyHistoryData,
+  weekStart: string,
 ): MealHistoryItem[] => {
   const grouped = new Map<string, MealHistoryItem>();
 
-  const addGroup = (
-    date: string,
+  const addMeal = (
+    meal: WeeklyHistoryMeal,
     status: MealHistoryItem["status"],
-    meal: NonNullable<MealHistoryItem["meals"]>[number],
+    index: number,
   ) => {
-    const dateKey = toDateKey(date);
+    const timestamp = getWeeklyMealTimestamp(meal);
+    const dateKey = timestamp ? toDateKey(timestamp) : weekStart;
     const groupId = `${status}-${dateKey}`;
+    const mealId = getWeeklyMealId(meal, `${groupId}-${index}`);
+    const price = getWeeklyMealPrice(meal);
+    const mealDetail = {
+      id: `${mealId}-${index}`,
+      time: timestamp ? formatTime(timestamp) : "—",
+      name: getWeeklyMealName(meal, mealId),
+      price,
+      status: status === "Completed" ? "Completed" as const : "Pending" as const,
+    };
     const existing = grouped.get(groupId);
 
     if (existing) {
-      existing.meals = [...(existing.meals || []), meal];
+      existing.meals = [...(existing.meals || []), mealDetail];
       existing.mealCount += 1;
-      existing.totalSpent += meal.price || 0;
+      existing.totalSpent += price || 0;
       return;
     }
 
     grouped.set(groupId, {
       id: groupId,
       date: formatDate(dateKey),
+      dateKey,
       dayOfWeek: new Date(`${dateKey}T00:00:00`).toLocaleDateString("en-US", {
         weekday: "long",
       }),
       mealCount: 1,
       status,
-      totalSpent: meal.price || 0,
-      meals: [meal],
+      totalSpent: price || 0,
+      meals: [mealDetail],
     });
   };
 
-  completedMeals.forEach((meal) => {
-    addGroup(meal.eatenAt, "Completed", {
-      id: meal.uniqueId,
-      time: formatTime(meal.eatenAt),
-      name: meal.mealTitle,
-      price: null,
-      status: "Completed",
-    });
-  });
-
-  partialMeals.forEach((meal) => {
-    const price = meal.estimatedPrice?.$numberDecimal
-      ? Number(meal.estimatedPrice.$numberDecimal)
-      : null;
-
-    addGroup(meal.addedAt, "Partial", {
-      id: meal.uniqueId,
-      time: formatTime(meal.addedAt),
-      name: meal.mealTitle,
-      price,
-      status: "Pending",
-    });
-  });
-
-  plannedMeals.forEach((meal) => {
-    const price = meal.estimatedPrice?.$numberDecimal
-      ? Number(meal.estimatedPrice.$numberDecimal)
-      : null;
-
-    addGroup(meal.addedAt, "Saved", {
-      id: meal.mealId,
-      time: formatTime(meal.addedAt),
-      name: meal.mealTitle,
-      price,
-      status: "Pending",
-    });
-  });
+  (data.generatedMeals || []).forEach((meal, index) =>
+    addMeal(meal, "Saved", index),
+  );
+  (data.plannedMeals || []).forEach((meal, index) =>
+    addMeal(meal, "Partial", index),
+  );
+  (data.eatenMeals || []).forEach((meal, index) =>
+    addMeal(meal, "Completed", index),
+  );
 
   return Array.from(grouped.values()).sort(
-    (first, second) => second.id.localeCompare(first.id),
+    (first, second) =>
+      (second.dateKey || "").localeCompare(first.dateKey || "") ||
+      first.status.localeCompare(second.status),
   );
 };
 
-const CHART_DATA = [
-  { day: "Mon", spent: 2100 },
-  { day: "Tue", spent: 1300 },
-  { day: "Wed", spent: 1600 },
-  { day: "Thu", spent: 1200 },
-  { day: "Fri", spent: 1100 },
-  { day: "Sat", spent: 900 },
-  { day: "Sun", spent: 650 },
-];
+const buildChartData = (weekStart: string, history: MealHistoryItem[]) => {
+  const dailySpent = new Map<string, number>();
+  history.forEach((item) => {
+    if (!item.dateKey) return;
+    dailySpent.set(
+      item.dateKey,
+      (dailySpent.get(item.dateKey) || 0) + item.totalSpent,
+    );
+  });
 
-const TOP_MEALS: TopMealItem[] = [
-  { name: "Rice and Beans", count: 3 },
-  { name: "Bread and Egg", count: 2 },
-  { name: "Pap and Akara", count: 2 },
-];
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = parseDateKey(weekStart);
+    date.setDate(date.getDate() + index);
+    const dateKey = getLocalDateKey(date);
+    return {
+      day: date.toLocaleDateString("en-US", { weekday: "short" }),
+      spent: dailySpent.get(dateKey) || 0,
+    };
+  });
+};
 
 export default function HistoryPage() {
   const [activeTab, setActiveTab] = useState<string>("All Plans");
   const [history, setHistory] = useState<MealHistoryItem[]>([]);
+  const [selectedWeek, setSelectedWeek] = useState("");
+  const [currentWeek, setCurrentWeek] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const weekStart = getSundayDateKey(new Date());
+    setCurrentWeek(weekStart);
+    setSelectedWeek(weekStart);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedWeek) return;
+    let isCurrentRequest = true;
+
     const loadHistory = async () => {
+      setIsLoading(true);
+      setError(null);
+      setHistory([]);
+
       try {
-        setIsLoading(true);
-        setError(null);
+        const response = await trackService.getWeeklyHistory(selectedWeek);
+        if (!isCurrentRequest) return;
 
-        const [completedResponse, partialResponse, plannedResponse] =
-          await Promise.all([
-            mealService.getAllCompletedMeals(1, 10),
-            mealService.getAllPartialMealsForHistory(1, 10),
-            mealService.getAllPlannedMealsForHistory(1, 10),
-          ]);
+        if (!response.success || !response.data) {
+          setError(
+            response.message || "No weekly history found for the specified date",
+          );
+          return;
+        }
 
-        setHistory(
-          buildHistory(
-            completedResponse.data?.meals || [],
-            partialResponse.data?.data || [],
-            plannedResponse.data?.meals || [],
-          ),
-        );
+        const weeklyHistory = buildWeeklyHistory(response.data, selectedWeek);
+        if (weeklyHistory.length === 0) {
+          setError(
+            response.message &&
+              !response.message.toLowerCase().includes("retrieved successfully")
+              ? response.message
+              : "No weekly history found for the specified date",
+          );
+          return;
+        }
+
+        setHistory(weeklyHistory);
       } catch (loadError) {
+        if (!isCurrentRequest) return;
         console.error("Failed to load meal history:", loadError);
-        setError("Unable to load your meal history right now.");
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load your meal history right now.",
+        );
       } finally {
-        setIsLoading(false);
+        if (isCurrentRequest) setIsLoading(false);
       }
     };
 
     loadHistory();
-  }, []);
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [selectedWeek]);
+
+  const weekOptions = currentWeek
+    ? [1, 0, -1, -2].map((offset) => {
+        const date = getWeekDateKey(currentWeek, offset);
+        return { date, label: formatWeekRange(date), offset };
+      })
+    : [];
+  const selectedWeekLabel =
+    weekOptions.find((week) => week.date === selectedWeek)?.label || "";
 
   const filteredHistory =
     activeTab === "All Plans"
@@ -172,6 +273,9 @@ export default function HistoryPage() {
   const completedPlans = history.filter(
     (item) => item.status === "Completed",
   ).length;
+  const chartData = selectedWeek
+    ? buildChartData(selectedWeek, history)
+    : [];
 
   return (
     <div className="min-h-screen bg-[#F9F8FC] p-4 md:p-8 text-[#1A1A2E]">
@@ -186,7 +290,7 @@ export default function HistoryPage() {
         </div>
 
         <div className="flex items-center gap-3 self-start sm:self-center">
-          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-xs hover:bg-gray-50 transition text-sm font-medium">
+          <label className="relative flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-xs hover:bg-gray-50 transition text-sm font-medium">
             <svg
               width="18"
               height="18"
@@ -200,7 +304,26 @@ export default function HistoryPage() {
                 fillOpacity="0.85"
               />
             </svg>
-            <span>Jun 1 - 6, 2026</span>
+            <span className="sr-only">
+              Select history week, Sunday to Saturday
+            </span>
+            <select
+              aria-label="Select history week, Sunday to Saturday"
+              value={selectedWeek}
+              disabled={!weekOptions.length}
+              onChange={(event) => setSelectedWeek(event.target.value)}
+              className="max-w-52 cursor-pointer appearance-none bg-transparent pr-4 outline-none disabled:cursor-wait"
+            >
+              {weekOptions.map((week) => (
+                <option key={week.date} value={week.date}>
+                  {week.offset === 1
+                    ? `Next week · ${week.label}`
+                    : week.offset === 0
+                      ? `This week · ${week.label}`
+                      : week.label}
+                </option>
+              ))}
+            </select>
             <svg
               width="12"
               height="12"
@@ -208,30 +331,11 @@ export default function HistoryPage() {
               fill="none"
               stroke="currentColor"
               strokeWidth="2.5"
+              className="pointer-events-none absolute right-3"
             >
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
-          </button>
-
-          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-xs hover:bg-gray-50 transition text-sm font-medium">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M15.25 7.63711H5.56635M2.14827 7.63711H0.75M2.14827 7.63711C2.14827 7.18395 2.32829 6.74934 2.64872 6.42891C2.96916 6.10848 3.40376 5.92846 3.85692 5.92846C4.31008 5.92846 4.74468 6.10848 5.06512 6.42891C5.38555 6.74934 5.56557 7.18395 5.56557 7.63711C5.56557 8.09027 5.38555 8.52487 5.06512 8.8453C4.74468 9.16574 4.31008 9.34576 3.85692 9.34576C3.40376 9.34576 2.96916 9.16574 2.64872 8.8453C2.32829 8.52487 2.14827 8.09027 2.14827 7.63711ZM15.25 12.8156H10.7448M10.7448 12.8156C10.7448 13.2688 10.5644 13.7039 10.2439 14.0244C9.92335 14.3449 9.48864 14.525 9.03538 14.525C8.58222 14.525 8.14762 14.3442 7.82718 14.0238C7.50675 13.7033 7.32673 13.2687 7.32673 12.8156M10.7448 12.8156C10.7448 12.3623 10.5644 11.928 10.2439 11.6075C9.92335 11.287 9.48864 11.1069 9.03538 11.1069C8.58222 11.1069 8.14762 11.2869 7.82718 11.6074C7.50675 11.9278 7.32673 12.3624 7.32673 12.8156M7.32673 12.8156H0.75M15.25 2.45865H12.8164M9.39827 2.45865H0.75M9.39827 2.45865C9.39827 2.00549 9.57829 1.57089 9.89872 1.25045C10.2192 0.930018 10.6538 0.75 11.1069 0.75C11.3313 0.75 11.5535 0.794196 11.7608 0.880063C11.9681 0.965931 12.1565 1.09179 12.3151 1.25045C12.4738 1.40911 12.5996 1.59747 12.6855 1.80478C12.7714 2.01208 12.8156 2.23427 12.8156 2.45865C12.8156 2.68303 12.7714 2.90522 12.6855 3.11252C12.5996 3.31982 12.4738 3.50818 12.3151 3.66685C12.1565 3.82551 11.9681 3.95137 11.7608 4.03723C11.5535 4.1231 11.3313 4.1673 11.1069 4.1673C10.6538 4.1673 10.2192 3.98728 9.89872 3.66685C9.57829 3.34641 9.39827 2.91181 9.39827 2.45865Z"
-                stroke="#1A1A2E"
-                strokeOpacity="0.7"
-                strokeWidth="1.5"
-                strokeMiterlimit="10"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span>Filter</span>
-          </button>
+          </label>
 
           <HeaderActions />
         </div>
@@ -249,7 +353,7 @@ export default function HistoryPage() {
               {error}
             </div>
           ) : (
-            <HistoryList items={filteredHistory} />
+            <HistoryList key={selectedWeek} items={filteredHistory} />
           )}
         </div>
 
@@ -260,13 +364,15 @@ export default function HistoryPage() {
               <h3 className="font-bold text-base text-[#1A1A2E]">
                 History Summary
               </h3>
-              <select className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 outline-hidden font-medium text-gray-600 cursor-pointer">
-                <option>This week</option>
-              </select>
+              <span className="text-xs bg-gray-50 border border-gray-100 rounded-lg p-1.5 font-medium text-gray-600">
+                {selectedWeekLabel || "This week"}
+              </span>
             </div>
             {history.length === 0 ? (
               <div className="h-28 flex items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-xl">
-                <span className="text-xs">No history summary available yet</span>
+                <span className="text-xs">
+                  No history summary available yet
+                </span>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-x-4 gap-y-5 pt-1">
@@ -298,9 +404,7 @@ export default function HistoryPage() {
             )}
           </div>
 
-          <SpendingChart data={CHART_DATA} />
-
-          <TopMeals meals={TOP_MEALS} />
+          <SpendingChart data={chartData} weekLabel={selectedWeekLabel} />
 
           <div className="bg-[#EAF4EF] rounded-2xl p-5 border border-[#D5ECE1] relative overflow-hidden">
             <h4 className="font-bold text-sm text-[#0F623D] mb-1">
