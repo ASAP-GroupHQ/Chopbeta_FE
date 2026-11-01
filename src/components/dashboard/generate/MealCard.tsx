@@ -111,7 +111,7 @@ export default function MealCard({ meal }: MealCardProps) {
       <AnimatePresence>
         {showDetails && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-[#1A2E35]/40 pb-24 backdrop-blur-sm sm:items-center sm:p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -123,31 +123,13 @@ export default function MealCard({ meal }: MealCardProps) {
               role="dialog"
               aria-modal="true"
               aria-labelledby={`meal-title-${meal._id}`}
-              initial={{ opacity: 0, scale: 0.96, y: 14 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 14 }}
-              className="relative max-h-[calc(100dvh-7rem)] w-full max-w-lg space-y-5 overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-h-[90vh] sm:rounded-3xl sm:p-6"
+              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="relative my-auto w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-green-700">
-                    {meal.category} · {meal.type || "meal"}
-                  </p>
-                  <h4 id={`meal-title-${meal._id}`} className="text-lg font-black leading-tight text-[#1A2E35]">
-                    {meal.mealTitle}
-                  </h4>
-                </div>
-                <button
-                  type="button"
-                  aria-label="Close meal details"
-                  onClick={() => setShowDetails(false)}
-                  className="shrink-0 rounded-full bg-gray-50 p-2 text-gray-400 transition hover:bg-gray-100"
-                >
-                  <FiX size={16} />
-                </button>
-              </div>
-
-              <div className="relative aspect-video overflow-hidden rounded-2xl bg-gray-100">
+              <div className="relative h-52 bg-slate-200 sm:h-64">
                 <img
                   src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
                   alt={meal.mealTitle}
@@ -156,29 +138,85 @@ export default function MealCard({ meal }: MealCardProps) {
                     event.currentTarget.src = DEFAULT_MEAL_IMAGE;
                   }}
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+                <button
+                  type="button"
+                  aria-label="Close meal details"
+                  onClick={() => setShowDetails(false)}
+                  className="absolute right-4 top-4 rounded-full bg-black/45 p-2 text-white backdrop-blur transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <FiX aria-hidden="true" className="h-5 w-5" />
+                </button>
+                <div className="absolute inset-x-5 bottom-5 text-white sm:inset-x-7 sm:bottom-6">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+                    {meal.category || meal.type || "Meal"}
+                  </p>
+                  <h4
+                    id={`meal-title-${meal._id}`}
+                    className="text-2xl font-bold drop-shadow sm:text-3xl"
+                  >
+                    {meal.mealTitle}
+                  </h4>
+                </div>
               </div>
 
-              <div className="flex items-start justify-between gap-4">
-                <p className="text-sm leading-relaxed text-gray-500">
-                  {meal.description || "A delicious meal selected for your budget."}
-                </p>
-                <span className="shrink-0 text-lg font-black text-green-700">₦{price}</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  ["Calories", calories, "text-[#1A2E35]"],
-                  ["Carbs", macros.carbohydrates || "0", "text-blue-600"],
-                  ["Proteins", macros.proteins || "0", "text-emerald-600"],
-                  ["Fats", macros.fats || "0", "text-amber-500"],
-                ].map(([label, value, color]) => (
-                  <div key={label} className="rounded-xl bg-gray-50/80 p-3 text-center">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}</span>
-                    <span className={`text-base font-black ${color}`}>
-                      {value}{label === "Calories" && !value.toString().includes("kcal") ? " kcal" : label !== "Calories" && !value.toString().includes("g") ? " g" : ""}
+              <div className="space-y-6 p-5 sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xl font-bold text-slate-900">₦{price}</p>
+                  {meal.type && (
+                    <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-800">
+                      {meal.type}
                     </span>
+                  )}
+                </div>
+
+                <p className="text-sm leading-6 text-slate-600">
+                  {meal.description ||
+                    "A delicious meal selected for your budget."}
+                </p>
+
+                <section aria-labelledby={`meal-nutrition-title-${meal._id}`}>
+                  <div className="mb-3">
+                    <h5
+                      id={`meal-nutrition-title-${meal._id}`}
+                      className="text-sm font-bold text-slate-900"
+                    >
+                      Estimated nutrition
+                    </h5>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Nutritional values provided for this meal
+                    </p>
                   </div>
-                ))}
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {[
+                      ["Calories", calories],
+                      ["Carbohydrates", macros.carbohydrates || "0"],
+                      ["Proteins", macros.proteins || "0"],
+                      ["Fats", macros.fats || "0"],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        className={`rounded-2xl p-3 sm:p-4 ${
+                          label === "Calories" ? "bg-orange-50" : "bg-slate-50"
+                        }`}
+                      >
+                        <p className="text-[11px] font-medium text-slate-500">
+                          {label}
+                        </p>
+                        <p className="mt-1 text-sm font-bold text-slate-900">
+                          {value}
+                          {label === "Calories" &&
+                          !value.toString().includes("kcal")
+                            ? " kcal"
+                            : label !== "Calories" &&
+                                !value.toString().includes("g")
+                              ? " g"
+                              : ""}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
               </div>
 
               {/* <button
