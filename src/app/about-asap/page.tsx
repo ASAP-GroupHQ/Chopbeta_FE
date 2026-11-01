@@ -63,7 +63,7 @@ export default function AboutAsapPage() {
         <div className="mb-8 flex items-end justify-between gap-5 border-b border-[#E6EFE8] pb-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">Meet the team</p>
-            <h2 className="mt-2 text-2xl font-extrabold text-[#1A2E35] sm:text-3xl">A team of ten</h2>
+            <h2 className="mt-2 text-2xl font-extrabold text-[#1A2E35] sm:text-3xl">Driven by a shared purpose</h2>
           </div>
           <span className="hidden items-center gap-2 text-xs font-medium text-gray-400 sm:flex">
             Lagos · Nigeria <span className="h-1.5 w-1.5 rounded-full bg-[#E85D26]" />
