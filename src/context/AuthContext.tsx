@@ -11,12 +11,21 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (credentials: LoginData) => Promise<User>;
+  startGoogleLogin: () => void;
   completeGoogleLogin: (response: unknown) => User;
   logout: () => void;
   updateUserData: (newData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function getCookie(name: string) {
+  const cookie = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(`${name}=`));
+
+  return cookie ? cookie.slice(name.length + 1) : null;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const toast = useToast();
@@ -26,13 +35,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const storedToken =
+      localStorage.getItem("token") ||
+      getCookie("accessToken") ||
+      getCookie("token");
     const storedUser = localStorage.getItem("user");
 
-    if (storedToken && storedUser) {
+    if (storedToken) {
+      setToken(storedToken);
+    }
+
+    if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        setToken(storedToken);
         setUser(parsedUser);
       } catch (err) {
         console.error("Failed to parse stored user data:", err);
@@ -50,6 +65,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.error(error.message || "Invalid credentials. Please try again.");
       throw error;
     }
+  };
+
+  const startGoogleLogin = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    document.cookie = "token=; path=/; max-age=0; SameSite=Lax;";
+    document.cookie = "accessToken=; path=/; max-age=0; SameSite=Lax;";
+    document.cookie = "role=; path=/; max-age=0; SameSite=Lax;";
+    setToken(null);
+    setUser(null);
+
+    window.location.assign(authService.googleLoginUrl());
   };
 
   const completeGoogleLogin = (response: any): User => {
@@ -85,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     localStorage.setItem("user", JSON.stringify(userData));
     document.cookie = `token=${extractedToken}; path=/; max-age=86400; SameSite=Lax;`;
+    document.cookie = `accessToken=${extractedToken}; path=/; max-age=900; SameSite=Lax;`;
     document.cookie = `role=${userData.role}; path=/; max-age=86400; SameSite=Lax;`;
     setToken(extractedToken);
     setUser(userData);
@@ -113,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Clear cookies
       document.cookie = "token=; path=/; max-age=0; SameSite=Lax;";
+      document.cookie = "accessToken=; path=/; max-age=0; SameSite=Lax;";
       document.cookie = "role=; path=/; max-age=0; SameSite=Lax;";
 
       setToken(null);
@@ -130,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         isLoading,
         login,
+        startGoogleLogin,
         completeGoogleLogin,
         logout,
         updateUserData,
