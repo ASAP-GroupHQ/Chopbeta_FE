@@ -4,6 +4,7 @@ export interface User {
   _id: string;
   fullName: string;
   email: string;
+  phoneNumber?: string | null;
   role: UserRole;
   isVerified: boolean;
   allergies?: string[];
