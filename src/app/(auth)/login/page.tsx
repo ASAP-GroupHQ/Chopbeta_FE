@@ -12,7 +12,7 @@ import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const { login, startGoogleLogin } = useAuth();
+  const { login } = useAuth();
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -278,7 +278,6 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={startGoogleLogin}
                 disabled={isLoading}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >

@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import LoadingState from "@/components/ui/LoadingState";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { authService } from "@/services/auth";
 
 function parseJsonValue(value: string | null) {
   if (!value) return null;
@@ -30,77 +29,37 @@ function GoogleCallbackContent() {
     if (hasProcessed.current) return;
     hasProcessed.current = true;
 
-    const completeSignIn = async () => {
-      try {
-        const providerError = searchParams.get("error");
-        if (providerError) {
-          throw new Error(
-            searchParams.get("error_description") ||
-              "Google sign-in was cancelled or could not be completed.",
-          );
-        }
+    try {
+      const data = parseJsonValue(searchParams.get("data"));
+      const user = parseJsonValue(searchParams.get("user"));
+      const payload = data?.data || data || {};
+      const response = {
+        ...payload,
+        token:
+          searchParams.get("token") ||
+          searchParams.get("accessToken") ||
+          payload.token ||
+          payload.accessToken,
+        refreshToken:
+          searchParams.get("refreshToken") || payload.refreshToken,
+        user: user || payload.user,
+        fullName: searchParams.get("fullName") || payload.fullName,
+        email: searchParams.get("email") || payload.email,
+        role: searchParams.get("role") || payload.role,
+      };
 
-        const callbackParams = Object.fromEntries(searchParams.entries());
-        const callbackResponse =
-          searchParams.has("code") &&
-          !searchParams.has("token") &&
-          !searchParams.has("accessToken") &&
-          !searchParams.has("access_token")
-            ? await authService.googleCallback(callbackParams)
-            : null;
-        const params = callbackResponse ? new URLSearchParams() : searchParams;
-        const data = parseJsonValue(params.get("data"));
-        const user = parseJsonValue(params.get("user"));
-        const payload =
-          callbackResponse?.data?.data ||
-          callbackResponse?.data ||
-          data?.data ||
-          data ||
-          {};
-        const response = {
-          ...callbackResponse,
-          ...payload,
-          token:
-            params.get("token") ||
-            params.get("accessToken") ||
-            params.get("access_token") ||
-            callbackResponse?.token ||
-            callbackResponse?.accessToken ||
-            callbackResponse?.access_token ||
-            payload.token ||
-            payload.accessToken ||
-            payload.access_token,
-          refreshToken:
-            params.get("refreshToken") ||
-            params.get("refresh_token") ||
-            callbackResponse?.refreshToken ||
-            callbackResponse?.refresh_token ||
-            payload.refreshToken ||
-            payload.refresh_token,
-          user: user || callbackResponse?.user || payload.user,
-          fullName: params.get("fullName") || payload.fullName,
-          email: params.get("email") || payload.email,
-          role: params.get("role") || payload.role,
-        };
-
-        const userData = completeGoogleLogin(response);
-        toast.success(
-          "Welcome to ChopBeta",
-          "Your Google account is connected.",
-        );
-        router.replace(
-          userData.role === "admin" ? "/admin/dashboard" : "/dashboard",
-        );
-      } catch (callbackError: any) {
-        setError(
-          callbackError?.message ||
-            "We could not complete Google sign-in. Please try again.",
-        );
-        toast.error("Google sign-in could not be completed.");
-      }
-    };
-
-    void completeSignIn();
+      const userData = completeGoogleLogin(response);
+      toast.success("Welcome to ChopBeta", "Your Google account is connected.");
+      router.replace(
+        userData.role === "admin" ? "/admin/dashboard" : "/dashboard",
+      );
+    } catch (callbackError: any) {
+      setError(
+        callbackError?.message ||
+          "We could not complete Google sign-in. Please try again.",
+      );
+      toast.error("Google sign-in could not be completed.");
+    }
   }, [completeGoogleLogin, router, searchParams, toast]);
 
   if (error) {

@@ -17,7 +17,7 @@ import { authService } from "@/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
 export default function SignUpPage() {
-  const { updateUserData, startGoogleLogin } = useAuth();
+  const { updateUserData } = useAuth();
   const toast = useToast();
 
   const [fullName, setFullName] = useState("");
@@ -394,7 +394,6 @@ export default function SignUpPage() {
         <div className="grid grid-cols-1 gap-3">
           <button
             type="button"
-            onClick={startGoogleLogin}
             disabled={isLoading}
             className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50 w-full"
           >
