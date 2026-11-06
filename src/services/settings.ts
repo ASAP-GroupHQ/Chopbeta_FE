@@ -49,6 +49,27 @@ export interface UpdateProfileRequest {
   disLikes?: string[];
 }
 
+export interface UserProfile {
+  fullName: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  gender: string | null;
+  stateOfOrigin: string | null;
+  LGA: string | null;
+  houseAddress: string | null;
+  countryOfResidence: string | null;
+  dateOfBirth: string | null;
+  allergies: string[];
+  disLikes: string[];
+}
+
+export interface GetUserProfileResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: UserProfile;
+}
+
 export interface UpdateProfileResponse {
   success: boolean;
   statusCode: number;
@@ -58,6 +79,18 @@ export interface UpdateProfileResponse {
     disLikes?: string[];
   };
 }
+
+export const getUserProfile = async (): Promise<GetUserProfileResponse> => {
+  const response = await apiClient.get<GetUserProfileResponse>(
+    "/auth/user/get-profile",
+  );
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || "Could not load your profile.");
+  }
+
+  return response.data;
+};
 
 export const updateProfile = async (
   profile: UpdateProfileRequest,

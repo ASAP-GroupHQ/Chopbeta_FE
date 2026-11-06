@@ -87,6 +87,7 @@ apiClient.interceptors.response.use(
       "An unexpected error occurred.";
 
     console.error("API Error:", errorMessage);
-    return Promise.reject(new Error(errorMessage));
+    error.message = errorMessage;
+    return Promise.reject(error);
   },
 );

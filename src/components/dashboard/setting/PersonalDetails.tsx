@@ -14,10 +14,15 @@ import {
   FiCamera,
   FiLoader,
   FiChevronDown,
+  FiPhone,
 } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { updateProfile, uploadProfilePicture } from "@/services/settings";
+import {
+  getUserProfile,
+  updateProfile,
+  uploadProfilePicture,
+} from "@/services/settings";
 import nigeriaLocations from "@/data/nigeria-states-lgas.json";
 
 interface NigeriaState {
@@ -35,12 +40,15 @@ export default function PersonalDetails() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
 
   // Local state to manage form fields
   const [formData, setFormData] = useState({
     fullName: "",
     userName: "",
     email: "",
+    phoneNumber: "",
     homeAddress: "",
     lga: "",
     countryOfResidence: "",
@@ -74,6 +82,7 @@ export default function PersonalDetails() {
         fullName: user.fullName || "",
         userName: user.userName || "",
         email: user.email || "",
+        phoneNumber: user.phoneNumber || "",
         homeAddress: user.houseAddress || user.address || "",
         lga: user.LGA || user.lga || "",
         countryOfResidence: user.countryOfResidence || user.country || "",
@@ -88,6 +97,53 @@ export default function PersonalDetails() {
       });
     }
   }, [user]);
+
+  const loadProfile = async () => {
+    setIsProfileLoading(true);
+    setProfileLoadError(null);
+
+    try {
+      const { data: profile } = await getUserProfile();
+      setFormData((previous) => ({
+        ...previous,
+        fullName: profile.fullName || "",
+        email: profile.email || "",
+        phoneNumber: profile.phoneNumber || "",
+        gender: profile.gender || "",
+        stateOfOrigin: profile.stateOfOrigin || "",
+        lga: profile.LGA || "",
+        homeAddress: profile.houseAddress || "",
+        countryOfResidence: profile.countryOfResidence || "",
+        dob: (profile.dateOfBirth || "").slice(0, 10),
+      }));
+      updateUserData({
+        fullName: profile.fullName || "",
+        email: profile.email || "",
+        phoneNumber: profile.phoneNumber,
+        gender: profile.gender || "",
+        stateOfOrigin: profile.stateOfOrigin || "",
+        LGA: profile.LGA || "",
+        houseAddress: profile.houseAddress || "",
+        countryOfResidence: profile.countryOfResidence || "",
+        dateOfBirth: profile.dateOfBirth || "",
+        allergies: profile.allergies,
+        disLikes: profile.disLikes,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Please try again.";
+      setProfileLoadError(message);
+      toast.error("Could not load profile", message);
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadProfile();
+    // Load the full profile once when Personal Details is opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSaveProfile = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -272,6 +328,26 @@ export default function PersonalDetails() {
 
       {/* Grid Inputs Using AuthInput */}
       <form onSubmit={handleSaveProfile}>
+      {profileLoadError && (
+        <div
+          role="alert"
+          className="mb-5 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span>Could not load the latest profile: {profileLoadError}</span>
+          <button
+            type="button"
+            onClick={() => void loadProfile()}
+            className="shrink-0 font-semibold text-amber-900 underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+      {isProfileLoading && (
+        <p role="status" className="mb-5 text-sm text-gray-500">
+          Loading your profile details...
+        </p>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
         <AuthInput
           label="Full Name"
@@ -281,7 +357,7 @@ export default function PersonalDetails() {
           onChange={(e) =>
             setFormData({ ...formData, fullName: e.target.value })
           }
-          disabled={!!user?.fullName}
+          disabled={!!user?.fullName || isProfileLoading}
         />
 
         <AuthInput
@@ -292,6 +368,15 @@ export default function PersonalDetails() {
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           disabled={true}
+        />
+
+        <AuthInput
+          label="Phone Number"
+          type="tel"
+          placeholder="No phone number added"
+          Icon={FiPhone}
+          value={formData.phoneNumber}
+          disabled
         />
 
         <div className="w-full space-y-1.5 text-left">
@@ -306,6 +391,7 @@ export default function PersonalDetails() {
               onChange={(event) =>
                 setFormData({ ...formData, gender: event.target.value })
               }
+              disabled={isProfileLoading}
               className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
             >
               <option value="">Select gender</option>
@@ -323,6 +409,7 @@ export default function PersonalDetails() {
           Icon={FiCalendar}
           value={formData.dob}
           onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+          disabled={isProfileLoading}
         />
 
         <AuthInput
@@ -336,6 +423,7 @@ export default function PersonalDetails() {
               countryOfResidence: event.target.value,
             })
           }
+          disabled={isProfileLoading}
         />
 
         <div className="w-full space-y-1.5 text-left">
@@ -348,6 +436,7 @@ export default function PersonalDetails() {
               id="personal-state"
               value={formData.stateOfOrigin}
               onChange={(event) => updateState(event.target.value)}
+              disabled={isProfileLoading}
               className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
             >
               <option value="">Select state</option>
@@ -373,7 +462,7 @@ export default function PersonalDetails() {
               onChange={(event) =>
                 setFormData({ ...formData, lga: event.target.value })
               }
-              disabled={!selectedState}
+              disabled={!selectedState || isProfileLoading}
               className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#1A2E35] outline-none transition-all focus:border-green-600 focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
             >
               <option value="">
@@ -407,6 +496,7 @@ export default function PersonalDetails() {
               onChange={(event) =>
                 setFormData({ ...formData, homeAddress: event.target.value })
               }
+              disabled={isProfileLoading}
               rows={3}
               placeholder="Enter your home address"
               className="w-full resize-y rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-[#1A2E35] outline-none transition-all placeholder:text-gray-400 focus:border-green-600 focus:ring-2 focus:ring-green-500/20"
@@ -420,10 +510,17 @@ export default function PersonalDetails() {
       <div className="flex justify-end pt-4">
         <button
           type="submit"
-          disabled={isSaving}
+          disabled={isSaving || isProfileLoading}
           className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-medium transition-all shadow-sm shadow-emerald-700/10 active:scale-95 cursor-pointer disabled:cursor-wait disabled:opacity-60"
         >
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <FiLoader className="animate-spin" aria-hidden="true" />
+              Saving...
+            </span>
+          ) : (
+            "Save Changes"
+          )}
         </button>
       </div>
       </form>

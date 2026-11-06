@@ -279,26 +279,26 @@ export default function QuickMeals() {
       <AnimatePresence>
         {selectedMeal && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-[#10221b]/45 pb-16 backdrop-blur-sm sm:items-center sm:p-6"
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
             onMouseDown={(event) => {
               if (event.target === event.currentTarget) setSelectedMeal(null);
             }}
           >
-            <motion.div
+            <motion.section
               role="dialog"
               aria-modal="true"
               aria-labelledby="quick-meal-title"
-              initial={{ opacity: 0, y: 28, scale: 0.97 }}
+              className="relative my-auto w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+              initial={{ opacity: 0, y: 18, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="max-h-[calc(92vh-4rem)] w-full overflow-y-auto rounded-t-[28px] bg-white shadow-2xl sm:max-h-[92vh] sm:max-w-lg sm:rounded-[28px]"
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              onClick={(event) => event.stopPropagation()}
             >
-              <div className="relative aspect-16/10 w-full overflow-hidden bg-gray-100">
+              <div className="relative h-52 bg-slate-200 sm:h-64">
                 <Image
                   src={selectedMeal.imageUrl || DEFAULT_MEAL_IMAGE}
                   alt={selectedMeal.mealTitle}
@@ -307,55 +307,65 @@ export default function QuickMeals() {
                   className="object-cover"
                   unoptimized
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/5 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
                 <button
                   type="button"
-                  aria-label="Close meal details"
                   onClick={() => setSelectedMeal(null)}
-                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white"
+                  aria-label="Close meal details"
+                  autoFocus
+                  className="absolute right-4 top-4 rounded-full bg-black/45 p-2 text-white backdrop-blur transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  <FiX />
+                  <FiX aria-hidden="true" className="h-5 w-5" />
                 </button>
-                <div className="absolute bottom-5 left-5 right-5 text-white">
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
-                    {selectedMeal.category} · {selectedMeal.type || "meal"}
+                <div className="absolute inset-x-5 bottom-5 text-white sm:inset-x-7 sm:bottom-6">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+                    {selectedMeal.category || selectedMeal.type || "Meal"}
                   </p>
                   <h2
                     id="quick-meal-title"
-                    className="text-2xl font-black leading-tight"
+                    className="text-2xl font-bold drop-shadow sm:text-3xl"
                   >
                     {selectedMeal.mealTitle}
                   </h2>
                 </div>
               </div>
 
-              <div className="space-y-5 p-5 sm:p-6">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm leading-relaxed text-gray-500">
-                    {selectedMeal.description ||
-                      "A delicious meal for your plan."}
-                  </p>
-                  <p className="shrink-0 text-lg font-black text-[#1E6B3C]">
+              <div className="space-y-6 p-5 sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xl font-bold text-slate-900">
                     ₦{formatPrice(selectedMeal)}
                   </p>
+                  {selectedMeal.type && (
+                    <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-800">
+                      {selectedMeal.type}
+                    </span>
+                  )}
                 </div>
 
-                <div>
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-sm font-black text-[#1A2E35]">
+                {selectedMeal.description && (
+                  <p className="text-sm leading-6 text-slate-600">
+                    {selectedMeal.description}
+                  </p>
+                )}
+
+                <section aria-labelledby="quick-meal-nutrition-title">
+                  <div className="mb-3">
+                    <h3
+                      id="quick-meal-nutrition-title"
+                      className="text-sm font-bold text-slate-900"
+                    >
                       Estimated nutrition
                     </h3>
-                    <span className="flex items-center gap-1 text-xs font-bold text-gray-400">
-                      <FiClock /> Per serving
-                    </span>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Nutritional values provided for this meal
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <div className="rounded-2xl bg-[#EAF6EE] p-3">
-                      <FiActivity className="mb-3 text-[#1E6B3C]" />
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="rounded-2xl bg-orange-50 p-3 sm:p-4">
+                      <p className="text-[11px] font-medium text-slate-500">
                         Calories
                       </p>
-                      <p className="mt-1 text-sm font-black text-[#1A2E35]">
+                      <p className="mt-1 text-sm font-bold text-slate-900">
                         {formatNutrition(
                           selectedMeal.averageNutritionalInfo
                             ?.estimatedCalories,
@@ -364,12 +374,12 @@ export default function QuickMeals() {
                     </div>
                     {[
                       [
-                        "Carbs",
+                        "Carbohydrates",
                         selectedMeal.averageNutritionalInfo
                           ?.estimatedMacronutrients?.carbohydrates,
                       ],
                       [
-                        "Protein",
+                        "Proteins",
                         selectedMeal.averageNutritionalInfo
                           ?.estimatedMacronutrients?.proteins,
                       ],
@@ -379,17 +389,20 @@ export default function QuickMeals() {
                           ?.estimatedMacronutrients?.fats,
                       ],
                     ].map(([label, value]) => (
-                      <div key={label} className="rounded-2xl bg-gray-50 p-3">
-                        <p className="mb-4 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                      <div
+                        key={label}
+                        className="rounded-2xl bg-slate-50 p-3 sm:p-4"
+                      >
+                        <p className="text-[11px] font-medium text-slate-500">
                           {label}
                         </p>
-                        <p className="text-sm font-black text-[#1A2E35]">
+                        <p className="mt-1 text-sm font-bold text-slate-900">
                           {formatNutrition(value)}
                         </p>
                       </div>
                     ))}
                   </div>
-                </div>
+                </section>
 
                 {/* <button
                   type="button"
@@ -406,7 +419,7 @@ export default function QuickMeals() {
                   )}
                 </button> */}
               </div>
-            </motion.div>
+            </motion.section>
           </motion.div>
         )}
       </AnimatePresence>
