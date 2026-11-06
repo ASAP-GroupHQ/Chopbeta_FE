@@ -8,26 +8,12 @@ export const apiClient = axios.create({
   },
 });
 
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-
-  const cookie = document.cookie
-    .split("; ")
-    .find((entry) => entry.startsWith(`${name}=`));
-
-  return cookie ? cookie.slice(name.length + 1) : null;
-}
-
 // Automatically inject the token into every single request
 apiClient.interceptors.request.use(
   (config) => {
-    // Prefer the existing bearer-token session, then the readable Google cookie.
+    // Look for the token in localStorage safely in Next.js SSR environment
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("token") ||
-          getCookie("accessToken") ||
-          getCookie("token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -101,6 +87,7 @@ apiClient.interceptors.response.use(
       "An unexpected error occurred.";
 
     console.error("API Error:", errorMessage);
-    return Promise.reject(new Error(errorMessage));
+    error.message = errorMessage;
+    return Promise.reject(error);
   },
 );
