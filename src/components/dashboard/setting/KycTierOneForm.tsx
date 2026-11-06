@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { FiCheck, FiCheckCircle } from "react-icons/fi";
+import { FiCheck, FiCheckCircle, FiLoader } from "react-icons/fi";
 import { SettingSectionCard } from "@/components/dashboard/setting/SettingSection";
 import { kycService } from "@/services/kyc";
 import { useToast } from "@/context/ToastContext";
@@ -324,11 +324,16 @@ export default function KycTierOneForm() {
               disabled={loading || loadStatus !== "ready"}
               className="w-full rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 active:scale-[0.99] disabled:opacity-60 sm:w-auto sm:py-2.5 cursor-pointer"
             >
-              {loading
-                ? "Saving..."
-                : hasKyc
-                  ? "Update Tier 1 KYC"
-                  : "Save Tier 1 KYC"}
+              {loading ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <FiLoader className="animate-spin" aria-hidden="true" />
+                  {hasKyc ? "Updating..." : "Saving..."}
+                </span>
+              ) : hasKyc ? (
+                "Update Tier 1 KYC"
+              ) : (
+                "Save Tier 1 KYC"
+              )}
             </button>
           </div>
         </form>

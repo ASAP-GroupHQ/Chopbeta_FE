@@ -513,7 +513,14 @@ export default function PersonalDetails() {
           disabled={isSaving || isProfileLoading}
           className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-medium transition-all shadow-sm shadow-emerald-700/10 active:scale-95 cursor-pointer disabled:cursor-wait disabled:opacity-60"
         >
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <FiLoader className="animate-spin" aria-hidden="true" />
+              Saving...
+            </span>
+          ) : (
+            "Save Changes"
+          )}
         </button>
       </div>
       </form>
