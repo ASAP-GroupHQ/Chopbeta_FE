@@ -17,7 +17,7 @@ import { authService } from "@/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
 export default function SignUpPage() {
-  const { updateUserData } = useAuth();
+  const { updateUserData, startGoogleLogin } = useAuth();
   const toast = useToast();
 
   const [fullName, setFullName] = useState("");
@@ -129,7 +129,7 @@ export default function SignUpPage() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen w-full">
+      <div className="fixed inset-0 z-50 flex w-full items-center justify-center bg-white/80 backdrop-blur-sm">
         <LoadingState
           message="Setting up your ChopBeta account..."
           messageSteps={[
@@ -394,7 +394,7 @@ export default function SignUpPage() {
         <div className="grid grid-cols-1 gap-3">
           <button
             type="button"
-            onClick={() => window.location.assign(authService.googleLoginUrl())}
+            onClick={startGoogleLogin}
             disabled={isLoading}
             className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50 w-full"
           >
@@ -454,5 +454,5 @@ export default function SignUpPage() {
         </div>
       </section>
     </main>
-  )
-};
+  );
+}
