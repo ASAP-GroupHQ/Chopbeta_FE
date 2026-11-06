@@ -10,7 +10,6 @@ import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
 import LoadingState from "@/components/ui/LoadingState";
 import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/context/AuthContext";
-import { authService } from "@/services/auth";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -77,14 +76,25 @@ export default function LoginPage() {
       <div className="flex flex-col items-center justify-center h-full pt-20 sm:pt-24 lg:pt-32">
         <section className="flex flex-col items-center w-full max-w-md space-y-8">
           {isLoading ? (
-            <LoadingState
-              message="Welcoming you back to ChopBeta..."
-              messageSteps={[
-                { afterSeconds: 4, message: "Finding your place at the table..." },
-                { afterSeconds: 9, message: "Gathering your personalized experience..." },
-                { afterSeconds: 14, message: "Taking a moment to unlock your feast..." },
-              ]}
-            />
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+              <LoadingState
+                message="Welcoming you back to ChopBeta..."
+                messageSteps={[
+                  {
+                    afterSeconds: 4,
+                    message: "Finding your place at the table...",
+                  },
+                  {
+                    afterSeconds: 9,
+                    message: "Gathering your personalized experience...",
+                  },
+                  {
+                    afterSeconds: 14,
+                    message: "Taking a moment to unlock your feast...",
+                  },
+                ]}
+              />
+            </div>
           ) : (
             <>
               <div className="inline-flex rounded-full mb-4">
@@ -268,7 +278,6 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => window.location.assign(authService.googleLoginUrl())}
                 disabled={isLoading}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
