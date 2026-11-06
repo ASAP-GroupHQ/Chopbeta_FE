@@ -29,6 +29,6 @@ export interface KycData {
 export interface KycResponse {
   success: boolean;
   statusCode: number;
-  message: KycData;
-  data: string;
+  message: string;
+  data: KycData | string | null;
 }

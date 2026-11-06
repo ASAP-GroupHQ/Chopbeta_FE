@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiCheck, FiCheckCircle } from "react-icons/fi";
 import { SettingSectionCard } from "@/components/dashboard/setting/SettingSection";
 import { kycService } from "@/services/kyc";
 import { useToast } from "@/context/ToastContext";
+import { KycData } from "@/types/kyc";
 
 const initialForm = {
   school: "",
@@ -19,11 +20,54 @@ const initialForm = {
   currentResidence: "",
 };
 
+const toFormValues = (kyc: KycData) => ({
+  school: kyc.school,
+  faculty: kyc.faculty,
+  department: kyc.department,
+  currentLevel: kyc.currentLevel,
+  course: kyc.course,
+  entryYear: kyc.entryYear,
+  expectedGraduation: kyc.expectedGraduation,
+  modeOfStudy: kyc.modeOfStudy,
+  currentResidence: kyc.currentResidence,
+});
+
 export default function KycTierOneForm() {
   const toast = useToast();
   const [formData, setFormData] = useState(initialForm);
-  const [submitted, setSubmitted] = useState(false);
+  const [hasKyc, setHasKyc] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadStatus, setLoadStatus] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
+
+  const loadKyc = async () => {
+    setLoadStatus("loading");
+
+    try {
+      const kyc = await kycService.getKYC();
+      if (kyc) {
+        setFormData(toFormValues(kyc));
+        setHasKyc(true);
+      } else {
+        setFormData(initialForm);
+        setHasKyc(false);
+      }
+      setLoadStatus("ready");
+    } catch (error) {
+      setLoadStatus("error");
+      toast.error(
+        "Could not load KYC",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    }
+  };
+
+  useEffect(() => {
+    void loadKyc();
+    // Load the signed-in user's record when this settings form is mounted.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateField = (field: keyof typeof initialForm, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -32,9 +76,7 @@ export default function KycTierOneForm() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const emptyFields = Object.entries(formData).filter(
-      ([, val]) => !val.trim(),
-    );
+    const emptyFields = Object.values(formData).filter((value) => !value.trim());
 
     if (emptyFields.length > 0) {
       toast.error("Missing required fields", "Please fill out all KYC fields.");
@@ -44,28 +86,43 @@ export default function KycTierOneForm() {
     setLoading(true);
 
     try {
-      const response = await kycService.createKYC(formData);
+      const response = hasKyc
+        ? await kycService.editKYC(formData)
+        : await kycService.createKYC(formData);
 
-      if (response.statusCode === 201 || response.success) {
-        setSubmitted(true);
-        toast.success(
-          "KYC Saved",
-          typeof response.data === "string"
-            ? response.data
-            : "KYC data stored successfully",
-        );
-      } else {
-        toast.error("Submission failed", "Could not save KYC data.");
+      if (!response.success) {
+        throw new Error(response.message || "Could not save KYC data.");
       }
-    } catch (error: any) {
-      const errorMsg =
-        typeof error?.response?.data?.data === "string"
-          ? error.response.data.data
-          : typeof error?.response?.data?.message === "string"
-            ? error.response.data.message
-            : "An error occurred while submitting KYC";
 
-      toast.error("Submission failed", errorMsg);
+      setHasKyc(true);
+      toast.success(
+        hasKyc ? "KYC updated" : "KYC saved",
+        response.message || "Your KYC information has been saved.",
+      );
+
+      try {
+        const updatedKyc = await kycService.getKYC();
+        if (updatedKyc) {
+          setFormData(toFormValues(updatedKyc));
+        } else {
+          toast.info(
+            "KYC saved",
+            "Your changes were saved, but the latest record could not be loaded.",
+          );
+        }
+      } catch {
+        toast.info(
+          "KYC saved",
+          "Your changes were saved, but the latest record could not be loaded.",
+        );
+      }
+    } catch (error) {
+      toast.error(
+        "Submission failed",
+        error instanceof Error
+          ? error.message
+          : "An error occurred while submitting KYC.",
+      );
     } finally {
       setLoading(false);
     }
@@ -80,20 +137,47 @@ export default function KycTierOneForm() {
         action={
           <span
             className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 text-[10px] font-bold sm:text-xs ${
-              submitted
+              hasKyc
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border-amber-100 bg-amber-50 text-amber-800"
             }`}
           >
             <span
               className={`h-2 w-2 rounded-full ${
-                submitted ? "bg-emerald-600" : "animate-pulse bg-amber-500"
+                hasKyc ? "bg-emerald-600" : "animate-pulse bg-amber-500"
               }`}
             />
-            {submitted ? "Done" : "In progress"}
+            {loadStatus === "loading"
+              ? "Loading"
+              : loadStatus === "error"
+                ? "Unavailable"
+                : hasKyc
+                  ? "Done"
+                  : "In progress"}
           </span>
         }
       >
+        {loadStatus !== "ready" ? (
+          <div
+            role={loadStatus === "error" ? "alert" : "status"}
+            className="rounded-2xl border border-gray-100 bg-gray-50 p-5 text-sm text-gray-600"
+          >
+            {loadStatus === "loading" ? (
+              "Loading your KYC information..."
+            ) : (
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span>We couldn&apos;t load your KYC information.</span>
+                <button
+                  type="button"
+                  onClick={() => void loadKyc()}
+                  className="font-semibold text-emerald-700 hover:text-emerald-800"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm text-gray-700">
@@ -202,7 +286,7 @@ export default function KycTierOneForm() {
           </div>
 
           <AnimatePresence>
-            {submitted && (
+            {hasKyc && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -237,17 +321,18 @@ export default function KycTierOneForm() {
             </p>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || loadStatus !== "ready"}
               className="w-full rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 active:scale-[0.99] disabled:opacity-60 sm:w-auto sm:py-2.5 cursor-pointer"
             >
               {loading
                 ? "Saving..."
-                : submitted
+                : hasKyc
                   ? "Update Tier 1 KYC"
                   : "Save Tier 1 KYC"}
             </button>
           </div>
         </form>
+        )}
       </SettingSectionCard>
     </div>
   );
