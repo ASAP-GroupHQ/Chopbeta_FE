@@ -10,6 +10,7 @@ import {
   ApiResponse,
   LogoutResponse,
   RegenerateTokenResponse,
+  GoogleCallbackResponse,
 } from "@/types/auth";
 
 export const authService = {
@@ -18,8 +19,10 @@ export const authService = {
     return `${baseUrl}/auth/user/google`;
   },
 
-  googleCallback: async (params?: Record<string, string>) => {
-    const response = await apiClient.get<ApiResponse>(
+  googleCallback: async (
+    params?: Record<string, string>,
+  ): Promise<GoogleCallbackResponse> => {
+    const response = await apiClient.get<GoogleCallbackResponse>(
       "/auth/user/google/callback",
       { params },
     );

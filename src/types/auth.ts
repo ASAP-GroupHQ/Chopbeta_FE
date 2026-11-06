@@ -97,3 +97,11 @@ export interface ApiResponse<T = any> {
   data?: T;
   token?: string;
 }
+
+export interface GoogleCallbackResponse extends ApiResponse {
+  accessToken?: string;
+  access_token?: string;
+  refreshToken?: string;
+  refresh_token?: string;
+  user?: User;
+}
