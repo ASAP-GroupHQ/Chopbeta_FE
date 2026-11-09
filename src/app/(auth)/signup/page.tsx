@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiUser, FiMail, FiLock } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Image from "next/image";
 import AuthInput from "@/components/auth/AuthInput";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import OtpVerification from "@/components/auth/OtpVerification";
 import FoodSelectionStep from "@/components/onboarding/FoodSelectionStep";
 import { SLIDER_DATA } from "@/constants/auth-slider";
@@ -392,13 +392,10 @@ export default function SignUpPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3">
-          <button
-            type="button"
+          <GoogleSignInButton
             disabled={isLoading}
             className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 cursor-pointer disabled:opacity-50 w-full"
-          >
-            <FcGoogle size={18} /> Google
-          </button>
+          />
         </div>
 
         <p className="mt-10 text-center text-sm text-gray-500">

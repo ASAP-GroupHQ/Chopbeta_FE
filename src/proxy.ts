@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
-  const userRole = request.cookies.get("role")?.value; // "admin" or "user"
+  const token =
+    request.cookies.get("token")?.value ??
+    request.cookies.get("accessToken")?.value;
+  const userRole = request.cookies.get("role")?.value;
   const { pathname } = request.nextUrl;
 
   const isUserDashboard = pathname.startsWith("/dashboard");
@@ -15,7 +17,7 @@ export function proxy(request: NextRequest) {
   }
 
   // Non-admin trying to access admin dashboard
-  if (isAdminDashboard && userRole !== "admin") {
+  if (isAdminDashboard && userRole && userRole !== "admin") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

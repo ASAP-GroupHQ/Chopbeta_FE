@@ -13,18 +13,7 @@ import {
 } from "@/types/auth";
 
 export const authService = {
-  googleLoginUrl: () => {
-    const baseUrl = String(apiClient.defaults.baseURL).replace(/\/$/, "");
-    return `${baseUrl}/auth/user/google`;
-  },
-
-  googleCallback: async (params?: Record<string, string>) => {
-    const response = await apiClient.get<ApiResponse>(
-      "/auth/user/google/callback",
-      { params },
-    );
-    return response.data;
-  },
+  googleLoginUrl: () => "/api/v1/auth/user/google",
 
   studentSignup: async (data: SignupData) => {
     const response = await apiClient.post<ApiResponse>(
@@ -80,11 +69,11 @@ export const authService = {
   },
 
   regenerateToken: async (
-    refreshToken: string,
+    refreshToken?: string,
   ): Promise<RegenerateTokenResponse> => {
     const response = await apiClient.post<RegenerateTokenResponse>(
       "/auth/user/regenerate-token",
-      { refreshToken },
+      refreshToken ? { refreshToken } : {},
     );
     return response.data;
   },
