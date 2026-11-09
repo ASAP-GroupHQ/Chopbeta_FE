@@ -50,6 +50,10 @@ export interface UpdateProfileRequest {
 }
 
 export interface UserProfile {
+  _id?: string;
+  id?: string;
+  role?: "user" | "admin";
+  isVerified?: boolean;
   fullName: string | null;
   email: string | null;
   phoneNumber: string | null;
