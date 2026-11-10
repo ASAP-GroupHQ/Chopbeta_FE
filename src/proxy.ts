@@ -8,8 +8,9 @@ export function proxy(request: NextRequest) {
   const userRole = request.cookies.get("role")?.value;
   const { pathname } = request.nextUrl;
 
-  const isUserDashboard = pathname.startsWith("/dashboard");
-  const isAdminDashboard = pathname.startsWith("/admin/dashboard");
+  const normalizedPathname = pathname.toLowerCase();
+  const isUserDashboard = normalizedPathname.startsWith("/dashboard");
+  const isAdminDashboard = normalizedPathname.startsWith("/admin/dashboard");
 
   // Unauthenticated access guard
   if ((isUserDashboard || isAdminDashboard) && !token) {
@@ -23,12 +24,16 @@ export function proxy(request: NextRequest) {
 
   // Admin trying to access standard user dashboard (Redirect them to Admin dashboard)
   if (isUserDashboard && !isAdminDashboard && userRole === "admin") {
-    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    return NextResponse.redirect(new URL("/Admin/dashboard", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/dashboard/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/Admin/dashboard/:path*",
+    "/admin/dashboard/:path*",
+  ],
 };
