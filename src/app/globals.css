@@ -45,3 +45,7 @@ body {
 .toast-drop {
   animation: toast-drop 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+.admin-page-background {
+  background: #ffffff;
+}

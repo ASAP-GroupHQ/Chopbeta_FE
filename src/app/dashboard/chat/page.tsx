@@ -40,10 +40,10 @@ function assistantReply(message: string) {
     return "Open Track from your dashboard to see today’s planned meals. Use the status control beside a meal to mark it as eaten and update your daily progress.";
   }
   if (text.includes("account") || text.includes("password") || text.includes("login") || text.includes("sign in")) {
-    return "For profile settings, open Settings → Personal Details. For sign-in or password help, email support@chopbeta.com and include the email address on your ChopBeta account.";
+    return "For profile settings, open Settings → Personal Details. For sign-in or password help, email asapgrouphq@gmail.com and include the email address on your ChopBeta account.";
   }
   if (text.includes("contact") || text.includes("human") || text.includes("support")) {
-    return "You can reach the support team at support@chopbeta.com or call +234 (0) 707 435 7521. Include a short description of what you need help with.";
+    return "You can reach the support team at asapgrouphq@gmail.com or call +234 (0) 707 435 7521. Include a short description of what you need help with.";
   }
 
   return "I can help you find your way around meal planning, budgets, dietary preferences, tracking, and account settings. Tell me a little more about what you’re trying to do, or choose one of the suggestions below.";
@@ -236,7 +236,7 @@ export default function KiraChatPage() {
             </motion.button>
           </div>
           <p className="mt-2 text-center text-[10px] leading-relaxed text-gray-400">
-            KIRA can guide you through ChopBeta. For account-specific help, contact support@chopbeta.com.
+            KIRA can guide you through ChopBeta. For account-specific help, contact asapgrouphq@gmail.com.
           </p>
         </form>
       </section>
