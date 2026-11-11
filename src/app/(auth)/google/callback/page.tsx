@@ -29,7 +29,7 @@ export default function GoogleCallbackPage() {
 
         toast.success("Welcome to ChopBeta", "Your Google account is connected.");
         router.replace(
-          user.role === "admin" ? "/admin/dashboard" : "/dashboard",
+          user.role === "admin" ? "/admin" : "/dashboard",
         );
       } catch (callbackError) {
         const message =

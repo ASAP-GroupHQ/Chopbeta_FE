@@ -240,7 +240,7 @@ export const adminService = {
 
   async getMealCount(): Promise<number> {
     const response = await apiClient.get<ApiEnvelope<number>>(
-      "/admin/dashboard/total-meals",
+      "/admin/total-meals",
     );
     const total = response.data.data;
     if (!Number.isFinite(total)) {
@@ -278,15 +278,15 @@ export const adminService = {
       apiClient.get<ApiEnvelope<{
         generatedMeals: MealActivity[];
         totalGeneratedMeals: number;
-      }>>("/admin/dashboard/generated-meals", { params: getDateQuery(date) }),
+      }>>("/admin/generated-meals", { params: getDateQuery(date) }),
       apiClient.get<ApiEnvelope<{
         plannedMeals: MealActivity[];
         totalPlannedMeals: number;
-      }>>("/admin/dashboard/planned-meals", { params: getDateQuery(date) }),
+      }>>("/admin/planned-meals", { params: getDateQuery(date) }),
       apiClient.get<ApiEnvelope<{
         completedMeals: MealActivity[];
         totalCompletedMeals: number;
-      }>>("/admin/dashboard/completed-meals", { params: getDateQuery(date) }),
+      }>>("/admin/completed-meals", { params: getDateQuery(date) }),
       apiClient.get<ApiEnvelope<{
         dailyActiveUsers: DailyActiveUsers[];
         totalActiveUsers: number;

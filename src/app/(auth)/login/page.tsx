@@ -37,7 +37,7 @@ export default function LoginPage() {
       const userRole = userData?.role || userData?.user?.role || "user";
       const redirectPath =
         String(userRole).toLowerCase() === "admin"
-          ? "/admin/dashboard"
+          ? "/admin"
           : "/dashboard";
 
       setTargetPath(redirectPath);
