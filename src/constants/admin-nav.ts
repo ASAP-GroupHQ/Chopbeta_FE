@@ -37,7 +37,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
     href: "/admin/analytics",
     icon: AnalyticsIcon,
   },
-  { label: "Feedback", href: "/admin/feedback", icon: FeedbackIcon },
+  { label: "Feedback & Reports", href: "/admin/feedback", icon: FeedbackIcon },
 ];
 
 export const MOBILE_BOTTOM_ITEMS: NavItem[] = [
