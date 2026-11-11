@@ -3,8 +3,15 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import HeaderActions from "@/components/dashboard/HeaderActions";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import {
+  ADMIN_STATS_CARDS,
+  ADMIN_QUICK_ACTIONS,
+  ADMIN_RECENT_ACTIVITIES,
+  ADMIN_POPULAR_MEALS,
+} from "@/constants/admin-dashboard";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -28,203 +35,54 @@ export default function AdminDashboardPage() {
     else setGreeting("Good Evening, Admin!");
   }, []);
 
-  // Mock metric data based on design preview
-  const statsCards = [
-    {
-      title: "Total Users",
-      value: "48,325",
-      change: "+20% vs last week",
-      isPositive: true,
-      emoji: "👥",
-    },
-    {
-      title: "Daily Active Users",
-      value: "12,325",
-      change: "+8% vs last week",
-      isPositive: true,
-      emoji: "🟢",
-    },
-    {
-      title: "Completed Meals",
-      value: "23,325",
-      change: "+20% vs last week",
-      isPositive: true,
-      emoji: "✅",
-    },
-    {
-      title: "Meals Plans Generated",
-      value: "23,325",
-      change: "+20% vs last week",
-      isPositive: true,
-      emoji: "📊",
-    },
-    {
-      title: "Users Retention Rate",
-      value: "96.7%",
-      change: "+20% vs last week",
-      isPositive: true,
-      emoji: "🔄",
-    },
-    {
-      title: "Meals in Database",
-      value: "96.7%",
-      change: "+20% vs last week",
-      isPositive: true,
-      emoji: "🍲",
-    },
-  ];
-
-  const quickActions = [
-    {
-      title: "Add new meals",
-      desc: "Add new meal to the database",
-      emoji: "➕",
-      link: "/admin/meals/new",
-    },
-    {
-      title: "Update Meal Prices",
-      desc: "Update prices of existing meals",
-      emoji: "💲",
-      link: "/admin/prices",
-    },
-    {
-      title: "View Users",
-      desc: "View and manage user accounts",
-      emoji: "👤",
-      link: "/admin/users",
-    },
-    {
-      title: "View Analytics",
-      desc: "See detailed platform analytics",
-      emoji: "📈",
-      link: "/admin/analytics",
-    },
-  ];
-
-  const recentActivities = [
-    {
-      name: "Esther",
-      action: "updated the price of Jollof Rice",
-      time: "2 minutes ago",
-      avatar: "👩🏽",
-    },
-    {
-      name: "Marvelous Admin",
-      action: "added a new meal: Pancake",
-      time: "15 minutes ago",
-      avatar: "👨🏽",
-    },
-    {
-      name: "Emmanuel O.",
-      action: "exported user activity report",
-      time: "35 minutes ago",
-      avatar: "👨🏾",
-    },
-    {
-      name: "Oluwaseyi",
-      action: "exported user activity report",
-      time: "1 hour ago",
-      avatar: "👨🏻",
-    },
-  ];
-
-  const popularMeals = [
-    {
-      name: "Bread & Egg",
-      category: "African Dish",
-      count: "2,432 times chosen",
-      progress: "80%",
-      image: "/images/meals/placeholder.jpg",
-    },
-    {
-      name: "Pap & Akara",
-      category: "African Dish",
-      count: "2,432 times chosen",
-      progress: "75%",
-      image: "/images/meals/placeholder.jpg",
-    },
-    {
-      name: "Noodles & Egg",
-      category: "African Dish",
-      count: "2,432 times chosen",
-      progress: "70%",
-      image: "/images/meals/placeholder.jpg",
-    },
-    {
-      name: "Rice & Beans",
-      category: "African Dish",
-      count: "2,432 times chosen",
-      progress: "85%",
-      image: "/images/meals/placeholder.jpg",
-    },
-  ];
-
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 font-sans p-6 bg-gray-50/50 min-h-screen"
+      className="space-y-6"
     >
       {/* HEADER BANNER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-gray-100 p-6 rounded-2xl shadow-xs gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#1A2E35] flex items-center gap-2">
+      <div className="flex items-center justify-between w-full">
+        <div className="space-y-0.5">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#1A2E35] flex items-center gap-2">
             {greeting} 👋
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5">
-            Here is what&apos;s happening with ChopBeta.
+          <p className="text-xs sm:text-sm text-gray-500 font-medium">
+            Here&apos;s what&apos;s happening with ChopBeta.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            aria-label="Help & Support"
-            className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
-          >
-            ❓
-          </button>
-          <button
-            aria-label="Notifications"
-            className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
-          >
-            🔔
-          </button>
-          <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-            <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-800 text-sm">
-              {user?.fullName ? user.fullName[0] : "V"}
-            </div>
-            <span className="text-sm font-bold text-gray-800 hidden sm:inline">
-              {user?.fullName?.split(" ")[0] || "Victor"}
-            </span>
-          </div>
-        </div>
+        <HeaderActions />
       </div>
 
-      {/* KPI METRICS GRID (Scrollable or responsive grid) */}
+      {/* KPI METRICS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {statsCards.map((stat, idx) => (
-          <div
-            key={idx}
-            className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs space-y-3 flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">
-                {stat.title}
-              </span>
-              <span className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-sm">
-                {stat.emoji}
-              </span>
+        {ADMIN_STATS_CARDS.map((stat, idx) => {
+          const IconComponent = stat.icon;
+          return (
+            <div
+              key={idx}
+              className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs space-y-4 flex flex-col justify-between min-h-[135px]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center flex-shrink-0">
+                  <IconComponent className="w-11 h-11 object-contain" />
+                </div>
+                <span className="text-xs font-bold text-gray-500 leading-tight">
+                  {stat.title}
+                </span>
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-bold tracking-tight text-[#1A2E35]">
+                  {stat.value}
+                </h3>
+                <p className="text-[10px] font-bold text-green-600 flex items-center gap-1 mt-1">
+                  <span>↗</span> {stat.change}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-black text-[#1A2E35]">
-                {stat.value}
-              </h3>
-              <p className="text-[10px] font-bold text-green-600 flex items-center gap-1 mt-1">
-                <span>↗</span> {stat.change}
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* MIDDLE SECTION: QUICK ACTIONS & RECENT ACTIVITIES */}
@@ -233,23 +91,26 @@ export default function AdminDashboardPage() {
         <div className="lg:col-span-7 bg-white border border-gray-100 p-6 rounded-2xl shadow-xs space-y-4">
           <h3 className="text-base font-bold text-[#1A2E35]">Quick Actions</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {quickActions.map((action, idx) => (
-              <Link
-                key={idx}
-                href={action.link}
-                className="flex flex-col items-center text-center p-4 rounded-2xl border border-gray-100 hover:border-green-600 hover:bg-green-50/30 transition group"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-700 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
-                  {action.emoji}
-                </div>
-                <h4 className="text-xs font-bold text-[#1A2E35]">
-                  {action.title}
-                </h4>
-                <p className="text-[10px] text-gray-400 mt-1 leading-tight">
-                  {action.desc}
-                </p>
-              </Link>
-            ))}
+            {ADMIN_QUICK_ACTIONS.map((action, idx) => {
+              const ActionIcon = action.icon;
+              return (
+                <Link
+                  key={idx}
+                  href={action.link}
+                  className="flex flex-col items-center text-center p-4 rounded-2xl border border-gray-100 shadow-sm hover:border-green-600 hover:bg-green-50/30 hover:shadow-md transition group"
+                >
+                  <div className="mb-3 group-hover:scale-110 transition-transform flex items-center justify-center">
+                    <ActionIcon className="w-11 h-11 object-contain" />
+                  </div>
+                  <h4 className="text-xs font-bold text-[#1A2E35]">
+                    {action.title}
+                  </h4>
+                  <p className="text-[10px] text-gray-400 mt-1 leading-tight">
+                    {action.desc}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -267,7 +128,7 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
           <div className="space-y-4 divide-y divide-gray-50">
-            {recentActivities.map((activity, idx) => (
+            {ADMIN_RECENT_ACTIVITIES.map((activity, idx) => (
               <div
                 key={idx}
                 className="flex items-start justify-between pt-3 first:pt-0"
@@ -368,7 +229,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="space-y-4">
-            {popularMeals.map((meal, idx) => (
+            {ADMIN_POPULAR_MEALS.map((meal, idx) => (
               <div
                 key={idx}
                 className="flex items-center justify-between gap-3"
