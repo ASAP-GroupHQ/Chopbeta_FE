@@ -1,0 +1,96 @@
+import {
+  TotalMealsIcon,
+  ActiveMealsIcon,
+  InactiveMealsIcon,
+  CategoriesIcon,
+} from "@/components/icons/AdminIcons";
+
+export const MEAL_STATS = [
+  {
+    title: "Total Meals",
+    value: "128",
+    subtitle: "All meals in menu",
+    icon: TotalMealsIcon,
+    borderColor: "border-gray-100",
+  },
+  {
+    title: "Active Meals",
+    value: "112",
+    subtitle: "Currently Available",
+    icon: ActiveMealsIcon,
+    borderColor: "border-green-200 bg-green-50/20",
+  },
+  {
+    title: "Inactive Meals",
+    value: "16",
+    subtitle: "Not currently available",
+    icon: InactiveMealsIcon,
+    borderColor: "border-red-200 bg-red-50/20",
+  },
+  {
+    title: "Categories",
+    value: "8",
+    subtitle: "Total Categories",
+    icon: CategoriesIcon,
+    borderColor: "border-blue-200 bg-blue-50/20",
+  },
+];
+
+export const MEALS_DATA = [
+  {
+    id: "1",
+    name: "Jollof Rice",
+    description: "Delicious party jollof rice cooked to perfection",
+    category: "Breakfast",
+    price: "₦1,200",
+    calories: "4200 Kcal",
+    status: "Active",
+    dateAdded: "Aug 15, 2025\n10:30 AM",
+    image: "/images/meals/Fried-Rice.png",
+  },
+  {
+    id: "2",
+    name: "Bread & Egg",
+    description: "Fresh bread served with perfect seasoned scrambled eggs",
+    category: "Lunch",
+    price: "₦3,500",
+    calories: "320 Kcal",
+    status: "Active",
+    dateAdded: "May 18, 2025\n10:30 AM",
+    image: "/images/meals/beans and plantain.png",
+  },
+  {
+    id: "3",
+    name: "Pap & Akara",
+    description: "Smooth creamy pap paired with crispy, golden akara",
+    category: "Dinner",
+    price: "₦3,500",
+    calories: "610 Kcal",
+    status: "Active",
+    dateAdded: "May 18, 2025\n10:30 AM",
+    image: "/images/meals/Puff-puff.jpg",
+  },
+  {
+    id: "4",
+    name: "Chicken Pasta",
+    description: "Creamy pasta with grilled chicken and Veggies",
+    category: "Lunch",
+    price: "₦3,500",
+    calories: "720 Kcal",
+    status: "Active",
+    dateAdded: "May 18, 2025\n10:30 AM",
+    image: "/images/meals/quick-meal.png",
+  },
+  {
+    id: "5",
+    name: "Noodles & Egg",
+    description:
+      "Savory noodles tossed with vegetables and served with fried egg",
+    category: "Breakfast",
+    price: "₦3,500",
+    calories: "220 Kcal",
+    status: "Active",
+    dateAdded: "May 18, 2025\n10:30 AM",
+    image: "/images/meals/Ofada_rice.png",
+  },
+];
