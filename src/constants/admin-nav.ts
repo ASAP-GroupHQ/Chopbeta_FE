@@ -43,25 +43,26 @@ export const SIDEBAR_ITEMS: NavItem[] = [
 export const MOBILE_BOTTOM_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: AdminDashboardIcon },
   {
-    label: "Meal Management",
+    label: "Meal",
     href: "/admin/meal-management",
     icon: MealManagementIcon,
   },
 
   {
-    label: "Price Management",
-    href: "/admin/price-management",
-    icon: PriceManagementIcon,
+    label: "User",
+    href: "/admin/user-management",
+    icon: UserManagementIcon,
     isPrimaryAction: true,
   },
 
   {
-    label: "User Management",
-    href: "/admin/user-management",
-    icon: UserManagementIcon,
+    label: "Price",
+    href: "/admin/price-management",
+    icon: PriceManagementIcon,
   },
+
   {
-    label: "Analytics & Reporting",
+    label: "Analytics",
     href: "/admin/analytics",
     icon: AnalyticsIcon,
   },

@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import AdminSidebar from "./AdminSidebar";
 import MobileTopHeader from "@/components/dashboard/MobileTopHeader";
-import MobileBottomNav from "@/components/dashboard/MobileBottomNav";
+import AdminMobileBottomNav from "@/components/admin/AdminMobileBottomNav";
 
 interface AdminLayoutWrapperProps {
   children: React.ReactNode;
@@ -42,7 +42,7 @@ export default function AdminLayoutWrapper({
         </main>
 
         {/* Mobile App View Footer Dock Bar */}
-        <MobileBottomNav />
+        <AdminMobileBottomNav />
       </div>
     </div>
   );
