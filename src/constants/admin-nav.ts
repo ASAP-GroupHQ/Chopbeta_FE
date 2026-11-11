@@ -5,7 +5,7 @@ import {
   PriceManagementIcon,
   UserManagementIcon,
   AnalyticsIcon,
-  SettingsIcon,
+  FeedbackIcon,
 } from "@/components/icons/NavIcons";
 
 export interface NavItem {
@@ -33,11 +33,11 @@ export const SIDEBAR_ITEMS: NavItem[] = [
     icon: UserManagementIcon,
   },
   {
-    label: "Analytics & Reporting",
+    label: "Analytics",
     href: "/admin/analytics",
     icon: AnalyticsIcon,
   },
-  { label: "Settings", href: "/admin/settings", icon: SettingsIcon },
+  { label: "Feedback", href: "/admin/feedback", icon: FeedbackIcon },
 ];
 
 export const MOBILE_BOTTOM_ITEMS: NavItem[] = [
