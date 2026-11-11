@@ -24,7 +24,7 @@ export function proxy(request: NextRequest) {
 
   // Admin trying to access standard user dashboard (Redirect them to Admin dashboard)
   if (isUserDashboard && !isAdminDashboard && userRole === "admin") {
-    return NextResponse.redirect(new URL("/Admin/dashboard", request.url));
+    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
 
   return NextResponse.next();
@@ -33,7 +33,6 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/Admin/dashboard/:path*",
     "/admin/dashboard/:path*",
   ],
 };
