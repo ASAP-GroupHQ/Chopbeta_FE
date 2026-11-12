@@ -1,15 +1,42 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import UserDirectoryFilters from "@/components/admin/user-management/UserDirectoryFilters";
+import UserActionDialog from "@/components/admin/user-management/UserActionDialog";
 import UserManagementHeader from "@/components/admin/user-management/UserManagementHeader";
 import UserResults from "@/components/admin/user-management/UserResults";
 import UserStats from "@/components/admin/user-management/UserStats";
+import type {
+  AdminUser,
+  UserDialogMode,
+  UserEdits,
+} from "@/components/admin/user-management/types";
 import { USERS_DATA } from "@/constants/admin-management";
+import { useToast } from "@/context/ToastContext";
 
 const PAGE_SIZE = 5;
 
 export default function UserManagementPage() {
+  const toast = useToast();
+  const [users, setUsers] = useState<AdminUser[]>(() =>
+    USERS_DATA.map((user) => ({
+      ...user,
+      gender: "female",
+      stateOfOrigin: "Delta",
+      LGA: "Burutu",
+      houseAddress: "no 2 olakein street",
+      countryOfResidence: "Nigeria",
+      dateOfBirth: "2026-05-13",
+      allergies: [],
+      disLikes: [],
+      isVerified: true,
+      isKYCVerified: true,
+    })),
+  );
+  const [activeDialog, setActiveDialog] = useState<{
+    user: AdminUser;
+    mode: UserDialogMode;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState("All roles");
   const [selectedStatus, setSelectedStatus] = useState("All statuses");
@@ -18,7 +45,7 @@ export default function UserManagementPage() {
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return USERS_DATA.filter((user) => {
+    return users.filter((user) => {
       const matchesQuery =
         !query ||
         [user.name, user.handle, user.email, user.phone].some((value) =>
@@ -30,17 +57,52 @@ export default function UserManagementPage() {
         selectedStatus === "All statuses" || user.status === selectedStatus;
       return matchesQuery && matchesRole && matchesStatus;
     });
-  }, [searchQuery, selectedRole, selectedStatus]);
+  }, [users, searchQuery, selectedRole, selectedStatus]);
 
   const pageCount = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const visiblePage = Math.min(currentPage, pageCount);
   const pageUsers = filteredUsers.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
+    (visiblePage - 1) * PAGE_SIZE,
+    visiblePage * PAGE_SIZE,
   );
   const firstUser = filteredUsers.length
-    ? (currentPage - 1) * PAGE_SIZE + 1
+    ? (visiblePage - 1) * PAGE_SIZE + 1
     : 0;
-  const lastUser = Math.min(currentPage * PAGE_SIZE, filteredUsers.length);
+  const lastUser = Math.min(visiblePage * PAGE_SIZE, filteredUsers.length);
+
+  const closeDialog = useCallback(() => {
+    setActiveDialog(null);
+  }, []);
+
+  const saveUser = (id: string, updates: UserEdits) => {
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.id === id ? { ...user, ...updates } : user,
+      ),
+    );
+    setActiveDialog(null);
+    toast.success("User profile updated.");
+  };
+
+  const deactivateUser = (userToDeactivate: AdminUser) => {
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.id === userToDeactivate.id ? { ...user, status: "Inactive" } : user,
+      ),
+    );
+    setActiveDialog(null);
+    toast.success("User account deactivated.");
+  };
+
+  const activateUser = (userToActivate: AdminUser) => {
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.id === userToActivate.id ? { ...user, status: "Active" } : user,
+      ),
+    );
+    setActiveDialog(null);
+    toast.success("User account activated.");
+  };
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -120,11 +182,28 @@ export default function UserManagementPage() {
           firstUser={firstUser}
           lastUser={lastUser}
           resultCount={filteredUsers.length}
-          currentPage={currentPage}
+          currentPage={visiblePage}
           pageCount={pageCount}
-          onPageChange={changePage}
+          onPageChange={(page) =>
+            changePage(Math.min(page, pageCount))
+          }
+          onView={(user) => setActiveDialog({ user, mode: "view" })}
+          onEdit={(user) => setActiveDialog({ user, mode: "edit" })}
+          onActivate={(user) => setActiveDialog({ user, mode: "activate" })}
+          onDeactivate={(user) =>
+            setActiveDialog({ user, mode: "deactivate" })
+          }
         />
       </section>
+      <UserActionDialog
+        isOpen={Boolean(activeDialog)}
+        user={activeDialog?.user ?? null}
+        mode={activeDialog?.mode ?? "view"}
+        onClose={closeDialog}
+        onSave={saveUser}
+        onActivate={activateUser}
+        onDeactivate={deactivateUser}
+      />
     </div>
   );
 }

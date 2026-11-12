@@ -3,13 +3,25 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
-import { Ellipsis, Eye, Pencil, Power } from "lucide-react";
+import { Ellipsis, Eye, Pencil, Power, UserRoundCheck } from "lucide-react";
 
 interface UserActionsMenuProps {
   userName: string;
+  status: string;
+  onView: () => void;
+  onEdit: () => void;
+  onActivate: () => void;
+  onDeactivate: () => void;
 }
 
-export default function UserActionsMenu({ userName }: UserActionsMenuProps) {
+export default function UserActionsMenu({
+  userName,
+  status,
+  onView,
+  onEdit,
+  onActivate,
+  onDeactivate,
+}: UserActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -76,7 +88,10 @@ export default function UserActionsMenu({ userName }: UserActionsMenuProps) {
     };
   }, [isOpen]);
 
-  const closeMenu = () => setIsOpen(false);
+  const selectAction = (action: () => void) => {
+    setIsOpen(false);
+    action();
+  };
 
   return (
     <>
@@ -115,7 +130,7 @@ export default function UserActionsMenu({ userName }: UserActionsMenuProps) {
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={closeMenu}
+                  onClick={() => selectAction(onView)}
                   className="flex h-12 w-full items-center gap-3 px-3 text-left text-sm font-medium tracking-wide text-[#26342b] transition-colors hover:bg-[#f6f8f6] focus-visible:bg-[#f6f8f6] focus-visible:outline-none"
                 >
                   <Eye className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -124,22 +139,37 @@ export default function UserActionsMenu({ userName }: UserActionsMenuProps) {
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={closeMenu}
+                  onClick={() => selectAction(onEdit)}
                   className="flex h-12 w-full items-center gap-3 px-3 text-left text-sm font-medium tracking-wide text-[#26342b] transition-colors hover:bg-[#f6f8f6] focus-visible:bg-[#f6f8f6] focus-visible:outline-none"
                 >
                   <Pencil className="h-[18px] w-[18px]" aria-hidden="true" />
                   Edit User
                 </button>
                 <div className="my-1 border-t border-[#edf0ed]" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={closeMenu}
-                  className="flex h-12 w-full items-center gap-3 px-3 text-left text-sm font-medium tracking-wide text-[#f21d43] transition-colors hover:bg-rose-50 focus-visible:bg-rose-50 focus-visible:outline-none"
-                >
-                  <Power className="h-[18px] w-[18px]" aria-hidden="true" />
-                  Deactivate User
-                </button>
+                {status === "Active" ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => selectAction(onDeactivate)}
+                    className="flex h-12 w-full items-center gap-3 px-3 text-left text-sm font-medium tracking-wide text-[#bd5147] transition-colors hover:bg-rose-50 focus-visible:bg-rose-50 focus-visible:outline-none"
+                  >
+                    <Power className="h-[18px] w-[18px]" aria-hidden="true" />
+                    Deactivate user
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => selectAction(onActivate)}
+                    className="flex h-12 w-full items-center gap-3 px-3 text-left text-sm font-medium tracking-wide text-[#27804a] transition-colors hover:bg-[#f0f8f2] focus-visible:bg-[#f0f8f2] focus-visible:outline-none"
+                  >
+                    <UserRoundCheck
+                      className="h-[18px] w-[18px]"
+                      aria-hidden="true"
+                    />
+                    Activate user
+                  </button>
+                )}
               </motion.div>
             )}
           </AnimatePresence>,

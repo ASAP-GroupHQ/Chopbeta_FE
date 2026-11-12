@@ -3,28 +3,20 @@
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import UserActionsMenu from "./UserActionsMenu";
-
-interface UserRecord {
-  id: string;
-  name: string;
-  handle: string;
-  email: string;
-  phone: string;
-  role: string;
-  status: string;
-  dateJoined: string;
-  lastActive: string;
-  avatar: string;
-}
+import type { AdminUser } from "./types";
 
 interface UserResultsProps {
-  users: UserRecord[];
+  users: AdminUser[];
   firstUser: number;
   lastUser: number;
   resultCount: number;
   currentPage: number;
   pageCount: number;
   onPageChange: (page: number) => void;
+  onView: (user: AdminUser) => void;
+  onEdit: (user: AdminUser) => void;
+  onActivate: (user: AdminUser) => void;
+  onDeactivate: (user: AdminUser) => void;
 }
 
 export default function UserResults({
@@ -35,6 +27,10 @@ export default function UserResults({
   currentPage,
   pageCount,
   onPageChange,
+  onView,
+  onEdit,
+  onActivate,
+  onDeactivate,
 }: UserResultsProps) {
   return (
     <>
@@ -67,7 +63,14 @@ export default function UserResults({
               <Detail label="Role" value={user.role} />
               <Detail label="Date joined" value={user.dateJoined} />
               <Detail label="Last active" value={user.lastActive} />
-              <UserActionsMenu userName={user.name} />
+              <UserActionsMenu
+                userName={user.name}
+                status={user.status}
+                onView={() => onView(user)}
+                onEdit={() => onEdit(user)}
+                onActivate={() => onActivate(user)}
+                onDeactivate={() => onDeactivate(user)}
+              />
             </div>
           </article>
         ))}
@@ -136,7 +139,14 @@ export default function UserResults({
                   {user.lastActive}
                 </td>
                 <td className="px-4 py-4">
-                  <UserActionsMenu userName={user.name} />
+                  <UserActionsMenu
+                    userName={user.name}
+                    status={user.status}
+                    onView={() => onView(user)}
+                    onEdit={() => onEdit(user)}
+                    onActivate={() => onActivate(user)}
+                    onDeactivate={() => onDeactivate(user)}
+                  />
                 </td>
               </tr>
             ))}
