@@ -62,19 +62,19 @@ export const ADMIN_QUICK_ACTIONS = [
     title: "Add new meals",
     desc: "Add new meal to the database",
     icon: AddMealIcon,
-    link: "/admin/meals/new",
+    link: "/admin/meal-management",
   },
   {
     title: "Update Meal Prices",
     desc: "Update prices of existing meals",
     icon: UpdatePriceIcon,
-    link: "/admin/prices",
+    link: "/admin/price-management",
   },
   {
     title: "View Users",
     desc: "View and manage user accounts",
     icon: ViewUsersIcon,
-    link: "/admin/users",
+    link: "/admin/user-management",
   },
   {
     title: "View Analytics",

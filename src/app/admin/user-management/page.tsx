@@ -1,30 +1,42 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
-import { createPortal } from "react-dom";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Ellipsis,
-  Eye,
-  Filter,
-  Pencil,
-  Power,
-  RotateCcw,
-  Search,
-  Users,
-  X,
-} from "lucide-react";
-import HeaderActions from "@/components/dashboard/HeaderActions";
-import { USER_STATS, USERS_DATA } from "@/constants/admin-management";
+import { useCallback, useMemo, useState } from "react";
+import UserDirectoryFilters from "@/components/admin/user-management/UserDirectoryFilters";
+import UserActionDialog from "@/components/admin/user-management/UserActionDialog";
+import UserManagementHeader from "@/components/admin/user-management/UserManagementHeader";
+import UserResults from "@/components/admin/user-management/UserResults";
+import UserStats from "@/components/admin/user-management/UserStats";
+import type {
+  AdminUser,
+  UserDialogMode,
+  UserEdits,
+} from "@/components/admin/user-management/types";
+import { USERS_DATA } from "@/constants/admin-management";
+import { useToast } from "@/context/ToastContext";
 
 const PAGE_SIZE = 5;
 
 export default function UserManagementPage() {
+  const toast = useToast();
+  const [users, setUsers] = useState<AdminUser[]>(() =>
+    USERS_DATA.map((user) => ({
+      ...user,
+      gender: "female",
+      stateOfOrigin: "Delta",
+      LGA: "Burutu",
+      houseAddress: "no 2 olakein street",
+      countryOfResidence: "Nigeria",
+      dateOfBirth: "2026-05-13",
+      allergies: [],
+      disLikes: [],
+      isVerified: true,
+      isKYCVerified: true,
+    })),
+  );
+  const [activeDialog, setActiveDialog] = useState<{
+    user: AdminUser;
+    mode: UserDialogMode;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState("All roles");
   const [selectedStatus, setSelectedStatus] = useState("All statuses");
@@ -33,7 +45,7 @@ export default function UserManagementPage() {
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return USERS_DATA.filter((user) => {
+    return users.filter((user) => {
       const matchesQuery =
         !query ||
         [user.name, user.handle, user.email, user.phone].some((value) =>
@@ -45,17 +57,52 @@ export default function UserManagementPage() {
         selectedStatus === "All statuses" || user.status === selectedStatus;
       return matchesQuery && matchesRole && matchesStatus;
     });
-  }, [searchQuery, selectedRole, selectedStatus]);
+  }, [users, searchQuery, selectedRole, selectedStatus]);
 
   const pageCount = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const visiblePage = Math.min(currentPage, pageCount);
   const pageUsers = filteredUsers.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
+    (visiblePage - 1) * PAGE_SIZE,
+    visiblePage * PAGE_SIZE,
   );
   const firstUser = filteredUsers.length
-    ? (currentPage - 1) * PAGE_SIZE + 1
+    ? (visiblePage - 1) * PAGE_SIZE + 1
     : 0;
-  const lastUser = Math.min(currentPage * PAGE_SIZE, filteredUsers.length);
+  const lastUser = Math.min(visiblePage * PAGE_SIZE, filteredUsers.length);
+
+  const closeDialog = useCallback(() => {
+    setActiveDialog(null);
+  }, []);
+
+  const saveUser = (id: string, updates: UserEdits) => {
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.id === id ? { ...user, ...updates } : user,
+      ),
+    );
+    setActiveDialog(null);
+    toast.success("User profile updated.");
+  };
+
+  const deactivateUser = (userToDeactivate: AdminUser) => {
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.id === userToDeactivate.id ? { ...user, status: "Inactive" } : user,
+      ),
+    );
+    setActiveDialog(null);
+    toast.success("User account deactivated.");
+  };
+
+  const activateUser = (userToActivate: AdminUser) => {
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.id === userToActivate.id ? { ...user, status: "Active" } : user,
+      ),
+    );
+    setActiveDialog(null);
+    toast.success("User account activated.");
+  };
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -106,521 +153,57 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-0.5">
-          <h1 className="text-2xl font-black tracking-tight text-[#1A2E35] sm:text-3xl">
-            User Management
-          </h1>
-          <p className="text-xs font-medium text-gray-500 sm:text-sm">
-            View, manage and monitor all registered users on ChopBeta.
-          </p>
-        </div>
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
-          <HeaderActions />
-        </div>
-      </div>
-
-      <section
-        aria-label="User statistics"
-        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-      >
-        {USER_STATS.map((stat, index) => {
-          const Icon = stat.icon;
-          const iconColors = [
-            "bg-[#eaf4ee] text-[#247443]",
-            "bg-[#e8f5ed] text-[#208149]",
-            "bg-[#fff0eb] text-[#df6848]",
-          ];
-          return (
-            <article
-              key={stat.title}
-              className="rounded-2xl border border-[#edf0ed] bg-white p-5 shadow-[0_3px_15px_rgba(27,56,38,0.04)] sm:p-6"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-[#748078]">
-                    {stat.title}
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold tracking-tight text-[#17211b]">
-                    {stat.value}
-                  </p>
-                </div>
-                <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconColors[index]}`}
-                >
-                  <Icon className="h-7 w-7" />
-                </span>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                <span className="font-semibold text-[#25834a]">
-                  +{stat.change}
-                </span>
-                <span className="text-[#829087]">{stat.trendText}</span>
-              </div>
-            </article>
-          );
-        })}
-      </section>
-
+      <UserManagementHeader />
+      <UserStats />
       <section className="overflow-hidden rounded-2xl border border-[#edf0ed] bg-white shadow-[0_3px_18px_rgba(27,56,38,0.04)]">
-        <div className="border-b border-[#edf0ed] p-4 sm:p-6">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">All Users</h2>
-              <p className="mt-1 text-sm text-[#829087]">
-                View and manage all registered users
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={exportUsers}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#dfe6e1] px-3 text-sm font-medium text-[#344239] transition hover:border-[#268348] hover:bg-[#f5faf6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#268348]"
-            >
-              <Download className="h-4 w-4" aria-hidden="true" />
-              Export
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <label className="relative min-w-0 flex-1">
-              <span className="sr-only">Search users</span>
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#909a93]"
-                aria-hidden="true"
-              />
-              <input
-                value={searchQuery}
-                onChange={(event) => {
-                  setSearchQuery(event.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="Search by name, email or phone"
-                className="h-11 w-full rounded-lg border border-[#e4e9e5] bg-white pl-10 pr-10 text-sm outline-none transition placeholder:text-[#9aa39d] focus:border-[#31844d] focus:ring-2 focus:ring-[#31844d]/10"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setCurrentPage(1);
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#89948d] hover:text-[#344239]"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </label>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                aria-expanded={isFiltersOpen}
-                onClick={() => setIsFiltersOpen((open) => !open)}
-                className={`inline-flex h-11 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#268348] ${
-                  isFiltersOpen
-                    ? "border-[#268348] bg-[#f4faf6] text-[#246f3e]"
-                    : "border-[#e4e9e5] text-[#48564d] hover:bg-[#f8faf8]"
-                }`}
-              >
-                <Filter className="h-4 w-4" aria-hidden="true" />
-                Filters
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${isFiltersOpen ? "rotate-180" : ""}`}
-                  aria-hidden="true"
-                />
-              </button>
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="inline-flex h-11 items-center gap-2 rounded-lg border border-[#e4e9e5] px-3 text-sm font-medium text-[#48564d] transition hover:bg-[#f8faf8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#268348]"
-              >
-                <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                Reset
-              </button>
-            </div>
-          </div>
-
-          {isFiltersOpen && (
-            <div className="mt-3 grid gap-3 rounded-xl bg-[#f8faf8] p-3 sm:grid-cols-2 sm:p-4">
-              <label className="text-xs font-medium text-[#67746b]">
-                Role
-                <select
-                  value={selectedRole}
-                  onChange={(event) => {
-                    setSelectedRole(event.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="mt-1.5 h-10 w-full rounded-lg border border-[#e1e7e2] bg-white px-3 text-sm font-normal text-[#344239] outline-none focus:border-[#31844d]"
-                >
-                  <option>All roles</option>
-                  <option>Student</option>
-                  <option>Admin</option>
-                </select>
-              </label>
-              <label className="text-xs font-medium text-[#67746b]">
-                Status
-                <select
-                  value={selectedStatus}
-                  onChange={(event) => {
-                    setSelectedStatus(event.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="mt-1.5 h-10 w-full rounded-lg border border-[#e1e7e2] bg-white px-3 text-sm font-normal text-[#344239] outline-none focus:border-[#31844d]"
-                >
-                  <option>All statuses</option>
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </label>
-            </div>
-          )}
-        </div>
-
-        <div className="divide-y divide-[#edf0ed] xl:hidden">
-          {pageUsers.map((user) => (
-            <article key={user.id} className="p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Image
-                    src={user.avatar}
-                    alt=""
-                    width={44}
-                    height={44}
-                    className="h-11 w-11 shrink-0 rounded-full object-cover"
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#26342b]">
-                      {user.name}
-                    </p>
-                    <p className="truncate text-xs text-[#8a958d]">
-                      {user.handle}
-                    </p>
-                  </div>
-                </div>
-                <StatusBadge status={user.status} />
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
-                <Detail label="Email" value={user.email} />
-                <Detail label="Phone number" value={user.phone} />
-                <Detail label="Role" value={user.role} />
-                <Detail label="Date joined" value={user.dateJoined} />
-                <Detail label="Last active" value={user.lastActive} />
-                <UserActionsMenu userName={user.name} />
-              </div>
-            </article>
-          ))}
-          {pageUsers.length === 0 && <EmptyState />}
-        </div>
-
-        <div className="hidden overflow-x-auto xl:block">
-          <table className="w-full min-w-[1050px] border-collapse text-left">
-            <thead>
-              <tr className="bg-[#f8faf8] text-xs font-semibold uppercase tracking-[0.04em] text-[#77837b]">
-                <th className="px-5 py-4">User</th>
-                <th className="px-4 py-4">Email</th>
-                <th className="px-4 py-4">Phone number</th>
-                <th className="px-4 py-4">Role</th>
-                <th className="px-4 py-4">Status</th>
-                <th className="px-4 py-4">Date joined</th>
-                <th className="px-4 py-4">Last active</th>
-                <th className="px-4 py-4">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#edf0ed]">
-              {pageUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="transition-colors hover:bg-[#fbfcfb]"
-                >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <Image
-                        src={user.avatar}
-                        alt=""
-                        width={42}
-                        height={42}
-                        className="h-10 w-10 shrink-0 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="whitespace-nowrap text-sm font-semibold text-[#26342b]">
-                          {user.name}
-                        </p>
-                        <p className="mt-0.5 text-xs text-[#8a958d]">
-                          {user.handle}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-sm text-[#58645c]">
-                    {user.email}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-4 text-sm text-[#58645c]">
-                    {user.phone}
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="rounded-md bg-[#f2f4f3] px-2.5 py-1 text-xs font-medium text-[#59655d]">
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <StatusBadge status={user.status} />
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-4 text-sm text-[#58645c]">
-                    {user.dateJoined}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-4 text-sm text-[#58645c]">
-                    {user.lastActive}
-                  </td>
-                  <td className="px-4 py-4">
-                    <UserActionsMenu userName={user.name} />
-                  </td>
-                </tr>
-              ))}
-              {pageUsers.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-12">
-                    <EmptyState />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <footer className="flex flex-col gap-3 border-t border-[#edf0ed] px-4 py-4 text-sm text-[#77837b] sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>
-            Showing{" "}
-            <span className="font-medium text-[#344239]">{firstUser}</span> to{" "}
-            <span className="font-medium text-[#344239]">{lastUser}</span> of{" "}
-            <span className="font-medium text-[#344239]">
-              {filteredUsers.length}
-            </span>{" "}
-            users
-          </p>
-          <nav
-            aria-label="User list pagination"
-            className="flex items-center gap-1"
-          >
-            <button
-              type="button"
-              aria-label="Previous page"
-              disabled={currentPage === 1}
-              onClick={() => changePage(currentPage - 1)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e4e9e5] transition hover:bg-[#f6f8f6] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map(
-              (page) => (
-                <button
-                  key={page}
-                  type="button"
-                  aria-current={page === currentPage ? "page" : undefined}
-                  onClick={() => changePage(page)}
-                  className={`h-9 min-w-9 rounded-lg px-2 text-sm font-medium transition ${
-                    page === currentPage
-                      ? "bg-[#258148] text-white shadow-sm"
-                      : "text-[#657168] hover:bg-[#f2f6f3]"
-                  }`}
-                >
-                  {page}
-                </button>
-              ),
-            )}
-            <button
-              type="button"
-              aria-label="Next page"
-              disabled={currentPage === pageCount}
-              onClick={() => changePage(currentPage + 1)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e4e9e5] transition hover:bg-[#f6f8f6] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </nav>
-        </footer>
+        <UserDirectoryFilters
+          searchQuery={searchQuery}
+          selectedRole={selectedRole}
+          selectedStatus={selectedStatus}
+          isFiltersOpen={isFiltersOpen}
+          onSearchChange={(value) => {
+            setSearchQuery(value);
+            setCurrentPage(1);
+          }}
+          onRoleChange={(value) => {
+            setSelectedRole(value);
+            setCurrentPage(1);
+          }}
+          onStatusChange={(value) => {
+            setSelectedStatus(value);
+            setCurrentPage(1);
+          }}
+          onFiltersToggle={() => setIsFiltersOpen((open) => !open)}
+          onReset={resetFilters}
+          onExport={exportUsers}
+        />
+        <UserResults
+          users={pageUsers}
+          firstUser={firstUser}
+          lastUser={lastUser}
+          resultCount={filteredUsers.length}
+          currentPage={visiblePage}
+          pageCount={pageCount}
+          onPageChange={(page) =>
+            changePage(Math.min(page, pageCount))
+          }
+          onView={(user) => setActiveDialog({ user, mode: "view" })}
+          onEdit={(user) => setActiveDialog({ user, mode: "edit" })}
+          onActivate={(user) => setActiveDialog({ user, mode: "activate" })}
+          onDeactivate={(user) =>
+            setActiveDialog({ user, mode: "deactivate" })
+          }
+        />
       </section>
-    </div>
-  );
-}
-
-function UserActionsMenu({ userName }: { userName: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-
-    const updatePosition = () => {
-      const trigger = triggerRef.current;
-      const menu = menuRef.current;
-      if (!trigger || !menu) return;
-
-      const triggerRect = trigger.getBoundingClientRect();
-      const menuRect = menu.getBoundingClientRect();
-      const margin = 8;
-      const left = Math.min(
-        Math.max(margin, triggerRect.right - menuRect.width),
-        window.innerWidth - menuRect.width - margin,
-      );
-      const spaceBelow = window.innerHeight - triggerRect.bottom;
-      const top =
-        spaceBelow >= menuRect.height + margin
-          ? triggerRect.bottom + margin
-          : Math.max(margin, triggerRect.top - menuRect.height - margin);
-
-      setPosition({ top, left });
-    };
-
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
-    return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const dismissOnOutsideClick = (event: PointerEvent) => {
-      const target = event.target;
-      if (
-        target instanceof Node &&
-        !triggerRef.current?.contains(target) &&
-        !menuRef.current?.contains(target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    const dismissOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
-    document.addEventListener("pointerdown", dismissOnOutsideClick);
-    document.addEventListener("keydown", dismissOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", dismissOnOutsideClick);
-      document.removeEventListener("keydown", dismissOnEscape);
-    };
-  }, [isOpen]);
-
-  const closeMenu = () => setIsOpen(false);
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-label={`More actions for ${userName}`}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-        className="rounded-lg p-2 text-[#77837b] transition hover:bg-[#f2f6f3] hover:text-[#2a7544] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#268348]"
-      >
-        <Ellipsis className="h-5 w-5" aria-hidden="true" />
-      </button>
-      {typeof document !== "undefined" &&
-        createPortal(
-          <AnimatePresence>
-            {isOpen && (
-              <motion.div
-                ref={menuRef}
-                role="menu"
-                aria-label={`${userName} actions`}
-                initial={{ opacity: 0, scale: 0.96, y: -4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.97, y: -3 }}
-                transition={{ duration: 0.16, ease: "easeOut" }}
-                style={{
-                  position: "fixed",
-                  top: position.top,
-                  left: position.left,
-                  transformOrigin: "top right",
-                  zIndex: 100,
-                }}
-                className="w-44 overflow-hidden rounded-lg border border-[#e9ecea] bg-white py-1 shadow-[0_8px_24px_rgba(27,56,38,0.16)]"
-              >
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={closeMenu}
-                  className="flex h-12 w-full items-center gap-3 px-3 text-left text-sm font-medium tracking-wide text-[#26342b] transition-colors hover:bg-[#f6f8f6] focus-visible:bg-[#f6f8f6] focus-visible:outline-none"
-                >
-                  <Eye className="h-[18px] w-[18px]" aria-hidden="true" />
-                  View Profile
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={closeMenu}
-                  className="flex h-12 w-full items-center gap-3 px-3 text-left text-sm font-medium tracking-wide text-[#26342b] transition-colors hover:bg-[#f6f8f6] focus-visible:bg-[#f6f8f6] focus-visible:outline-none"
-                >
-                  <Pencil className="h-[18px] w-[18px]" aria-hidden="true" />
-                  Edit User
-                </button>
-                <div className="my-1 border-t border-[#edf0ed]" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={closeMenu}
-                  className="flex h-12 w-full items-center gap-3 px-3 text-left text-sm font-medium tracking-wide text-[#f21d43] transition-colors hover:bg-rose-50 focus-visible:bg-rose-50 focus-visible:outline-none"
-                >
-                  <Power className="h-[18px] w-[18px]" aria-hidden="true" />
-                  Deactivate User
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>,
-          document.body,
-        )}
-    </>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const isActive = status === "Active";
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
-        isActive ? "bg-[#eaf6ee] text-[#27804a]" : "bg-[#fff0eb] text-[#cf6245]"
-      }`}
-    >
-      <span
-        className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-[#31a15b]" : "bg-[#e37958]"}`}
+      <UserActionDialog
+        isOpen={Boolean(activeDialog)}
+        user={activeDialog?.user ?? null}
+        mode={activeDialog?.mode ?? "view"}
+        onClose={closeDialog}
+        onSave={saveUser}
+        onActivate={activateUser}
+        onDeactivate={deactivateUser}
       />
-      {status}
-    </span>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-[#929d95]">{label}</p>
-      <p className="mt-1 truncate font-medium text-[#46534a]">{value}</p>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-5 text-center">
-      <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#eef5f0] text-[#31844d]">
-        <Users className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <p className="text-sm font-semibold text-[#344239]">No users found</p>
-      <p className="mt-1 text-xs text-[#829087]">
-        Try changing your search or filters.
-      </p>
     </div>
   );
 }

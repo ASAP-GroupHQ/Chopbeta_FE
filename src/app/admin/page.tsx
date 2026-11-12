@@ -187,7 +187,7 @@ export default function AdminDashboardPage() {
               Recent Activities
             </h3>
             <Link
-              href="/admin/activities"
+              href="/admin/user-management"
               className="text-xs font-bold text-green-700 hover:underline"
             >
               View all
@@ -327,7 +327,7 @@ export default function AdminDashboardPage() {
               Most Popular Meals
             </h3>
             <Link
-              href="/admin/meals"
+              href="/admin/meal-management"
               className="text-xs font-bold text-green-700 hover:underline"
             >
               View all
