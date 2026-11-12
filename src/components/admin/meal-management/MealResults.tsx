@@ -1,14 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye, Pencil, Search, Trash2 } from "lucide-react";
-import { MEALS_DATA } from "@/constants/admin-management";
-
-type Meal = (typeof MEALS_DATA)[number];
+import type { ManagedMeal } from "@/components/admin/meal-management/MealActionDialog";
 
 interface MealResultsProps {
-  meals: Meal[];
+  meals: ManagedMeal[];
   resultCount: number;
   firstItem: number;
   lastItem: number;
@@ -17,6 +14,9 @@ interface MealResultsProps {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (itemsPerPage: number) => void;
+  onView: (meal: ManagedMeal) => void;
+  onEdit: (meal: ManagedMeal) => void;
+  onDelete: (meal: ManagedMeal) => void;
 }
 
 export default function MealResults({
@@ -29,6 +29,9 @@ export default function MealResults({
   itemsPerPage,
   onPageChange,
   onItemsPerPageChange,
+  onView,
+  onEdit,
+  onDelete,
 }: MealResultsProps) {
   return (
     <>
@@ -70,7 +73,14 @@ export default function MealResults({
                   {meal.dateAdded}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex justify-end"><MealActions meal={meal} /></div>
+                  <div className="flex justify-end">
+                    <MealActions
+                      meal={meal}
+                      onView={onView}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -109,7 +119,12 @@ export default function MealResults({
               <span className="whitespace-pre-line text-[10px] leading-4 text-gray-400">
                 Added {meal.dateAdded}
               </span>
-              <MealActions meal={meal} />
+              <MealActions
+                meal={meal}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             </div>
           </article>
         ))}
@@ -165,7 +180,13 @@ export default function MealResults({
   );
 }
 
-function MealImage({ meal, size }: { meal: Meal; size: "table" | "card" }) {
+function MealImage({
+  meal,
+  size,
+}: {
+  meal: ManagedMeal;
+  size: "table" | "card";
+}) {
   const isCard = size === "card";
   return (
     <div
@@ -203,30 +224,45 @@ function MealStatus({
   );
 }
 
-function MealActions({ meal }: { meal: Meal }) {
+function MealActions({
+  meal,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  meal: ManagedMeal;
+  onView: (meal: ManagedMeal) => void;
+  onEdit: (meal: ManagedMeal) => void;
+  onDelete: (meal: ManagedMeal) => void;
+}) {
+  const actionClassName =
+    "inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition focus-visible:outline-none focus-visible:ring-2";
+
   return (
     <div className="flex items-center gap-1.5">
-      <Link
-        href={`/admin/meals/${meal.id}`}
+      <button
+        type="button"
+        onClick={() => onView(meal)}
         aria-label={`View ${meal.name}`}
-        className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+        className={`${actionClassName} bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus-visible:ring-emerald-600`}
       >
         <Eye className="h-3 w-3" />
         <span>View</span>
-      </Link>
-      <Link
-        href={`/admin/meals/${meal.id}/edit`}
+      </button>
+      <button
+        type="button"
+        onClick={() => onEdit(meal)}
         aria-label={`Edit ${meal.name}`}
-        className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700 transition hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+        className={`${actionClassName} bg-blue-50 text-blue-700 hover:bg-blue-100 focus-visible:ring-blue-600`}
       >
         <Pencil className="h-3 w-3" />
         <span>Edit</span>
-      </Link>
+      </button>
       <button
         type="button"
-        onClick={() => alert(`Delete meal ${meal.name}?`)}
+        onClick={() => onDelete(meal)}
         aria-label={`Delete ${meal.name}`}
-        className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-700 transition hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600"
+        className={`${actionClassName} bg-rose-50 text-rose-700 hover:bg-rose-100 focus-visible:ring-rose-600`}
       >
         <Trash2 className="h-3 w-3" />
         <span>Delete</span>
