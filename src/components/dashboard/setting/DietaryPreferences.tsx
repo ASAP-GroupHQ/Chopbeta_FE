@@ -40,7 +40,7 @@ function preferenceValues(items: string[], options: string[]) {
 }
 
 export default function DietaryPreferences() {
-  const { user, updateUserData } = useAuth();
+  const { updateUserData } = useAuth();
   const toast = useToast();
   const [allergies, setAllergies] = useState<string[]>([]);
   const [dislikes, setDislikes] = useState<string[]>([]);
@@ -121,11 +121,6 @@ export default function DietaryPreferences() {
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user?._id) {
-      toast.error("Could not identify your account. Please sign in again.");
-      return;
-    }
-
     const savedAllergies = valuesForSave(allergies, allergyCustom);
     const savedDislikes = valuesForSave(dislikes, dislikeCustom);
     setIsSaving(true);
