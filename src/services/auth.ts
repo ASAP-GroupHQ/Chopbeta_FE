@@ -9,6 +9,7 @@ import {
   ForgotPasswordResponse,
   ApiResponse,
   LogoutResponse,
+  LogoutAllResponse,
   RegenerateTokenResponse,
 } from "@/types/auth";
 
@@ -80,6 +81,14 @@ export const authService = {
 
   logoutUser: async (): Promise<LogoutResponse> => {
     const response = await apiClient.post<LogoutResponse>("/auth/user/logout");
+    return response.data;
+  },
+
+  logoutAllSessions: async (email: string): Promise<LogoutAllResponse> => {
+    const response = await apiClient.post<LogoutAllResponse>(
+      "/auth/user/logout-all",
+      { email },
+    );
     return response.data;
   },
 };
