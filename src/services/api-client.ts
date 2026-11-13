@@ -83,6 +83,9 @@ apiClient.interceptors.response.use(
     const isRefreshRequest = originalRequest?.url?.includes(
       "/auth/user/regenerate-token",
     );
+    const isLogoutAllRequest = originalRequest?.url?.includes(
+      "/auth/user/logout-all",
+    );
     const isPublicAuthRequest = publicAuthPaths.some((path) =>
       originalRequest?.url?.includes(path),
     );
@@ -92,6 +95,7 @@ apiClient.interceptors.response.use(
       originalRequest &&
       !originalRequest._retry &&
       !isRefreshRequest &&
+      !isLogoutAllRequest &&
       !isPublicAuthRequest
     ) {
       originalRequest._retry = true;

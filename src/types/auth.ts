@@ -89,6 +89,12 @@ export interface LogoutResponse {
   message: string;
 }
 
+export interface LogoutAllResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+}
+
 // Generic Server Response Shape
 export interface ApiResponse<T = any> {
   status?: string;

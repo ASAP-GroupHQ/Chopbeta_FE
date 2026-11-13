@@ -1,24 +1,31 @@
 "use client";
 
 import React, { useState } from "react";
+import { isAxiosError } from "axios";
 import { FiMail, FiLock } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
 import AuthInput from "@/components/auth/AuthInput";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import SuccessfulScreen from "@/components/auth/SuccessfulScreen";
+import SessionLimitDialog from "@/components/auth/SessionLimitDialog";
 import LoadingState from "@/components/ui/LoadingState";
 import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, logoutAllSessions } = useAuth();
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [targetPath, setTargetPath] = useState("/dashboard");
+  const [isSessionLimitOpen, setIsSessionLimitOpen] = useState(false);
+  const [isSigningOutAllSessions, setIsSigningOutAllSessions] = useState(false);
+  const [sessionLimitError, setSessionLimitError] = useState<string | null>(
+    null,
+  );
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,10 +49,41 @@ export default function LoginPage() {
 
       setTargetPath(redirectPath);
       setShowSuccess(true);
-    } catch {
-      // Handled by AuthContext toast
+    } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 403) {
+        setSessionLimitError(null);
+        setIsSessionLimitOpen(true);
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLogoutAllSessions = async () => {
+    setIsSigningOutAllSessions(true);
+    setSessionLimitError(null);
+    try {
+      const trimmedEmail = email.trim();
+      if (!trimmedEmail) {
+        setSessionLimitError("Enter your email address and try again.");
+        return;
+      }
+
+      await logoutAllSessions(trimmedEmail);
+      setIsSessionLimitOpen(false);
+      toast.success("All sessions have been signed out. You can sign in again.");
+    } catch (error) {
+      setSessionLimitError(
+        isAxiosError(error)
+          ? error.response?.data?.message ||
+              error.message ||
+              "Could not sign out all sessions. Please try again."
+          : error instanceof Error
+            ? error.message
+            : "Could not sign out all sessions. Please try again.",
+      );
+    } finally {
+      setIsSigningOutAllSessions(false);
     }
   };
 
@@ -61,7 +99,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white relative px-4 sm:px-6 lg:px-8 font-sans">
+    <>
+      <main className="min-h-screen bg-white relative px-4 sm:px-6 lg:px-8 font-sans">
       <div className="absolute top-6 left-6 sm:top-10 sm:left-10 z-10">
         <Link href="/" className="hover:opacity-90 transition-opacity">
           <Image
@@ -296,6 +335,16 @@ export default function LoginPage() {
           )}
         </section>
       </div>
-    </main>
+      </main>
+      <SessionLimitDialog
+        isOpen={isSessionLimitOpen}
+        isSubmitting={isSigningOutAllSessions}
+        errorMessage={sessionLimitError}
+        onClose={() => {
+          if (!isSigningOutAllSessions) setIsSessionLimitOpen(false);
+        }}
+        onConfirm={handleLogoutAllSessions}
+      />
+    </>
   );
 }

@@ -18,6 +18,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (credentials: LoginData) => Promise<User>;
+  logoutAllSessions: (email: string) => Promise<void>;
   refreshSession: (fallbackUser?: DataRecord) => Promise<User | null>;
   logout: () => Promise<void>;
   updateUserData: (newData: Partial<User>) => void;
@@ -219,12 +220,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return profile;
       } catch (error: any) {
-        toast.error(error.message || "Invalid credentials. Please try again.");
+        if (error.response?.status !== 403) {
+          toast.error(error.message || "Invalid credentials. Please try again.");
+        }
         throw error;
       }
     },
     [refreshSession, toast],
   );
+
+  const logoutAllSessions = useCallback(async (email: string) => {
+    await authService.logoutAllSessions(email);
+    clearClientSession();
+    setToken(null);
+    setUser(null);
+  }, []);
 
   const updateUserData = useCallback((newData: Partial<User>) => {
     setUser((prevUser) => {
@@ -265,6 +275,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         isLoading,
         login,
+        logoutAllSessions,
         refreshSession,
         logout,
         updateUserData,
