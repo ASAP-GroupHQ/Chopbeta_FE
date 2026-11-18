@@ -220,7 +220,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return profile;
       } catch (error: any) {
-        if (error.response?.status !== 403) {
+        if (
+          error.response?.status !== 403 &&
+          error.response?.status !== 429
+        ) {
           toast.error(error.message || "Invalid credentials. Please try again.");
         }
         throw error;

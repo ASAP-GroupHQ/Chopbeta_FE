@@ -140,10 +140,11 @@ apiClient.interceptors.response.use(
     }
 
     const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      "An unexpected error occurred.";
-
+      error.response?.status === 429
+        ? "Too many attempts. Please wait a moment before trying again."
+        : error.response?.data?.message ||
+          error.message ||
+          "An unexpected error occurred.";
     console.error("API Error:", errorMessage);
     error.message = errorMessage;
     return Promise.reject(error);

@@ -17,12 +17,10 @@ import {
 import { ChevronDown } from "lucide-react";
 import {
   getAnalyticsTimeRange,
-  MEAL_CATEGORY_ANALYTICS,
-  MEAL_PLAN_ANALYTICS,
   type AnalyticsTimeRange,
-  USER_GROWTH_ANALYTICS,
   VISIBLE_POINTS_BY_RANGE,
 } from "@/constants/analytics-data";
+import type { AdminAnalyticsData } from "@/types/admin-analytics";
 
 const chartCardClass =
   "min-w-0 overflow-hidden rounded-xl border border-[#e8e4ed] bg-white/80 shadow-[0_2px_8px_rgba(47,39,68,0.035)]";
@@ -35,21 +33,23 @@ const tooltipStyle = {
 };
 
 interface AnalyticsChartsProps {
+  data: AdminAnalyticsData;
   selectedRange: AnalyticsTimeRange;
   onSelectRange: (range: AnalyticsTimeRange) => void;
 }
 
 export default function AnalyticsCharts({
+  data,
   selectedRange,
   onSelectRange,
 }: AnalyticsChartsProps) {
-  const visibleMealPlans = MEAL_PLAN_ANALYTICS.slice(
+  const visibleMealPlans = data.mealPlans.slice(
     -VISIBLE_POINTS_BY_RANGE[selectedRange],
   );
-  const visibleUserGrowth = USER_GROWTH_ANALYTICS.slice(
+  const visibleUserGrowth = data.userGrowth.slice(
     -Math.min(
       VISIBLE_POINTS_BY_RANGE[selectedRange],
-      USER_GROWTH_ANALYTICS.length,
+      data.userGrowth.length,
     ),
   );
 
@@ -65,7 +65,10 @@ export default function AnalyticsCharts({
           onSelectRange={onSelectRange}
         />
         <div className="h-[220px] px-2 pb-2 pt-3 sm:h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
+          {visibleMealPlans.length === 0 ? (
+            <ChartEmptyState />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={visibleMealPlans}
               margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
@@ -100,8 +103,7 @@ export default function AnalyticsCharts({
                 tickMargin={7}
               />
               <YAxis
-                domain={[0, 40]}
-                ticks={[0, 8, 16, 24, 32, 40]}
+                allowDecimals={false}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fill: "#858598", fontSize: 9 }}
@@ -133,7 +135,8 @@ export default function AnalyticsCharts({
                 animationDuration={700}
               />
             </AreaChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          )}
         </div>
       </article>
 
@@ -144,11 +147,15 @@ export default function AnalyticsCharts({
           onSelectRange={onSelectRange}
         />
         <div className="flex min-h-[220px] items-center gap-2 px-3 py-3 sm:min-h-[250px] sm:px-4">
+          {data.mealCategories.length === 0 ? (
+            <ChartEmptyState />
+          ) : (
+            <>
           <div className="relative h-[190px] min-w-0 flex-1 sm:h-[210px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={MEAL_CATEGORY_ANALYTICS}
+                  data={data.mealCategories}
                   dataKey="value"
                   nameKey="name"
                   innerRadius="54%"
@@ -157,7 +164,7 @@ export default function AnalyticsCharts({
                   stroke="none"
                   animationDuration={700}
                 >
-                  {MEAL_CATEGORY_ANALYTICS.map((item) => (
+                  {data.mealCategories.map((item) => (
                     <Cell key={item.name} fill={item.color} />
                   ))}
                 </Pie>
@@ -168,12 +175,14 @@ export default function AnalyticsCharts({
               </PieChart>
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-sm font-bold text-[#3d3d50]">48,731</span>
+              <span className="text-sm font-bold text-[#3d3d50]">
+                {data.totalMealPlans.toLocaleString("en-NG")}
+              </span>
               <span className="text-[9px] text-[#858598]">Total Plans</span>
             </div>
           </div>
           <ul className="min-w-[112px] flex-1 space-y-3">
-            {MEAL_CATEGORY_ANALYTICS.map((item) => (
+            {data.mealCategories.map((item) => (
               <li
                 key={item.name}
                 className="flex items-center justify-between gap-2 text-[9px] sm:text-[10px]"
@@ -191,6 +200,8 @@ export default function AnalyticsCharts({
               </li>
             ))}
           </ul>
+            </>
+          )}
         </div>
       </article>
 
@@ -201,7 +212,10 @@ export default function AnalyticsCharts({
           onSelectRange={onSelectRange}
         />
         <div className="h-[220px] px-2 pb-2 pt-3 sm:h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
+          {visibleUserGrowth.length === 0 ? (
+            <ChartEmptyState />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={visibleUserGrowth}
               margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
@@ -219,8 +233,7 @@ export default function AnalyticsCharts({
                 tickMargin={7}
               />
               <YAxis
-                domain={[0, 40]}
-                ticks={[0, 8, 16, 24, 32, 40]}
+                allowDecimals={false}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fill: "#858598", fontSize: 9 }}
@@ -238,10 +251,19 @@ export default function AnalyticsCharts({
                 animationDuration={700}
               />
             </BarChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          )}
         </div>
       </article>
     </section>
+  );
+}
+
+function ChartEmptyState() {
+  return (
+    <div className="flex h-full min-h-[180px] items-center justify-center text-xs text-[#858598]">
+      No data available for this period.
+    </div>
   );
 }
 

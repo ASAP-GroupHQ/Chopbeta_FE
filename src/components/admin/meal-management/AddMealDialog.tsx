@@ -10,13 +10,13 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { LoaderCircle, Plus, X } from "lucide-react";
-import type { MealWriteData } from "@/services/admin";
+import type { MealWriteData } from "@/types/admin-meals";
 
 interface AddMealDialogProps {
   isOpen: boolean;
   isSubmitting: boolean;
   onClose: () => void;
-  onSubmit: (meal: MealWriteData) => Promise<boolean>;
+  onSubmit: (meal: MealWriteData, image?: File) => Promise<boolean>;
 }
 
 const initialForm = {
@@ -37,11 +37,13 @@ export default function AddMealDialog({
   onSubmit,
 }: AddMealDialogProps) {
   const [form, setForm] = useState(initialForm);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const closeDialog = useCallback(() => {
     if (isSubmitting) return;
     setForm(initialForm);
+    setImageFile(null);
     onClose();
   }, [isSubmitting, onClose]);
 
@@ -99,9 +101,10 @@ export default function AddMealDialog({
           fats: Number(form.fats),
         },
       },
-    });
+    }, imageFile ?? undefined);
     if (wasAdded) {
       setForm(initialForm);
+      setImageFile(null);
       onClose();
     }
   };
@@ -226,6 +229,18 @@ export default function AddMealDialog({
                     </select>
                   </label>
                   {numberInput("estimatedPrice", "Estimated price", "NGN")}
+                  <label className="block text-xs font-semibold text-[#526056] sm:col-span-2">
+                    Meal image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) =>
+                        setImageFile(event.target.files?.[0] ?? null)
+                      }
+                      className="mt-1.5 block w-full text-sm text-[#526056] file:mr-3 file:rounded-lg file:border-0 file:bg-[#eaf4ee] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#247443]"
+                      disabled={isSubmitting}
+                    />
+                  </label>
                   <label className="block text-xs font-semibold text-[#526056] sm:col-span-2">
                     Description
                     <textarea

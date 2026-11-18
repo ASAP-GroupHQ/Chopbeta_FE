@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 import { ChevronDown, Search as SearchIcon } from "lucide-react";
-import type { FeedbackCategory, FeedbackStatus } from "@/constants/admin-feedback";
+import type { FeedbackCategory, FeedbackStatus } from "@/types/admin-feedback";
 
 interface FeedbackFiltersProps {
   searchQuery: string;

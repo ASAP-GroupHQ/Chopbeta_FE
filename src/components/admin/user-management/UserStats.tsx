@@ -1,4 +1,5 @@
 import { USER_STATS } from "@/constants/admin-management";
+import type { AdminUserSummary } from "@/types/admin-users";
 
 const iconColors = [
   "bg-[#eaf4ee] text-[#247443]",
@@ -6,7 +7,16 @@ const iconColors = [
   "bg-[#fff0eb] text-[#df6848]",
 ];
 
-export default function UserStats() {
+export default function UserStats({
+  stats,
+}: {
+  stats: AdminUserSummary | null;
+}) {
+  const values: Record<string, number | undefined> = {
+    "Total Users": stats?.totalUsers,
+    "Active Users": stats?.activeUsers,
+    "Inactive Users": stats?.inactiveUsers,
+  };
   return (
     <section
       aria-label="User statistics"
@@ -25,7 +35,7 @@ export default function UserStats() {
                   {stat.title}
                 </p>
                 <p className="mt-2 text-3xl font-semibold tracking-tight text-[#17211b]">
-                  {stat.value}
+                  {values[stat.title]?.toLocaleString("en-NG") ?? "—"}
                 </p>
               </div>
               <span
@@ -36,9 +46,9 @@ export default function UserStats() {
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
               <span className="font-semibold text-[#25834a]">
-                +{stat.change}
+                Live
               </span>
-              <span className="text-[#829087]">{stat.trendText}</span>
+              <span className="text-[#829087]">from the users API</span>
             </div>
           </article>
         );

@@ -1,14 +1,14 @@
 "use client";
 
-import { ArrowRight, Eye, Star, Trash2 } from "lucide-react";
-import type { AdminFeedback } from "@/constants/admin-feedback";
+import { ArrowRight, CircleCheck, Eye, Star } from "lucide-react";
+import type { AdminFeedback } from "@/types/admin-feedback";
 
 interface RecentFeedbackProps {
   feedback: AdminFeedback[];
   isShowingAll: boolean;
   onToggleAll: () => void;
   onView: (item: AdminFeedback) => void;
-  onDelete: (item: AdminFeedback) => void;
+  onAdvance: (item: AdminFeedback) => void;
 }
 
 export default function RecentFeedback({
@@ -16,7 +16,7 @@ export default function RecentFeedback({
   isShowingAll,
   onToggleAll,
   onView,
-  onDelete,
+  onAdvance,
 }: RecentFeedbackProps) {
   return (
     <section className="overflow-hidden rounded-2xl border border-[#e9e5ed] bg-white shadow-[0_2px_10px_rgba(47,39,68,0.035)]">
@@ -61,7 +61,8 @@ export default function RecentFeedback({
               </div>
               <RowActions
                 onView={() => onView(item)}
-                onDelete={() => onDelete(item)}
+                onAdvance={() => onAdvance(item)}
+                canAdvance={item.status !== "Resolved"}
               />
             </div>
           </article>
@@ -115,7 +116,8 @@ export default function RecentFeedback({
                   <div className="flex justify-end">
                     <RowActions
                       onView={() => onView(item)}
-                      onDelete={() => onDelete(item)}
+                      onAdvance={() => onAdvance(item)}
+                      canAdvance={item.status !== "Resolved"}
                     />
                   </div>
                 </td>
@@ -208,10 +210,12 @@ function RatingStars({ rating }: { rating: number }) {
 
 function RowActions({
   onView,
-  onDelete,
+  onAdvance,
+  canAdvance,
 }: {
   onView: () => void;
-  onDelete: () => void;
+  onAdvance: () => void;
+  canAdvance: boolean;
 }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -223,14 +227,16 @@ function RowActions({
       >
         <Eye className="h-4 w-4" />
       </button>
-      <button
-        type="button"
-        aria-label="Delete feedback"
-        onClick={onDelete}
-        className="rounded-full bg-[#fbefed] p-2 text-[#bd665c] transition hover:bg-[#f5dfdb]"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
+      {canAdvance && (
+        <button
+          type="button"
+          aria-label="Advance feedback status"
+          onClick={onAdvance}
+          className="rounded-full bg-[#edf5ef] p-2 text-[#438469] transition hover:bg-[#e1ebe5]"
+        >
+          <CircleCheck className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

@@ -1,20 +1,24 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import AddMealDialog from "@/components/admin/meal-management/AddMealDialog";
 import MealActionDialog, {
   type MealDialogMode,
-  type MealEdits,
-  type ManagedMeal,
 } from "@/components/admin/meal-management/MealActionDialog";
 import MealFilters from "@/components/admin/meal-management/MealFilters";
 import MealManagementHeader from "@/components/admin/meal-management/MealManagementHeader";
 import MealResults from "@/components/admin/meal-management/MealResults";
 import MealStats from "@/components/admin/meal-management/MealStats";
 import { useToast } from "@/context/ToastContext";
-import { MEALS_DATA } from "@/constants/admin-management";
-import { adminService, type MealWriteData } from "@/services/admin";
+import { adminMealsService } from "@/services/admin-meals";
+import type {
+  AdminMeal,
+  MealEdits,
+  MealStats as MealStatsData,
+  MealWriteData,
+  ManagedMeal,
+} from "@/types/admin-meals";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -29,7 +33,8 @@ const containerVariants = {
 
 export default function MealManagementPage() {
   const toast = useToast();
-  const [meals, setMeals] = useState<ManagedMeal[]>(MEALS_DATA);
+  const [meals, setMeals] = useState<ManagedMeal[]>([]);
+  const [mealStats, setMealStats] = useState<MealStatsData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
@@ -38,6 +43,7 @@ export default function MealManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [isAddingMeal, setIsAddingMeal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeMealDialog, setActiveMealDialog] = useState<{
     meal: ManagedMeal;
     mode: MealDialogMode;
@@ -48,6 +54,39 @@ export default function MealManagementPage() {
   const closeMealDialog = useCallback(() => {
     setActiveMealDialog(null);
   }, []);
+
+  const loadMeals = useCallback(async () => {
+    const [mealRecords, stats] = await Promise.all([
+      adminMealsService.getMeals(),
+      adminMealsService.getStats(),
+    ]);
+    setMeals(mealRecords.map(toManagedMeal));
+    setMealStats(stats);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([adminMealsService.getMeals(), adminMealsService.getStats()])
+      .then(([mealRecords, stats]) => {
+        if (!active) return;
+        setMeals(mealRecords.map(toManagedMeal));
+        setMealStats(stats);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          toast.error(
+            "Could not load meals",
+            error instanceof Error ? error.message : "Please try again.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [toast]);
 
   const categories = useMemo(
     () => [...new Set(meals.map((meal) => meal.category))].sort(),
@@ -103,36 +142,43 @@ export default function MealManagementPage() {
     setCurrentPage(1);
   };
 
-  const addMeal = async (meal: MealWriteData): Promise<boolean> => {
+  const addMeal = async (
+    meal: MealWriteData,
+    image?: File,
+  ): Promise<boolean> => {
     setIsAddingMeal(true);
     try {
-      const id = await adminService.createMeal(meal);
-      const now = new Date();
-      const dateAdded = `${now.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })}\n${now.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
-      const calories = meal.averageNutritionalInfo.estimatedCalories;
-
-      setMeals((previousMeals) => [
-        {
-          id,
-          name: meal.mealTitle,
-          description: meal.description,
-          category:
-            meal.category.charAt(0).toUpperCase() + meal.category.slice(1),
-          price: `₦${meal.estimatedPrice.toLocaleString("en-NG")}`,
-          calories: `${calories} Kcal`,
-          status: "Active",
-          dateAdded,
-          image: "/images/meals/quick-meal.png",
-        },
-        ...previousMeals,
-      ]);
+      const id = await adminMealsService.createMeal(meal);
+      if (image) {
+        try {
+          await adminMealsService.uploadMealImage(id, image);
+        } catch (error) {
+          try {
+            await loadMeals();
+          } catch (refreshError) {
+            toast.error(
+              "Meal was added, but the list could not be refreshed",
+              refreshError instanceof Error
+                ? refreshError.message
+                : "Please refresh the page.",
+            );
+          }
+          toast.error(
+            "Meal added, but its image could not be uploaded",
+            error instanceof Error ? error.message : "Please try again.",
+          );
+          return true;
+        }
+      }
+      try {
+        await loadMeals();
+      } catch (error) {
+        toast.error(
+          "Meal added, but the list could not be refreshed",
+          error instanceof Error ? error.message : "Please refresh the page.",
+        );
+        return true;
+      }
       setCurrentPage(1);
       toast.success("Meal added successfully.");
       return true;
@@ -147,22 +193,107 @@ export default function MealManagementPage() {
     }
   };
 
-  const saveMealEdits = (id: string, updates: MealEdits) => {
+  const saveMealEdits = async (id: string, updates: MealEdits) => {
+    const original = meals.find((meal) => meal.id === id);
+    if (!original) return;
+    try {
+      await adminMealsService.updateMeal(id, {
+        mealTitle: updates.name,
+        description: updates.description,
+        category: updates.category,
+        estimatedPrice: Number(updates.price.replace(/[^\d.]/g, "")),
+        averageNutritionalInfo: {
+          ...original.source.averageNutritionalInfo,
+          estimatedCalories: Number(updates.calories.replace(/[^\d.]/g, "")),
+        },
+      });
+    } catch (error) {
+      toast.error(
+        "Could not update meal",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+      return;
+    }
     setMeals((previousMeals) =>
       previousMeals.map((meal) =>
-        meal.id === id ? { ...meal, ...updates } : meal,
+        meal.id === id
+          ? {
+              ...meal,
+              ...updates,
+              source: {
+                ...meal.source,
+                mealTitle: updates.name,
+                category: updates.category,
+                estimatedPrice: Number(
+                  updates.price.replace(/[^\d.]/g, ""),
+                ),
+                description: updates.description,
+              },
+            }
+          : meal,
       ),
     );
     setActiveMealDialog(null);
     toast.success("Meal updated successfully.");
   };
 
-  const deleteMeal = (mealToDelete: ManagedMeal) => {
-    setMeals((previousMeals) =>
-      previousMeals.filter((meal) => meal.id !== mealToDelete.id),
-    );
-    setActiveMealDialog(null);
-    toast.success("Meal deleted successfully.");
+  const deleteMeal = async (mealToDelete: ManagedMeal) => {
+    try {
+      await adminMealsService.deleteMeal(mealToDelete.id);
+      setMeals((previousMeals) =>
+        previousMeals.filter((meal) => meal.id !== mealToDelete.id),
+      );
+      setActiveMealDialog(null);
+      toast.success("Meal deleted successfully.");
+    } catch (error) {
+      toast.error(
+        "Could not delete meal",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    }
+  };
+
+  const toggleMealStatus = async (meal: ManagedMeal) => {
+    try {
+      await adminMealsService.toggleMealStatus(meal.id);
+      const updatedMeal: ManagedMeal = {
+        ...meal,
+        status: meal.status === "Active" ? "Inactive" : "Active",
+        source: {
+          ...meal.source,
+          isActive: meal.status !== "Active",
+        },
+      };
+      setMeals((previousMeals) =>
+        previousMeals.map((item) =>
+          item.id === meal.id ? updatedMeal : item,
+        ),
+      );
+      setActiveMealDialog((current) =>
+        current?.meal.id === meal.id
+          ? { ...current, meal: updatedMeal }
+          : current,
+      );
+      setMealStats((current) =>
+        current
+          ? {
+              ...current,
+              activeMeals:
+                current.activeMeals + (meal.status === "Active" ? -1 : 1),
+              inactiveMeals:
+                current.inactiveMeals + (meal.status === "Active" ? 1 : -1),
+            }
+          : current,
+      );
+      toast.success(
+        meal.status === "Active" ? "Meal deactivated." : "Meal activated.",
+      );
+    } catch (error) {
+      toast.error(
+        "Could not change meal status",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    }
   };
 
   return (
@@ -174,7 +305,12 @@ export default function MealManagementPage() {
         className="space-y-6"
       >
         <MealManagementHeader onAddMeal={() => setIsAddMealOpen(true)} />
-        <MealStats />
+        <MealStats stats={mealStats} />
+        {isLoading && (
+          <p role="status" className="text-sm text-gray-500">
+            Loading meals…
+          </p>
+        )}
         <section className="overflow-hidden rounded-2xl border border-[#E1E5EB] bg-white shadow-[0_2px_10px_rgba(26,46,53,0.04)]">
           <MealFilters
             categories={categories}
@@ -224,7 +360,33 @@ export default function MealManagementPage() {
         onClose={closeMealDialog}
         onSave={saveMealEdits}
         onDelete={deleteMeal}
+        onToggleStatus={toggleMealStatus}
       />
     </>
   );
+}
+
+function toManagedMeal(meal: AdminMeal): ManagedMeal {
+  const calories =
+    meal.averageNutritionalInfo?.estimatedCalories ??
+    meal.averageNutritionalInfo?.estimatedMacronutrients?.calories;
+  return {
+    id: meal._id,
+    name: meal.mealTitle,
+    description: meal.description ?? "",
+    category: meal.category,
+    price: `₦${adminMealsService.toPrice(meal.estimatedPrice).toLocaleString("en-NG")}`,
+    calories: calories === undefined ? "—" : `${calories} Kcal`,
+    status:
+      meal.isActive === undefined
+        ? "Unknown"
+        : meal.isActive
+          ? "Active"
+          : "Inactive",
+    dateAdded: meal.createdAt
+      ? new Date(meal.createdAt).toLocaleString()
+      : "—",
+    image: meal.imageUrl,
+    source: meal,
+  };
 }

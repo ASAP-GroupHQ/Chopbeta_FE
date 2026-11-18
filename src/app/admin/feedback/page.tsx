@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import FeedbackDetailsDialog from "@/components/admin/feedback/FeedbackDetailsDialog";
 import FeedbackFilters from "@/components/admin/feedback/FeedbackFilters";
@@ -11,16 +11,22 @@ import FeedbackStats from "@/components/admin/feedback/FeedbackStats";
 import RecentFeedback from "@/components/admin/feedback/RecentFeedback";
 import UserSupportReport from "@/components/admin/feedback/UserSupportReport";
 import { useToast } from "@/context/ToastContext";
-import {
-  ADMIN_FEEDBACK,
-  type AdminFeedback,
-  type FeedbackCategory,
-  type FeedbackStatus,
-} from "@/constants/admin-feedback";
+import { adminFeedbackService } from "@/services/admin-feedback";
+import type {
+  AdminFeedback,
+  FeedbackCategory,
+  FeedbackOverviewItem,
+  FeedbackStats as FeedbackStatsData,
+  FeedbackStatus,
+} from "@/types/admin-feedback";
 
 export default function FeedbackPage() {
   const toast = useToast();
-  const [feedbackItems, setFeedbackItems] = useState(ADMIN_FEEDBACK);
+  const [feedbackItems, setFeedbackItems] = useState<AdminFeedback[]>([]);
+  const [feedbackStats, setFeedbackStats] =
+    useState<FeedbackStatsData | null>(null);
+  const [overview, setOverview] = useState<FeedbackOverviewItem[]>([]);
+  const [loadError, setLoadError] = useState("");
   const [searchDraft, setSearchDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<
@@ -35,8 +41,37 @@ export default function FeedbackPage() {
   const [isShowingAll, setIsShowingAll] = useState(false);
   const [selectedFeedback, setSelectedFeedback] =
     useState<AdminFeedback | null>(null);
-  const [dialogMode, setDialogMode] = useState<"view" | "delete" | null>(null);
+  const [dialogMode, setDialogMode] = useState<"view" | "advance" | null>(null);
   const [reportGenerated, setReportGenerated] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const loadFeedbackData = async () => {
+      try {
+        const items = await adminFeedbackService.getFeedback();
+        const stats = await adminFeedbackService.getStats();
+        const categories = await adminFeedbackService.getCategoryOverview();
+        if (!active) return;
+        setFeedbackItems(items);
+        setFeedbackStats(stats);
+        setOverview(categories);
+        setLoadError("");
+      } catch (error: unknown) {
+        if (!active) return;
+        setLoadError(
+          error instanceof Error ? error.message : "Could not load feedback.",
+        );
+        toast.error(
+          "Could not load feedback",
+          error instanceof Error ? error.message : "Please try again.",
+        );
+      }
+    };
+    void loadFeedbackData();
+    return () => {
+      active = false;
+    };
+  }, [toast]);
 
   const filteredFeedback = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -68,18 +103,32 @@ export default function FeedbackPage() {
     setDialogMode("view");
   };
 
-  const requestDelete = (item: AdminFeedback) => {
+  const requestAdvance = (item: AdminFeedback) => {
     setSelectedFeedback(item);
-    setDialogMode("delete");
+    setDialogMode("advance");
   };
 
-  const deleteFeedback = () => {
-    if (!selectedFeedback) return;
-    setFeedbackItems((previous) =>
-      previous.filter((item) => item.id !== selectedFeedback.id),
-    );
-    closeDialog();
-    toast.success("Feedback removed from this sample list.");
+  const advanceFeedback = async () => {
+    if (!selectedFeedback || selectedFeedback.status === "Resolved") return;
+    try {
+      await adminFeedbackService.advanceStatus(selectedFeedback.id);
+      const nextStatus =
+        selectedFeedback.status === "New" ? "In progress" : "Resolved";
+      setFeedbackItems((previous) =>
+        previous.map((item) =>
+          item.id === selectedFeedback.id
+            ? { ...item, status: nextStatus }
+            : item,
+        ),
+      );
+      closeDialog();
+      toast.success(`Feedback marked ${nextStatus.toLowerCase()}.`);
+    } catch (error) {
+      toast.error(
+        "Could not update feedback status",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    }
   };
 
   const generateReport = () => {
@@ -192,7 +241,7 @@ export default function FeedbackPage() {
         className="space-y-4"
       >
         <FeedbackHeader />
-        <FeedbackStats />
+        <FeedbackStats stats={feedbackStats} />
         <FeedbackFilters
           searchQuery={searchDraft}
           selectedType={selectedType}
@@ -204,18 +253,24 @@ export default function FeedbackPage() {
         />
         <section className="grid gap-3 xl:grid-cols-2">
           <FeedbackOverview
+            overview={overview}
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
           />
-          <FeedbackQuickInsights />
+          <FeedbackQuickInsights overview={overview} />
         </section>
         <RecentFeedback
           feedback={visibleFeedback}
           isShowingAll={isShowingAll}
           onToggleAll={() => setIsShowingAll((showingAll) => !showingAll)}
           onView={showFeedback}
-          onDelete={requestDelete}
+          onAdvance={requestAdvance}
         />
+        {loadError && (
+          <p role="alert" className="text-sm text-red-600">
+            Could not load feedback: {loadError}
+          </p>
+        )}
         <UserSupportReport
           reportGenerated={reportGenerated}
           reportCount={feedbackItems.length}
@@ -228,7 +283,7 @@ export default function FeedbackPage() {
         feedback={selectedFeedback}
         mode={dialogMode}
         onClose={closeDialog}
-        onConfirmDelete={deleteFeedback}
+        onConfirmAdvance={advanceFeedback}
       />
     </>
   );

@@ -7,7 +7,6 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import Image from "next/image";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -248,13 +247,17 @@ function UserProfile({
   return (
     <div className="space-y-5 px-5 py-5 sm:px-6">
       <div className="flex flex-col gap-4 rounded-xl bg-[#f7f9f7] p-4 sm:flex-row sm:items-center">
-        <Image
-          src={user.avatar}
-          alt=""
-          width={64}
-          height={64}
-          className="h-16 w-16 shrink-0 rounded-full object-cover"
-        />
+        <span
+          aria-hidden="true"
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#eaf4ee] text-xl font-bold text-[#247443]"
+        >
+          {user.name
+            .trim()
+            .split(/\s+/)
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join("") || "?"}
+        </span>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-semibold text-[#26342b]">
             {user.name}
@@ -283,14 +286,14 @@ function UserProfile({
         </h3>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ProfileDetail label="Phone number" value={user.phone} />
-          <ProfileDetail label="Gender" value={user.gender} />
-          <ProfileDetail label="Date of birth" value={formatDate(user.dateOfBirth)} />
-          <ProfileDetail label="Country of residence" value={user.countryOfResidence} />
-          <ProfileDetail label="State of origin" value={user.stateOfOrigin} />
-          <ProfileDetail label="LGA" value={user.LGA} />
+          <ProfileDetail label="Gender" value={user.gender ?? ""} />
+          <ProfileDetail label="Date of birth" value={formatDate(user.dateOfBirth ?? "")} />
+          <ProfileDetail label="Country of residence" value={user.countryOfResidence ?? ""} />
+          <ProfileDetail label="State of origin" value={user.stateOfOrigin ?? ""} />
+          <ProfileDetail label="LGA" value={user.LGA ?? ""} />
           <ProfileDetail
             label="House address"
-            value={user.houseAddress}
+            value={user.houseAddress ?? ""}
             className="sm:col-span-2"
           />
         </div>
@@ -311,7 +314,13 @@ function UserProfile({
         <ProfileDetail label="Last active" value={user.lastActive} />
         <ProfileDetail
           label="KYC verification"
-          value={user.isKYCVerified ? "Verified" : "Not verified"}
+          value={
+            user.isKYCVerified === undefined
+              ? "Unknown"
+              : user.isKYCVerified
+                ? "Verified"
+                : "Not verified"
+          }
         />
         <ProfileDetail label="Account status" value={user.status} />
       </div>
@@ -335,17 +344,21 @@ function EditUserForm({
     email: user.email,
     phone: user.phone,
     role: user.role,
-    gender: user.gender,
-    stateOfOrigin: user.stateOfOrigin,
-    LGA: user.LGA,
-    houseAddress: user.houseAddress,
-    countryOfResidence: user.countryOfResidence,
-    dateOfBirth: user.dateOfBirth,
-    allergies: user.allergies,
-    disLikes: user.disLikes,
+    gender: user.gender ?? "",
+    stateOfOrigin: user.stateOfOrigin ?? "",
+    LGA: user.LGA ?? "",
+    houseAddress: user.houseAddress ?? "",
+    countryOfResidence: user.countryOfResidence ?? "",
+    dateOfBirth: user.dateOfBirth ?? "",
+    allergies: user.allergies ?? [],
+    disLikes: user.disLikes ?? [],
   }));
-  const [allergiesInput, setAllergiesInput] = useState(user.allergies.join(", "));
-  const [dislikesInput, setDislikesInput] = useState(user.disLikes.join(", "));
+  const [allergiesInput, setAllergiesInput] = useState(
+    (user.allergies ?? []).join(", "),
+  );
+  const [dislikesInput, setDislikesInput] = useState(
+    (user.disLikes ?? []).join(", "),
+  );
 
   const updateField = (field: UserTextField, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -400,7 +413,7 @@ function EditUserForm({
             onChange={(event) => updateField("role", event.target.value)}
             className={inputClassName}
           >
-            <option>Student</option>
+            <option>User</option>
             <option>Admin</option>
           </select>
         </FormField>
@@ -522,11 +535,19 @@ function ProfileDetail({
   );
 }
 
-function TagList({ label, values }: { label: string; values: string[] }) {
+function TagList({
+  label,
+  values,
+}: {
+  label: string;
+  values?: string[];
+}) {
   return (
     <div className="rounded-xl bg-[#f7f9f7] p-3">
       <p className="text-[11px] font-medium text-[#89948d]">{label}</p>
-      {values.length ? (
+      {values === undefined ? (
+        <p className="mt-1 text-sm font-medium text-[#344239]">Not provided</p>
+      ) : values.length ? (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {values.map((value) => (
             <span
@@ -546,15 +567,24 @@ function TagList({ label, values }: { label: string; values: string[] }) {
 
 function StatusBadge({ status }: { status: string }) {
   const isActive = status === "Active";
+  const isInactive = status === "Inactive";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-        isActive ? "bg-[#eaf6ee] text-[#27804a]" : "bg-[#fff0eb] text-[#cf6245]"
+        isActive
+          ? "bg-[#eaf6ee] text-[#27804a]"
+          : isInactive
+            ? "bg-[#fff0eb] text-[#cf6245]"
+            : "bg-[#f0f1f3] text-[#858896]"
       }`}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${
-          isActive ? "bg-[#31a15b]" : "bg-[#e37958]"
+          isActive
+            ? "bg-[#31a15b]"
+            : isInactive
+              ? "bg-[#e37958]"
+              : "bg-[#9a9ca5]"
         }`}
       />
       {status}
