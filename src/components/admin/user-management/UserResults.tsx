@@ -32,7 +32,10 @@ export default function UserResults({
           <article key={user.id} className="p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <UserAvatar name={user.name} />
+                <UserAvatar
+                  name={user.name}
+                  profilePicture={user.profilePicture}
+                />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[#26342b]">
                     {user.name}
@@ -84,7 +87,10 @@ export default function UserResults({
               >
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <UserAvatar name={user.name} />
+                    <UserAvatar
+                      name={user.name}
+                      profilePicture={user.profilePicture}
+                    />
                     <div>
                       <p className="whitespace-nowrap text-sm font-semibold text-[#26342b]">
                         {user.name}
@@ -237,7 +243,13 @@ function EmptyState() {
   );
 }
 
-function UserAvatar({ name }: { name: string }) {
+function UserAvatar({
+  name,
+  profilePicture,
+}: {
+  name: string;
+  profilePicture?: string;
+}) {
   const initials = name
     .trim()
     .split(/\s+/)
@@ -247,10 +259,19 @@ function UserAvatar({ name }: { name: string }) {
 
   return (
     <span
-      aria-hidden="true"
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eef5f0] text-[#31844d]"
+      aria-label={name ? `${name}'s avatar` : "User avatar"}
+      className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#eef5f0] text-[#31844d]"
     >
-      {initials || <UserRound className="h-5 w-5" />}
+      {profilePicture ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={profilePicture}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        initials || <UserRound className="h-5 w-5" aria-hidden="true" />
+      )}
     </span>
   );
 }

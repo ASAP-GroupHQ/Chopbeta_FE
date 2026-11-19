@@ -16,6 +16,7 @@ import type {
   AdminFeedback,
   FeedbackCategory,
   FeedbackOverviewItem,
+  FeedbackSentiment,
   FeedbackStats as FeedbackStatsData,
   FeedbackStatus,
 } from "@/types/admin-feedback";
@@ -27,15 +28,21 @@ export default function FeedbackPage() {
     useState<FeedbackStatsData | null>(null);
   const [overview, setOverview] = useState<FeedbackOverviewItem[]>([]);
   const [loadError, setLoadError] = useState("");
+  const [summaryErrors, setSummaryErrors] = useState<
+    Partial<Record<"stats" | "overview", string>>
+  >({});
   const [searchDraft, setSearchDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<
-    "All Types" | FeedbackCategory
+    "All Types" | FeedbackSentiment
   >("All Types");
   const [selectedStatus, setSelectedStatus] = useState<
     "All Status" | FeedbackStatus
   >("All Status");
   const [selectedCategory, setSelectedCategory] = useState<
+    "All Categories" | FeedbackCategory
+  >("All Categories");
+  const [selectedOverviewCategory, setSelectedOverviewCategory] = useState<
     "All Categories" | FeedbackCategory
   >("All Categories");
   const [isShowingAll, setIsShowingAll] = useState(false);
@@ -46,15 +53,18 @@ export default function FeedbackPage() {
 
   useEffect(() => {
     let active = true;
-    const loadFeedbackData = async () => {
+    const loadFeedback = async () => {
       try {
-        const items = await adminFeedbackService.getFeedback();
-        const stats = await adminFeedbackService.getStats();
-        const categories = await adminFeedbackService.getCategoryOverview();
+        const items = await adminFeedbackService.getFeedback({
+          category:
+            selectedCategory === "All Categories"
+              ? undefined
+              : selectedCategory,
+          type: selectedType === "All Types" ? undefined : selectedType,
+          status: selectedStatus === "All Status" ? undefined : selectedStatus,
+        });
         if (!active) return;
         setFeedbackItems(items);
-        setFeedbackStats(stats);
-        setOverview(categories);
         setLoadError("");
       } catch (error: unknown) {
         if (!active) return;
@@ -67,27 +77,76 @@ export default function FeedbackPage() {
         );
       }
     };
-    void loadFeedbackData();
+    void loadFeedback();
     return () => {
       active = false;
     };
-  }, [toast]);
+  }, [selectedCategory, selectedStatus, selectedType, toast]);
+
+  useEffect(() => {
+    let active = true;
+    adminFeedbackService
+      .getStats()
+      .then((stats) => {
+        if (!active) return;
+        setFeedbackStats(stats);
+        setSummaryErrors((current) => {
+          const next = { ...current };
+          delete next.stats;
+          return next;
+        });
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setSummaryErrors((current) => ({
+          ...current,
+          stats: `Could not load feedback statistics: ${
+            error instanceof Error ? error.message : "Please try again."
+          }`,
+        }));
+      });
+    adminFeedbackService
+      .getCategoryOverview()
+      .then((categories) => {
+        if (!active) return;
+        setOverview(categories);
+        setSummaryErrors((current) => {
+          const next = { ...current };
+          delete next.overview;
+          return next;
+        });
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setSummaryErrors((current) => ({
+          ...current,
+          overview: `Could not load feedback overview: ${
+            error instanceof Error ? error.message : "Please try again."
+          }`,
+        }));
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filteredFeedback = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return feedbackItems.filter((item) => {
       const matchesQuery =
         !query ||
-        [item.name, item.email, item.type, item.message].some((value) =>
+        [
+          item.name,
+          item.email,
+          item.type,
+          item.category,
+          item.message,
+        ].some((value) =>
           value.toLowerCase().includes(query),
         );
-      const matchesType =
-        selectedType === "All Types" || item.type === selectedType;
-      const matchesStatus =
-        selectedStatus === "All Status" || item.status === selectedStatus;
-      return matchesQuery && matchesType && matchesStatus;
+      return matchesQuery;
     });
-  }, [feedbackItems, searchQuery, selectedStatus, selectedType]);
+  }, [feedbackItems, searchQuery]);
 
   const visibleFeedback = isShowingAll
     ? filteredFeedback
@@ -139,6 +198,7 @@ export default function FeedbackPage() {
     const columns = [
       "User",
       "Email",
+      "Feedback Category",
       "Feedback Type",
       "Rating",
       "Message",
@@ -148,6 +208,7 @@ export default function FeedbackPage() {
     const rows = feedbackItems.map((item) => [
       item.name,
       item.email,
+      item.category,
       item.type,
       String(item.rating),
       item.message,
@@ -193,6 +254,7 @@ export default function FeedbackPage() {
       .map(
         (item) => `<tr>
           <td>${escapeHtml(item.name)}</td>
+          <td>${escapeHtml(item.category)}</td>
           <td>${escapeHtml(item.type)}</td>
           <td>${escapeHtml(String(item.rating))}/5</td>
           <td>${escapeHtml(item.message)}</td>
@@ -223,7 +285,7 @@ export default function FeedbackPage() {
           <h1>ChopBeta User Support Report</h1>
           <p>Generated ${escapeHtml(new Date().toLocaleDateString())} · ${feedbackItems.length} feedback entries</p>
           <table>
-            <thead><tr><th>User</th><th>Feedback Type</th><th>Rating</th><th>Message</th><th>Date</th><th>Status</th></tr></thead>
+            <thead><tr><th>User</th><th>Feedback Category</th><th>Feedback Type</th><th>Rating</th><th>Message</th><th>Date</th><th>Status</th></tr></thead>
             <tbody>${reportRows}</tbody>
           </table>
           <script>window.onafterprint = () => window.close(); window.onload = () => window.print();</script>
@@ -242,20 +304,27 @@ export default function FeedbackPage() {
       >
         <FeedbackHeader />
         <FeedbackStats stats={feedbackStats} />
+        {Object.entries(summaryErrors).map(([key, error]) => (
+          <p key={key} role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
+        ))}
         <FeedbackFilters
           searchQuery={searchDraft}
+          selectedCategory={selectedCategory}
           selectedType={selectedType}
           selectedStatus={selectedStatus}
           onSearchChange={setSearchDraft}
           onSearch={() => setSearchQuery(searchDraft)}
+          onCategoryChange={setSelectedCategory}
           onTypeChange={setSelectedType}
           onStatusChange={setSelectedStatus}
         />
         <section className="grid gap-3 xl:grid-cols-2">
           <FeedbackOverview
             overview={overview}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+            selectedCategory={selectedOverviewCategory}
+            onCategoryChange={setSelectedOverviewCategory}
           />
           <FeedbackQuickInsights overview={overview} />
         </section>

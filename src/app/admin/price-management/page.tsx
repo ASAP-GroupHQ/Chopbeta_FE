@@ -29,11 +29,22 @@ const containerVariants = {
 export default function PriceManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [prices, setPrices] = useState<ManagedPrice[]>([]);
-  const [stats, setStats] = useState<PriceStatsData | null>(null);
+  const [stats, setStats] = useState<Partial<PriceStatsData>>({});
   const [mealToDelete, setMealToDelete] = useState<ManagedPrice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [totalMealsError, setTotalMealsError] = useState("");
   const toast = useToast();
+
+  const loadTotalMeals = useCallback(
+    async (isActive: () => boolean = () => true) => {
+      const totalMeals = await adminMealsService.getTotalMeals();
+      if (!isActive()) return;
+      setStats((current) => ({ ...current, totalMeals }));
+      setTotalMealsError("");
+    },
+    [],
+  );
 
   useEffect(() => {
     let active = true;
@@ -46,14 +57,14 @@ export default function PriceManagementPage() {
           adminMealsService.toPrice(meal.estimatedPrice),
         );
         setPrices(rows);
-        setStats({
-          totalMeals: meals.length,
+        setStats((current) => ({
+          ...current,
           averagePrice: amounts.length
             ? amounts.reduce((sum, amount) => sum + amount, 0) / amounts.length
             : 0,
           highestPrice: amounts.length ? Math.max(...amounts) : 0,
           lowestPrice: amounts.length ? Math.min(...amounts) : 0,
-        });
+        }));
         setLoadError("");
       })
       .catch((error: unknown) => {
@@ -70,10 +81,25 @@ export default function PriceManagementPage() {
       .finally(() => {
         if (active) setIsLoading(false);
       });
+    adminMealsService
+      .getTotalMeals()
+      .then((totalMeals) => {
+        if (!active) return;
+        setStats((current) => ({ ...current, totalMeals }));
+        setTotalMealsError("");
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setTotalMealsError(
+          error instanceof Error
+            ? error.message
+            : "Could not load total meals.",
+        );
+      });
     return () => {
       active = false;
     };
-  }, [toast]);
+  }, [loadTotalMeals, toast]);
 
   const closeDeleteDialog = useCallback(() => {
     setMealToDelete(null);
@@ -108,7 +134,10 @@ export default function PriceManagementPage() {
             : price,
         );
         setPrices(nextPrices);
-        setStats(calculatePriceStats(nextPrices));
+        setStats((current) => ({
+          ...current,
+          ...calculatePriceStats(nextPrices),
+        }));
         toast.success("Meal price updated.");
       } catch (error) {
         toast.error(
@@ -126,7 +155,15 @@ export default function PriceManagementPage() {
       await adminMealsService.deleteMeal(mealToDelete.id);
       const nextPrices = prices.filter((item) => item.id !== mealToDelete.id);
       setPrices(nextPrices);
-      setStats(calculatePriceStats(nextPrices));
+      setStats((current) => ({
+        ...current,
+        ...calculatePriceStats(nextPrices),
+      }));
+      loadTotalMeals().catch((error: unknown) => {
+        setTotalMealsError(
+          error instanceof Error ? error.message : "Could not load total meals.",
+        );
+      });
       setMealToDelete(null);
       toast.success("Meal deleted.");
     } catch (error) {
@@ -135,7 +172,7 @@ export default function PriceManagementPage() {
         error instanceof Error ? error.message : "Please try again.",
       );
     }
-  }, [mealToDelete, prices, toast]);
+  }, [loadTotalMeals, mealToDelete, prices, toast]);
 
   return (
     <>
@@ -150,6 +187,11 @@ export default function PriceManagementPage() {
         {loadError && (
           <p role="alert" className="text-sm text-red-600">
             Could not load meal prices: {loadError}
+          </p>
+        )}
+        {totalMealsError && (
+          <p role="alert" className="text-sm text-red-600">
+            Could not load total meals: {totalMealsError}
           </p>
         )}
         <PriceFilters
@@ -202,10 +244,11 @@ function toPriceRow(meal: AdminMeal): ManagedPrice {
   };
 }
 
-function calculatePriceStats(prices: ManagedPrice[]): PriceStatsData {
+function calculatePriceStats(
+  prices: ManagedPrice[],
+): Pick<PriceStatsData, "averagePrice" | "highestPrice" | "lowestPrice"> {
   const amounts = prices.map((price) => price.newPrice);
   return {
-    totalMeals: prices.length,
     averagePrice: amounts.length
       ? amounts.reduce((sum, amount) => sum + amount, 0) / amounts.length
       : 0,

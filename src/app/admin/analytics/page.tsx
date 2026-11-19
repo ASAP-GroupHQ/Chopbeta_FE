@@ -13,6 +13,18 @@ import type {
 } from "@/types/admin-analytics";
 import { adminAnalyticsService } from "@/services/admin-analytics";
 
+const EMPTY_ANALYTICS_DATA: AdminAnalyticsData = {
+  mealPlans: [],
+  userGrowth: [],
+  mealCategories: [],
+  topMeals: [],
+  totalMealPlans: null,
+  totalUsers: null,
+  activeUsers: null,
+  averageMealPrice: null,
+  growthPercentage: null,
+};
+
 export default function AnalyticsPage() {
   const today = new Date();
   const thirtyDaysAgo = new Date(today);
@@ -20,8 +32,10 @@ export default function AnalyticsPage() {
   const [selectedRange, setSelectedRange] =
     useState<AnalyticsTimeRange>("30 Days");
   const [showCustomRange, setShowCustomRange] = useState(false);
-  const [data, setData] = useState<AdminAnalyticsData | null>(null);
-  const [error, setError] = useState("");
+  const [data, setData] = useState(EMPTY_ANALYTICS_DATA);
+  const [endpointErrors, setEndpointErrors] = useState<Record<string, string>>(
+    {},
+  );
   const [customStartDate, setCustomStartDate] = useState(
     toDateInputValue(thirtyDaysAgo),
   );
@@ -34,28 +48,61 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     let active = true;
-    adminAnalyticsService
-      .getAnalytics(
+    const loadEndpoint = <T,>(
+      key: string,
+      request: Promise<T>,
+      apply: (result: T) => Partial<AdminAnalyticsData>,
+    ) => {
+      request
+        .then((result) => {
+          if (!active) return;
+          setData((current) => ({ ...current, ...apply(result) }));
+          setEndpointErrors((current) => {
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+        })
+        .catch((cause: unknown) => {
+          if (!active) return;
+          const message =
+            cause instanceof Error ? cause.message : "Please try again.";
+          setEndpointErrors((current) => ({
+            ...current,
+            [key]: `Could not load ${key}: ${message}`,
+          }));
+        });
+    };
+    const customRange =
+      selectedRange === "Custom"
+        ? { startDate: customStartDate, endDate: customEndDate }
+        : undefined;
+
+    loadEndpoint(
+      "Generated meal analysis",
+      adminAnalyticsService.getGeneratedMealsAnalysis(
         selectedRange,
-        selectedRange === "Custom"
-          ? { startDate: customStartDate, endDate: customEndDate }
-          : undefined,
-      )
-      .then((result) => {
-        if (active) {
-          setData(result);
-          setError("");
-        }
-      })
-      .catch((cause: unknown) => {
-        if (active) {
-          setError(
-            cause instanceof Error
-              ? cause.message
-              : "Could not load analytics.",
-          );
-        }
-      });
+        customRange,
+      ),
+      (result) => result,
+    );
+    loadEndpoint(
+      "User growth",
+      adminAnalyticsService.getGrowthRate(selectedRange),
+      (result) => result,
+    );
+    loadEndpoint(
+      "Analytics records",
+      adminAnalyticsService.getAnalyticsRecord(),
+      (result) => result,
+    );
+    loadEndpoint(
+      "Top meals",
+      adminAnalyticsService
+        .getTopMeals(selectedRange)
+        .then((topMeals) => ({ topMeals })),
+      (result) => result,
+    );
     return () => {
       active = false;
     };
@@ -80,29 +127,21 @@ export default function AnalyticsPage() {
             : setCustomEndDate(value)
         }
       />
-      {error && (
-        <p role="alert" className="text-sm text-red-600">
-          Could not load analytics: {error}
+      {Object.entries(endpointErrors).map(([endpoint, error]) => (
+        <p key={endpoint} role="alert" className="text-sm text-red-600">
+          {error}
         </p>
-      )}
-      {!data && !error ? (
-        <p role="status" className="text-sm text-gray-500">
-          Loading analytics…
-        </p>
-      ) : data ? (
-        <>
-          <AnalyticsStats data={data} />
-          <AnalyticsCharts
-            data={data}
-            selectedRange={selectedRange}
-            onSelectRange={selectRange}
-          />
-          <section className="grid gap-3 lg:grid-cols-2">
-            <TopMeals meals={data.topMeals} />
-            <QuickInsights data={data} />
-          </section>
-        </>
-      ) : null}
+      ))}
+      <AnalyticsStats data={data} />
+      <AnalyticsCharts
+        data={data}
+        selectedRange={selectedRange}
+        onSelectRange={selectRange}
+      />
+      <section className="grid gap-3 lg:grid-cols-2">
+        <TopMeals meals={data.topMeals} />
+        <QuickInsights data={data} />
+      </section>
     </motion.div>
   );
 }

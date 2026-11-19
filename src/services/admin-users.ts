@@ -3,7 +3,6 @@ import type {
   AdminUser,
   AdminUserPage,
   AdminUserRecord,
-  AdminUserSummary,
 } from "@/types/admin-users";
 
 interface ApiEnvelope<T> {
@@ -42,6 +41,7 @@ const mapUser = (
   handle: record.username ? `@${record.username}` : record.email,
   email: record.email,
   phone: record.phoneNumber ?? "—",
+  profilePicture: record.profilePicture || record.avatar || record.image || undefined,
   role:
     record.role?.toLowerCase() === "admin"
       ? "Admin"
@@ -78,27 +78,6 @@ async function getStatusPage(
   );
 }
 
-async function getAllStatusIds(
-  status: "activeUsers" | "inactiveUsers",
-): Promise<Set<string>> {
-  const ids = new Set<string>();
-  const pageSize = 100;
-  let page = 1;
-  let totalPages = 1;
-  while (page <= totalPages) {
-    const response = await getStatusPage(status, page, pageSize);
-    const payload = response.data.data;
-    const users = payload[status];
-    if (!Array.isArray(users) || !Number.isFinite(payload.totalPages)) {
-      throw new Error(`The ${status} API response was incomplete.`);
-    }
-    users.forEach((user) => ids.add(user._id));
-    totalPages = Math.max(1, payload.totalPages!);
-    page += 1;
-  }
-  return ids;
-}
-
 export const adminUsersService = {
   async getUsersPage(page: number, pageSize: number): Promise<AdminUserPage> {
     const response = await apiClient.get<ApiEnvelope<UserPagePayload>>(
@@ -131,10 +110,6 @@ export const adminUsersService = {
   },
 
   async getAllUsers(): Promise<AdminUser[]> {
-    const [activeIds, inactiveIds] = await Promise.all([
-      getAllStatusIds("activeUsers"),
-      getAllStatusIds("inactiveUsers"),
-    ]);
     const first = await apiClient.get<ApiEnvelope<UserPagePayload>>(
       "/auth/user/all-users",
       { params: { page: 1, pageSize: 100 } },
@@ -157,27 +132,30 @@ export const adminUsersService = {
     return records.map((record) =>
       mapUser(
         record,
-        activeIds.has(record._id)
+        record.isActive === true
           ? "Active"
-          : inactiveIds.has(record._id)
+          : record.isActive === false
             ? "Inactive"
             : "Unknown",
       ),
     );
   },
 
-  async getSummary(): Promise<AdminUserSummary> {
-    const [users, active, inactive] = await Promise.all([
-      apiClient.get<ApiEnvelope<UserPagePayload>>("/auth/user/all-users", {
-        params: { page: 1, pageSize: 1 },
-      }),
-      getStatusPage("activeUsers", 1, 1),
-      getStatusPage("inactiveUsers", 1, 1),
-    ]);
-    return {
-      totalUsers: requireCount(users.data.data.totalUsers, "total users"),
-      activeUsers: requireCount(active.data.data.count, "active users"),
-      inactiveUsers: requireCount(inactive.data.data.count, "inactive users"),
-    };
+  async getTotalUsers(): Promise<number> {
+    const response = await apiClient.get<ApiEnvelope<UserPagePayload>>(
+      "/auth/user/all-users",
+      { params: { page: 1, pageSize: 1 } },
+    );
+    return requireCount(response.data.data.totalUsers, "total users");
+  },
+
+  async getActiveUsers(): Promise<number> {
+    const response = await getStatusPage("activeUsers", 1, 1);
+    return requireCount(response.data.data.count, "active users");
+  },
+
+  async getInactiveUsers(): Promise<number> {
+    const response = await getStatusPage("inactiveUsers", 1, 1);
+    return requireCount(response.data.data.count, "inactive users");
   },
 };

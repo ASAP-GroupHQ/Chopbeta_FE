@@ -38,6 +38,7 @@ export default function AddMealDialog({
 }: AddMealDialogProps) {
   const [form, setForm] = useState(initialForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const closeDialog = useCallback(() => {
@@ -58,6 +59,13 @@ export default function AddMealDialog({
       document.body.style.overflow = previousOverflow;
     };
   }, [isOpen]);
+
+  useEffect(
+    () => () => {
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    },
+    [imagePreviewUrl],
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -234,12 +242,37 @@ export default function AddMealDialog({
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(event) =>
-                        setImageFile(event.target.files?.[0] ?? null)
-                      }
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        setImageFile(file);
+                        setImagePreviewUrl(
+                          file ? URL.createObjectURL(file) : null,
+                        );
+                      }}
                       className="mt-1.5 block w-full text-sm text-[#526056] file:mr-3 file:rounded-lg file:border-0 file:bg-[#eaf4ee] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#247443]"
                       disabled={isSubmitting}
                     />
+                    <span className="mt-1 block text-[11px] font-normal text-[#829087]">
+                      The selected image will be uploaded when you add the meal.
+                    </span>
+                    {imagePreviewUrl && imageFile && (
+                      <span className="mt-3 flex items-center gap-3 rounded-xl border border-[#e5ede7] bg-[#f8fbf8] p-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imagePreviewUrl}
+                          alt={`Preview of ${imageFile.name}`}
+                          className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                        />
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-semibold text-[#344239]">
+                            {imageFile.name}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] font-normal text-[#829087]">
+                            Ready to upload
+                          </span>
+                        </span>
+                      </span>
+                    )}
                   </label>
                   <label className="block text-xs font-semibold text-[#526056] sm:col-span-2">
                     Description

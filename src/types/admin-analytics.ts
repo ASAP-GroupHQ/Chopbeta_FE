@@ -33,7 +33,7 @@ export interface AdminAnalyticsData {
   userGrowth: UserGrowthPoint[];
   mealCategories: MealCategoryPoint[];
   topMeals: AnalyticsTopMeal[];
-  totalMealPlans: number;
+  totalMealPlans: number | null;
   totalUsers: number | null;
   activeUsers: number | null;
   averageMealPrice: number | null;

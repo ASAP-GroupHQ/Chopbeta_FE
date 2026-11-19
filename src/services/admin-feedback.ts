@@ -4,6 +4,7 @@ import type {
   AdminFeedback,
   FeedbackCategory,
   FeedbackOverviewItem,
+  FeedbackSentiment,
   FeedbackStats,
   FeedbackStatus,
 } from "@/types/admin-feedback";
@@ -45,10 +46,22 @@ const categories: Record<FeedbackRecord["category"], FeedbackCategory> = {
   complaint: "Complaint",
 };
 
+const sentiments: Record<FeedbackRecord["type"], FeedbackSentiment> = {
+  positive: "Positive",
+  neutral: "Neutral",
+  negative: "Negative",
+};
+
 const statuses: Record<FeedbackRecord["status"], FeedbackStatus> = {
   new: "New",
   reviewing: "In progress",
   resolved: "Resolved",
+};
+
+const apiStatuses: Record<FeedbackStatus, FeedbackRecord["status"]> = {
+  New: "new",
+  "In progress": "reviewing",
+  Resolved: "resolved",
 };
 
 const colors: Record<FeedbackCategory, string> = {
@@ -98,36 +111,47 @@ async function getWithRateLimitRetry<T>(
 }
 
 export const adminFeedbackService = {
-  async getFeedback(): Promise<AdminFeedback[]> {
-    const feedback: AdminFeedback[] = [];
-    for (const status of ["new", "reviewing", "resolved"] as const) {
-      const payload = await getWithRateLimitRetry<FeedbackListPayload>(
-        "/admin/feedback/get-feedback",
-        { params: { status } },
-      );
-      const list = payload.result;
-      if (!Array.isArray(list)) {
-        throw new Error("The feedback API response was invalid.");
-      }
-      feedback.push(...list.map((item) => {
-        const type = categories[item.category];
-        const statusLabel = statuses[item.status];
-        if (!type || !statusLabel) {
-          throw new Error("The feedback API returned an unsupported category or status.");
-        }
-        return {
-          id: item._id,
-          name: item.email || item.userId,
-          email: item.email,
-          type,
-          rating: item.rating,
-          message: item.message,
-          date: new Date(item.createdAt).toLocaleDateString(),
-          status: statusLabel,
-        };
-      }));
+  async getFeedback(filters: {
+    category?: FeedbackCategory;
+    type?: FeedbackSentiment;
+    status?: FeedbackStatus;
+  } = {}): Promise<AdminFeedback[]> {
+    const params: Record<string, string> = {};
+    if (filters.category) {
+      params.category = filters.category.toLowerCase();
     }
-    return feedback;
+    if (filters.type) params.type = filters.type.toLowerCase();
+    if (filters.status) params.status = apiStatuses[filters.status];
+
+    const payload = await getWithRateLimitRetry<FeedbackListPayload>(
+      "/admin/feedback/get-feedback",
+      Object.keys(params).length > 0 ? { params } : undefined,
+    );
+    if (!Array.isArray(payload.result)) {
+      throw new Error("The feedback API response was invalid.");
+    }
+
+    return payload.result.map((item) => {
+      const category = categories[item.category];
+      const type = sentiments[item.type];
+      const status = statuses[item.status];
+      if (!category || !type || !status) {
+        throw new Error(
+          "The feedback API returned an unsupported category, type, or status.",
+        );
+      }
+      return {
+        id: item._id,
+        name: item.email || item.userId,
+        email: item.email,
+        category,
+        type,
+        rating: item.rating,
+        message: item.message,
+        date: new Date(item.createdAt).toLocaleDateString(),
+        status,
+      };
+    });
   },
 
   async getStats(): Promise<FeedbackStats> {

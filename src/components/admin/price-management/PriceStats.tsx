@@ -1,7 +1,11 @@
 import { PRICE_STATS } from "@/constants/admin-management";
 import type { PriceStats as PriceStatsData } from "@/types/admin-prices";
 
-export default function PriceStats({ stats }: { stats: PriceStatsData | null }) {
+export default function PriceStats({
+  stats,
+}: {
+  stats: Partial<PriceStatsData> | null;
+}) {
   const values: Record<string, number | undefined> = {
     "Total Meal": stats?.totalMeals,
     "Average Price": stats?.averagePrice,

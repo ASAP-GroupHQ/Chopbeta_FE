@@ -2,7 +2,6 @@ import { apiClient } from "@/services/api-client";
 import type {
   AdminMeal,
   DecimalValue,
-  MealStats,
   MealWriteData,
 } from "@/types/admin-meals";
 
@@ -61,28 +60,40 @@ export const adminMealsService = {
     return meals;
   },
 
-  async getStats(): Promise<MealStats> {
-    const [total, active, inactive, categories] = await Promise.all([
-      apiClient.get<ApiEnvelope<number>>("/admin/dashboard/total-meals"),
-      apiClient.get<ApiEnvelope<MealCollection>>("/admin/meals/active-meals"),
-      apiClient.get<ApiEnvelope<MealCollection>>(
-        "/admin/meals/inactive-meals",
-      ),
-      apiClient.get<ApiEnvelope<{ categories?: number }>>(
-        "/admin/meals/categories",
-      ),
-    ]);
-    const totalMeals = Number(total.data.data);
-    const categoryCount = Number(categories.data.data.categories);
-    if (!Number.isFinite(totalMeals) || !Number.isFinite(categoryCount)) {
-      throw new Error("The meal statistics API response was invalid.");
+  async getTotalMeals(): Promise<number> {
+    const response = await apiClient.get<ApiEnvelope<number>>(
+      "/admin/dashboard/total-meals",
+    );
+    const total = Number(response.data.data);
+    if (!Number.isFinite(total)) {
+      throw new Error("The total meals API response was invalid.");
     }
-    return {
-      totalMeals,
-      activeMeals: countMeals(active.data.data, "active meals"),
-      inactiveMeals: countMeals(inactive.data.data, "inactive meals"),
-      categories: categoryCount,
-    };
+    return total;
+  },
+
+  async getActiveMeals(): Promise<number> {
+    const response = await apiClient.get<ApiEnvelope<MealCollection>>(
+      "/admin/meals/active-meals",
+    );
+    return countMeals(response.data.data, "active meals");
+  },
+
+  async getInactiveMeals(): Promise<number> {
+    const response = await apiClient.get<ApiEnvelope<MealCollection>>(
+      "/admin/meals/inactive-meals",
+    );
+    return countMeals(response.data.data, "inactive meals");
+  },
+
+  async getCategoryCount(): Promise<number> {
+    const response = await apiClient.get<
+      ApiEnvelope<{ categories?: number }>
+    >("/admin/meals/categories");
+    const count = Number(response.data.data.categories);
+    if (!Number.isFinite(count)) {
+      throw new Error("The meal categories API response was invalid.");
+    }
+    return count;
   },
 
   async createMeal(data: MealWriteData): Promise<string> {

@@ -34,7 +34,10 @@ const containerVariants = {
 export default function MealManagementPage() {
   const toast = useToast();
   const [meals, setMeals] = useState<ManagedMeal[]>([]);
-  const [mealStats, setMealStats] = useState<MealStatsData | null>(null);
+  const [mealStats, setMealStats] = useState<Partial<MealStatsData>>({});
+  const [mealStatsErrors, setMealStatsErrors] = useState<
+    Partial<Record<keyof MealStatsData, string>>
+  >({});
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
@@ -55,23 +58,52 @@ export default function MealManagementPage() {
     setActiveMealDialog(null);
   }, []);
 
-  const loadMeals = useCallback(async () => {
-    const [mealRecords, stats] = await Promise.all([
-      adminMealsService.getMeals(),
-      adminMealsService.getStats(),
-    ]);
-    setMeals(mealRecords.map(toManagedMeal));
-    setMealStats(stats);
-  }, []);
+  const loadMeals = useCallback(
+    async (isActive: () => boolean = () => true) => {
+      const mealRecords = await adminMealsService.getMeals();
+      if (isActive()) setMeals(mealRecords.map(toManagedMeal));
+    },
+    [],
+  );
+
+  const loadMealStats = useCallback(
+    (isActive: () => boolean = () => true) => {
+      const loadStat = (
+        key: keyof MealStatsData,
+        request: Promise<number>,
+      ) => {
+        request
+          .then((value) => {
+            if (!isActive()) return;
+            setMealStats((current) => ({ ...current, [key]: value }));
+            setMealStatsErrors((current) => {
+              const next = { ...current };
+              delete next[key];
+              return next;
+            });
+          })
+          .catch((error: unknown) => {
+            if (!isActive()) return;
+            const message =
+              error instanceof Error ? error.message : "Please try again.";
+            setMealStatsErrors((current) => ({
+              ...current,
+              [key]: `Could not load ${key}: ${message}`,
+            }));
+          });
+      };
+
+      loadStat("totalMeals", adminMealsService.getTotalMeals());
+      loadStat("activeMeals", adminMealsService.getActiveMeals());
+      loadStat("inactiveMeals", adminMealsService.getInactiveMeals());
+      loadStat("categories", adminMealsService.getCategoryCount());
+    },
+    [],
+  );
 
   useEffect(() => {
     let active = true;
-    Promise.all([adminMealsService.getMeals(), adminMealsService.getStats()])
-      .then(([mealRecords, stats]) => {
-        if (!active) return;
-        setMeals(mealRecords.map(toManagedMeal));
-        setMealStats(stats);
-      })
+    loadMeals(() => active)
       .catch((error: unknown) => {
         if (active) {
           toast.error(
@@ -83,10 +115,12 @@ export default function MealManagementPage() {
       .finally(() => {
         if (active) setIsLoading(false);
       });
+    loadMealStats(() => active);
+
     return () => {
       active = false;
     };
-  }, [toast]);
+  }, [loadMealStats, loadMeals, toast]);
 
   const categories = useMemo(
     () => [...new Set(meals.map((meal) => meal.category))].sort(),
@@ -149,6 +183,7 @@ export default function MealManagementPage() {
     setIsAddingMeal(true);
     try {
       const id = await adminMealsService.createMeal(meal);
+      loadMealStats();
       if (image) {
         try {
           await adminMealsService.uploadMealImage(id, image);
@@ -243,6 +278,7 @@ export default function MealManagementPage() {
       setMeals((previousMeals) =>
         previousMeals.filter((meal) => meal.id !== mealToDelete.id),
       );
+      loadMealStats();
       setActiveMealDialog(null);
       toast.success("Meal deleted successfully.");
     } catch (error) {
@@ -279,9 +315,13 @@ export default function MealManagementPage() {
           ? {
               ...current,
               activeMeals:
-                current.activeMeals + (meal.status === "Active" ? -1 : 1),
+                current.activeMeals === undefined
+                  ? undefined
+                  : current.activeMeals + (meal.status === "Active" ? -1 : 1),
               inactiveMeals:
-                current.inactiveMeals + (meal.status === "Active" ? 1 : -1),
+                current.inactiveMeals === undefined
+                  ? undefined
+                  : current.inactiveMeals + (meal.status === "Active" ? 1 : -1),
             }
           : current,
       );
@@ -306,6 +346,11 @@ export default function MealManagementPage() {
       >
         <MealManagementHeader onAddMeal={() => setIsAddMealOpen(true)} />
         <MealStats stats={mealStats} />
+        {Object.entries(mealStatsErrors).map(([key, error]) => (
+          <p key={key} role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
+        ))}
         {isLoading && (
           <p role="status" className="text-sm text-gray-500">
             Loading meals…

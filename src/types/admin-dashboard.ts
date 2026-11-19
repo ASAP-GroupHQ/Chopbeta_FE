@@ -13,13 +13,3 @@ export interface AdminTopMeal {
   count: number;
 }
 
-export interface AdminDashboardSummary {
-  totalUsers: number;
-  dailyActiveUsers: number;
-  completedMeals: number;
-  generatedMeals: number;
-  plannedMeals: number;
-  userRetentionRate: string | null;
-  totalMeals: number;
-  generatedMealActivity: AdminMealActivity[];
-}

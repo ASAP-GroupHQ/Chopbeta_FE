@@ -79,7 +79,8 @@ export default function FeedbackDetailsDialog({
               <>
                 <div className="mt-5 grid gap-3 rounded-xl bg-[#f8faf8] p-4 text-sm sm:grid-cols-2">
                   <DialogDetail label="Email" value={feedback.email} />
-                  <DialogDetail label="Feedback type" value={feedback.type} />
+                  <DialogDetail label="Category" value={feedback.category} />
+                  <DialogDetail label="Type" value={feedback.type} />
                   <DialogDetail label="Status" value={feedback.status} />
                   <div>
                     <p className="text-xs text-[#858598]">Rating</p>

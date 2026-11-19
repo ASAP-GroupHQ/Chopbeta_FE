@@ -21,7 +21,7 @@ import {
 import { adminDashboardService } from "@/services/admin-dashboard";
 import { adminAnalyticsService } from "@/services/admin-analytics";
 import type {
-  AdminDashboardSummary,
+  AdminMealActivity,
   AdminTopMeal,
 } from "@/types/admin-dashboard";
 
@@ -46,48 +46,164 @@ export default function AdminDashboardPage() {
     return "Good Evening, Admin!";
   });
   const [selectedWeek, setSelectedWeek] = useState<ChartWeek>("this-week");
-  const [summary, setSummary] = useState<AdminDashboardSummary | null>(null);
+  const [dailyActiveUsers, setDailyActiveUsers] = useState<number | null>(null);
+  const [completedMeals, setCompletedMeals] = useState<number | null>(null);
+  const [plannedMeals, setPlannedMeals] = useState<number | null>(null);
+  const [userRetentionRate, setUserRetentionRate] = useState<string | null>(
+    null,
+  );
+  const [generatedMealActivity, setGeneratedMealActivity] = useState<
+    AdminMealActivity[]
+  >([]);
   const [topMeals, setTopMeals] = useState<AdminTopMeal[]>([]);
-  const [loadError, setLoadError] = useState("");
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+  const [totalMeals, setTotalMeals] = useState<number | null>(null);
+  const [endpointErrors, setEndpointErrors] = useState<Record<string, string>>(
+    {},
+  );
+
+  useEffect(() => {
+    let active = true;
+    const loadEndpoint = <T,>(
+      key: string,
+      request: Promise<T>,
+      onSuccess: (value: T) => void,
+    ) => {
+      request
+        .then((value) => {
+          if (!active) return;
+          onSuccess(value);
+          setEndpointErrors((current) => {
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          const message =
+            error instanceof Error ? error.message : "Please try again.";
+          setEndpointErrors((current) => ({
+            ...current,
+            [key]: `Could not load ${key}: ${message}`,
+          }));
+        });
+    };
+
+    loadEndpoint(
+      "Total users",
+      adminDashboardService.getTotalUsers(),
+      setTotalUsers,
+    );
+    loadEndpoint(
+      "Total meals",
+      adminDashboardService.getTotalMeals(),
+      setTotalMeals,
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
     const date = new Date();
     if (selectedWeek === "last-week") date.setDate(date.getDate() - 7);
     const queryDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    Promise.all([
-      adminDashboardService.getSummary(queryDate),
-      adminAnalyticsService.getTopMeals("7 Days"),
-    ])
-      .then(([dashboardSummary, popularMeals]) => {
-        if (!active) return;
-        setSummary(dashboardSummary);
-        setTopMeals(popularMeals);
-        setLoadError("");
-      })
-      .catch((error: unknown) => {
-        if (active) {
-          setLoadError(
-            error instanceof Error ? error.message : "Could not load dashboard data.",
-          );
-        }
-      });
+    const loadEndpoint = <T,>(
+      key: string,
+      request: Promise<T>,
+      onSuccess: (value: T) => void,
+    ) => {
+      request
+        .then((value) => {
+          if (!active) return;
+          onSuccess(value);
+          setEndpointErrors((current) => {
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          const message =
+            error instanceof Error ? error.message : "Please try again.";
+          setEndpointErrors((current) => ({
+            ...current,
+            [key]: `Could not load ${key}: ${message}`,
+          }));
+        });
+    };
+
+    loadEndpoint(
+      "Daily active users",
+      adminDashboardService.getDailyActiveUsers(queryDate),
+      setDailyActiveUsers,
+    );
+    loadEndpoint(
+      "Completed meals",
+      adminDashboardService.getCompletedMeals(queryDate),
+      setCompletedMeals,
+    );
+    loadEndpoint(
+      "Generated meals",
+      adminDashboardService.getGeneratedMeals(queryDate),
+      setGeneratedMealActivity,
+    );
+    loadEndpoint(
+      "Planned meals",
+      adminDashboardService.getPlannedMeals(queryDate),
+      setPlannedMeals,
+    );
+    loadEndpoint(
+      "Users retention rate",
+      adminDashboardService.getUserRetentionRate(queryDate),
+      setUserRetentionRate,
+    );
     return () => {
       active = false;
     };
   }, [selectedWeek]);
 
+  useEffect(() => {
+    let active = true;
+    adminAnalyticsService
+      .getTopMeals("7 Days")
+      .then((popularMeals) => {
+        if (!active) return;
+        setTopMeals(popularMeals);
+        setEndpointErrors((current) => {
+          const next = { ...current };
+          delete next["Popular meals"];
+          return next;
+        });
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        const message =
+          error instanceof Error ? error.message : "Please try again.";
+        setEndpointErrors((current) => ({
+          ...current,
+          "Popular meals": `Could not load popular meals: ${message}`,
+        }));
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const statValues: Record<string, string> = {
-    "Total Users": summary?.totalUsers.toLocaleString("en-NG") ?? "—",
-    "Daily Active Users": summary?.dailyActiveUsers.toLocaleString("en-NG") ?? "—",
-    "Completed Meals": summary?.completedMeals.toLocaleString("en-NG") ?? "—",
-    "Planned Meals": summary?.plannedMeals.toLocaleString("en-NG") ?? "—",
-    "Users Retention Rate": summary?.userRetentionRate ?? "—",
-    "Meals in Database": summary?.totalMeals.toLocaleString("en-NG") ?? "—",
+    "Total Users": totalUsers?.toLocaleString("en-NG") ?? "—",
+    "Daily Active Users": dailyActiveUsers?.toLocaleString("en-NG") ?? "—",
+    "Completed Meals": completedMeals?.toLocaleString("en-NG") ?? "—",
+    "Planned Meals": plannedMeals?.toLocaleString("en-NG") ?? "—",
+    "Users Retention Rate": userRetentionRate ?? "—",
+    "Total Meals": totalMeals?.toLocaleString("en-NG") ?? "—",
   };
-  const chartData = makeChartData(summary?.generatedMealActivity ?? []);
+  const chartData = makeChartData(generatedMealActivity);
   const maxTopMealCount = Math.max(1, ...topMeals.map((meal) => meal.count));
-  const recentActivities = (summary?.generatedMealActivity ?? [])
+  const recentActivities = generatedMealActivity
     .slice(0, 4)
     .map((activity, index) => ({
       id: activity.mealId,
@@ -391,17 +507,17 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
-      {loadError && (
-        <p role="alert" className="text-sm text-red-600">
-          Could not load dashboard data: {loadError}
+      {Object.entries(endpointErrors).map(([endpoint, error]) => (
+        <p key={endpoint} role="alert" className="text-sm text-red-600">
+          {error}
         </p>
-      )}
+      ))}
     </motion.div>
   );
 }
 
 function makeChartData(
-  activities: AdminDashboardSummary["generatedMealActivity"],
+  activities: AdminMealActivity[],
 ): { day: string; plans: number }[] {
   const counts = new Map<string, { timestamp: number; day: string; plans: number }>();
   for (const activity of activities) {

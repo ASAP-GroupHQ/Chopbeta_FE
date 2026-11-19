@@ -17,7 +17,7 @@ export const ADMIN_STATS_CARDS = [
   { title: "Completed Meals", icon: CompletedMealsIcon },
   { title: "Planned Meals", icon: MealsPlanGeneratedIcon },
   { title: "Users Retention Rate", icon: UserRetentionIcon },
-  { title: "Meals in Database", icon: MealsInDatabaseIcon },
+  { title: "Total Meals", icon: MealsInDatabaseIcon },
 ] as const;
 
 export const ADMIN_QUICK_ACTIONS = [

@@ -176,7 +176,7 @@ export default function AnalyticsCharts({
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-sm font-bold text-[#3d3d50]">
-                {data.totalMealPlans.toLocaleString("en-NG")}
+                {data.totalMealPlans?.toLocaleString("en-NG") ?? "—"}
               </span>
               <span className="text-[9px] text-[#858598]">Total Plans</span>
             </div>

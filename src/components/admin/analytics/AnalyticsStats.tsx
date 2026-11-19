@@ -35,7 +35,8 @@ export default function AnalyticsStats({
   data: AdminAnalyticsData;
 }) {
   const values: Record<string, string> = {
-    "Total Meal plans": data.totalMealPlans.toLocaleString("en-NG"),
+    "Total Meal plans":
+      data.totalMealPlans?.toLocaleString("en-NG") ?? "—",
     "Average Price":
       data.averageMealPrice === null
         ? "—"

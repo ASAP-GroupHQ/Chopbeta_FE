@@ -77,10 +77,10 @@ export const adminAnalyticsService = {
     return response.data.data;
   },
 
-  async getAnalytics(
+  async getGeneratedMealsAnalysis(
     filter: AnalyticsTimeRange,
     customRange?: { startDate: string; endDate: string },
-  ): Promise<AdminAnalyticsData> {
+  ): Promise<Pick<AdminAnalyticsData, "mealPlans" | "totalMealPlans">> {
     const generatedParams =
       filter === "Custom"
         ? {
@@ -89,28 +89,13 @@ export const adminAnalyticsService = {
             endDate: customRange?.endDate,
           }
         : { filter: analysisFilter[filter] };
-    const filterValue = summaryFilter[filter];
-    const [generated, growth, records, topMeals] = await Promise.all([
-      apiClient.get<ApiEnvelope<GeneratedMealRecord[] | { message?: string }>>(
-        "/admin/analytics/generated-meals-analysis",
-        { params: generatedParams },
-      ),
-      apiClient.get<ApiEnvelope<GrowthPayload>>(
-        "/admin/analytics/growth-rate",
-        { params: { filter: filterValue } },
-      ),
-      apiClient.get<ApiEnvelope<AnalyticsRecord[]>>(
-        "/admin/analytics/analytics-record",
-      ),
-      this.getTopMeals(filter),
-    ]);
-    const generatedData = generated.data.data;
+    const response = await apiClient.get<
+      ApiEnvelope<GeneratedMealRecord[] | { message?: string }>
+    >("/admin/analytics/generated-meals-analysis", {
+      params: generatedParams,
+    });
+    const generatedData = response.data.data;
     const generatedRecords = Array.isArray(generatedData) ? generatedData : [];
-    const growthData = growth.data.data;
-    const analyticsRecords = records.data.data;
-    if (!Array.isArray(analyticsRecords)) {
-      throw new Error("The analytics record API response was invalid.");
-    }
 
     const perDay = new Map<string, number>();
     for (const meal of generatedRecords) {
@@ -121,7 +106,47 @@ export const adminAnalyticsService = {
       });
       perDay.set(day, (perDay.get(day) ?? 0) + 1);
     }
-    const mealPlans = [...perDay].map(([day, plans]) => ({ day, plans }));
+
+    return {
+      mealPlans: [...perDay].map(([day, plans]) => ({ day, plans })),
+      totalMealPlans: generatedRecords.length,
+    };
+  },
+
+  async getGrowthRate(
+    filter: AnalyticsTimeRange,
+  ): Promise<Pick<AdminAnalyticsData, "userGrowth" | "growthPercentage">> {
+    const response = await apiClient.get<ApiEnvelope<GrowthPayload>>(
+      "/admin/analytics/growth-rate",
+      { params: { filter: summaryFilter[filter] } },
+    );
+    const growthData = response.data.data;
+    return {
+      userGrowth: (growthData.series ?? []).map((point) => ({
+        day: new Date(point.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        users: point.count,
+      })),
+      growthPercentage: growthData.growthPercentage ?? null,
+    };
+  },
+
+  async getAnalyticsRecord(): Promise<
+    Pick<
+      AdminAnalyticsData,
+      "mealCategories" | "totalUsers" | "activeUsers" | "averageMealPrice"
+    >
+  > {
+    const response = await apiClient.get<ApiEnvelope<AnalyticsRecord[]>>(
+      "/admin/analytics/analytics-record",
+    );
+    const analyticsRecords = response.data.data;
+    if (!Array.isArray(analyticsRecords)) {
+      throw new Error("The analytics record API response was invalid.");
+    }
+
     const categoryCounts = new Map<string, number>();
     const prices: number[] = [];
     for (const record of analyticsRecords) {
@@ -158,23 +183,12 @@ export const adminAnalyticsService = {
       : null;
 
     return {
-      mealPlans,
-      userGrowth: (growthData.series ?? []).map((point) => ({
-        day: new Date(point.date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
-        users: point.count,
-      })),
       mealCategories,
-      topMeals,
-      totalMealPlans: generatedRecords.length,
       totalUsers,
       activeUsers,
       averageMealPrice: prices.length
         ? prices.reduce((total, price) => total + price, 0) / prices.length
         : null,
-      growthPercentage: growthData.growthPercentage ?? null,
     };
   },
 };

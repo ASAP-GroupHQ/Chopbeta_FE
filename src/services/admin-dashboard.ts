@@ -1,8 +1,5 @@
 import { apiClient } from "@/services/api-client";
-import type {
-  AdminDashboardSummary,
-  AdminMealActivity,
-} from "@/types/admin-dashboard";
+import type { AdminMealActivity } from "@/types/admin-dashboard";
 
 interface ApiEnvelope<T> {
   data: T;
@@ -46,62 +43,76 @@ const countFromPayload = (
 };
 
 export const adminDashboardService = {
-  async getSummary(date: string): Promise<AdminDashboardSummary> {
-    const [users, meals, activeUsers, completed, generated, planned, retention] =
-      await Promise.all([
-        apiClient.get<ApiEnvelope<number>>("/admin/dashboard/total-users"),
-        apiClient.get<ApiEnvelope<number>>("/admin/dashboard/total-meals"),
-        apiClient.get<ApiEnvelope<CountPayload | number>>(
-          "/admin/daily-active-users",
-          { params: { date } },
-        ),
-        apiClient.get<ApiEnvelope<CountPayload>>(
-          "/admin/dashboard/completed-meals",
-          { params: { date } },
-        ),
-        apiClient.get<ApiEnvelope<CountPayload>>(
-          "/admin/dashboard/generated-meals",
-          { params: { date } },
-        ),
-        apiClient.get<ApiEnvelope<CountPayload>>(
-          "/admin/dashboard/planned-meals",
-          { params: { date } },
-        ),
-        apiClient.get<ApiEnvelope<RetentionPayload | null>>(
-          "/admin/dashboard/user-retention-rate",
-          { params: { queryDate: date } },
-        ),
-      ]);
+  async getTotalUsers(): Promise<number> {
+    const response = await apiClient.get<ApiEnvelope<number>>(
+      "/admin/dashboard/total-users",
+    );
+    return requireCount(response.data.data, "total users");
+  },
 
-    const activePayload = activeUsers.data.data;
-    return {
-      totalUsers: requireCount(users.data.data, "total users"),
-      totalMeals: requireCount(meals.data.data, "total meals"),
-      dailyActiveUsers: requireCount(
-        typeof activePayload === "number"
-          ? activePayload
-          : activePayload.totalActiveUsers,
-        "daily active users",
-      ),
-      completedMeals: countFromPayload(
-        completed.data.data,
-        "totalCompletedMeals",
-        "completedMeals",
-      ),
-      generatedMeals: countFromPayload(
-        generated.data.data,
-        "totalGeneratedMeals",
-        "generatedMeals",
-      ),
-      plannedMeals: countFromPayload(
-        planned.data.data,
-        "totalPlannedMeals",
-        "plannedMeals",
-      ),
-      userRetentionRate: retention.data.data?.retentionRate ?? null,
-      generatedMealActivity: Array.isArray(generated.data.data.generatedMeals)
-        ? generated.data.data.generatedMeals
-        : [],
-    };
+  async getTotalMeals(): Promise<number> {
+    const response = await apiClient.get<ApiEnvelope<number>>(
+      "/admin/dashboard/total-meals",
+    );
+    return requireCount(response.data.data, "total meals");
+  },
+
+  async getDailyActiveUsers(date: string): Promise<number> {
+    const response = await apiClient.get<
+      ApiEnvelope<CountPayload | number>
+    >("/admin/daily-active-users", { params: { date } });
+    const payload = response.data.data;
+    return requireCount(
+      typeof payload === "number" ? payload : payload.totalActiveUsers,
+      "daily active users",
+    );
+  },
+
+  async getCompletedMeals(date: string): Promise<number> {
+    const response = await apiClient.get<ApiEnvelope<CountPayload>>(
+      "/admin/dashboard/completed-meals",
+      { params: { date } },
+    );
+    return countFromPayload(
+      response.data.data,
+      "totalCompletedMeals",
+      "completedMeals",
+    );
+  },
+
+  async getGeneratedMeals(date: string): Promise<AdminMealActivity[]> {
+    const response = await apiClient.get<ApiEnvelope<CountPayload>>(
+      "/admin/dashboard/generated-meals",
+      { params: { date } },
+    );
+    countFromPayload(
+      response.data.data,
+      "totalGeneratedMeals",
+      "generatedMeals",
+    );
+    return Array.isArray(response.data.data.generatedMeals)
+      ? response.data.data.generatedMeals
+      : [];
+  },
+
+  async getPlannedMeals(date: string): Promise<number> {
+    const response = await apiClient.get<ApiEnvelope<CountPayload>>(
+      "/admin/dashboard/planned-meals",
+      { params: { date } },
+    );
+    return countFromPayload(
+      response.data.data,
+      "totalPlannedMeals",
+      "plannedMeals",
+    );
+  },
+
+  async getUserRetentionRate(date: string): Promise<string | null> {
+    const response = await apiClient.get<
+      ApiEnvelope<RetentionPayload | null>
+    >("/admin/dashboard/user-retention-rate", {
+      params: { queryDate: date },
+    });
+    return response.data.data?.retentionRate ?? null;
   },
 };

@@ -10,7 +10,7 @@ const iconColors = [
 export default function UserStats({
   stats,
 }: {
-  stats: AdminUserSummary | null;
+  stats: Partial<AdminUserSummary> | null;
 }) {
   const values: Record<string, number | undefined> = {
     "Total Users": stats?.totalUsers,

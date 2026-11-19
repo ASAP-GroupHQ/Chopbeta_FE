@@ -1,7 +1,11 @@
 import { MEAL_STATS } from "@/constants/admin-management";
 import type { MealStats as MealStatsData } from "@/types/admin-meals";
 
-export default function MealStats({ stats }: { stats: MealStatsData | null }) {
+export default function MealStats({
+  stats,
+}: {
+  stats: Partial<MealStatsData> | null;
+}) {
   return (
     <section
       aria-label="Meal statistics"

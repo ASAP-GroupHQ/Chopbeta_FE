@@ -244,19 +244,28 @@ function UserProfile({
   user: AdminUser;
   onClose: () => void;
 }) {
+  const initials =
+    user.name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("") || "?";
+
   return (
     <div className="space-y-5 px-5 py-5 sm:px-6">
       <div className="flex flex-col gap-4 rounded-xl bg-[#f7f9f7] p-4 sm:flex-row sm:items-center">
-        <span
-          aria-hidden="true"
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#eaf4ee] text-xl font-bold text-[#247443]"
-        >
-          {user.name
-            .trim()
-            .split(/\s+/)
-            .slice(0, 2)
-            .map((part) => part[0])
-            .join("") || "?"}
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#eaf4ee] text-xl font-bold text-[#247443]">
+          {user.profilePicture ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.profilePicture}
+              alt={`${user.name}'s avatar`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span aria-label={`${user.name}'s initials`}>{initials}</span>
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-semibold text-[#26342b]">

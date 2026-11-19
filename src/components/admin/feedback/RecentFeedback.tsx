@@ -50,7 +50,10 @@ export default function RecentFeedback({
               </div>
               <StatusBadge status={item.status} />
             </div>
-            <CategoryBadge type={item.type} />
+            <div className="flex items-center gap-2">
+              <CategoryBadge category={item.category} />
+              <span className="text-[10px] text-[#858598]">{item.type}</span>
+            </div>
             <p className="text-xs leading-relaxed text-[#626276]">
               {item.message}
             </p>
@@ -75,7 +78,8 @@ export default function RecentFeedback({
           <thead>
             <tr className="bg-[#f6f5f8] text-[11px] font-semibold text-[#5b5b6d]">
               <th className="px-4 py-3">User</th>
-              <th className="px-3 py-3">Feedback Type</th>
+              <th className="px-3 py-3">Category</th>
+              <th className="px-3 py-3">Type</th>
               <th className="px-3 py-3">Rating</th>
               <th className="px-3 py-3">Message</th>
               <th className="px-3 py-3">Date</th>
@@ -98,7 +102,10 @@ export default function RecentFeedback({
                   </div>
                 </td>
                 <td className="px-3 py-3">
-                  <CategoryBadge type={item.type} />
+                  <CategoryBadge category={item.category} />
+                </td>
+                <td className="px-3 py-3 text-xs text-[#626276]">
+                  {item.type}
                 </td>
                 <td className="px-3 py-3">
                   <RatingStars rating={item.rating} />
@@ -125,7 +132,7 @@ export default function RecentFeedback({
             ))}
             {feedback.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10">
+                <td colSpan={8} className="px-4 py-10">
                   <EmptyFeedback />
                 </td>
               </tr>
@@ -155,17 +162,17 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
-function CategoryBadge({ type }: { type: AdminFeedback["type"] }) {
-  const styles: Record<AdminFeedback["type"], string> = {
+function CategoryBadge({ category }: { category: AdminFeedback["category"] }) {
+  const styles: Record<AdminFeedback["category"], string> = {
     Suggestion: "bg-[#edf5ef] text-[#397c53]",
     Compliment: "bg-[#edf3fa] text-[#4c7eaf]",
     Complaint: "bg-[#fbefed] text-[#b7655a]",
   };
   return (
     <span
-      className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold ${styles[type]}`}
+      className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold ${styles[category]}`}
     >
-      {type}
+      {category}
     </span>
   );
 }

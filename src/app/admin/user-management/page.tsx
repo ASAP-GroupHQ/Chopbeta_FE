@@ -15,7 +15,10 @@ const PAGE_SIZE = 10;
 export default function UserManagementPage() {
   const toast = useToast();
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [stats, setStats] = useState<AdminUserSummary | null>(null);
+  const [stats, setStats] = useState<Partial<AdminUserSummary>>({});
+  const [statsErrors, setStatsErrors] = useState<
+    Partial<Record<keyof AdminUserSummary, string>>
+  >({});
   const [loadError, setLoadError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [serverTotalUsers, setServerTotalUsers] = useState(0);
@@ -79,23 +82,38 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     let active = true;
-    adminUsersService
-      .getSummary()
-      .then((summary) => {
-        if (active) setStats(summary);
-      })
-      .catch((error: unknown) => {
-        if (active) {
-          toast.error(
-            "Could not load user statistics",
-            error instanceof Error ? error.message : "Please try again.",
-          );
-        }
-      });
+    const loadStat = (
+      key: keyof AdminUserSummary,
+      request: Promise<number>,
+    ) => {
+      request
+        .then((value) => {
+          if (!active) return;
+          setStats((current) => ({ ...current, [key]: value }));
+          setStatsErrors((current) => {
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          const message =
+            error instanceof Error ? error.message : "Please try again.";
+          setStatsErrors((current) => ({
+            ...current,
+            [key]: `Could not load ${key}: ${message}`,
+          }));
+        });
+    };
+
+    loadStat("totalUsers", adminUsersService.getTotalUsers());
+    loadStat("activeUsers", adminUsersService.getActiveUsers());
+    loadStat("inactiveUsers", adminUsersService.getInactiveUsers());
     return () => {
       active = false;
     };
-  }, [toast]);
+  }, []);
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -197,6 +215,11 @@ export default function UserManagementPage() {
     <div className="space-y-6">
       <UserManagementHeader />
       <UserStats stats={stats} />
+      {Object.entries(statsErrors).map(([key, error]) => (
+        <p key={key} role="alert" className="text-sm text-red-600">
+          {error}
+        </p>
+      ))}
       {loadError && (
         <p role="alert" className="text-sm text-red-600">
           Could not load users: {loadError}

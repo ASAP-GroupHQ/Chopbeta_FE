@@ -1,11 +1,13 @@
 export type FeedbackCategory = "Suggestion" | "Compliment" | "Complaint";
+export type FeedbackSentiment = "Positive" | "Neutral" | "Negative";
 export type FeedbackStatus = "New" | "In progress" | "Resolved";
 
 export interface AdminFeedback {
   id: string;
   name: string;
   email: string;
-  type: FeedbackCategory;
+  category: FeedbackCategory;
+  type: FeedbackSentiment;
   rating: number;
   message: string;
   date: string;

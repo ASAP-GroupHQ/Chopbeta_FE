@@ -5,6 +5,9 @@ export interface AdminUserRecord {
   role?: string;
   phoneNumber?: string;
   username?: string;
+  profilePicture?: string;
+  avatar?: string;
+  image?: string;
   isActive?: boolean;
   createdAt?: string;
   lastActive?: string;
@@ -17,6 +20,7 @@ export interface AdminUser {
   handle: string;
   email: string;
   phone: string;
+  profilePicture?: string;
   role: string;
   status: string;
   dateJoined: string;
