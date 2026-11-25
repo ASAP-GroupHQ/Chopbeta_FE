@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiBarChart2,
   FiCheckSquare,
   FiInfo,
+  FiRepeat,
   FiTrendingDown,
   FiUser,
 } from "react-icons/fi";
@@ -21,10 +23,14 @@ import {
   MOCK_NOTIFICATIONS,
   NotificationItem,
 } from "@/constants/notifications";
+import { ADMIN_PROFILE_MENU_ITEMS } from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export default function MobileTopHeader() {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
+  const isAdminArea = pathname.startsWith("/admin");
+  const showAdminProfileMenu = isAdminArea && user?.role === "admin";
 
   const [activeSheet, setActiveSheet] = useState<
     "notifications" | "profile" | null
@@ -104,6 +110,25 @@ export default function MobileTopHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
+          {user?.role === "admin" && (
+            <Link
+              href={isAdminArea ? "/dashboard" : "/admin"}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-white hover:text-green-800 active:scale-90"
+              aria-label={
+                isAdminArea
+                  ? "Switch to user dashboard"
+                  : "Switch to admin dashboard"
+              }
+              title={
+                isAdminArea
+                  ? "Switch to user dashboard"
+                  : "Switch to admin dashboard"
+              }
+            >
+              <FiRepeat size={19} aria-hidden="true" />
+            </Link>
+          )}
+
           {/* Help Button */}
           <Link
             href="/dashboard/chat"
@@ -315,41 +340,69 @@ export default function MobileTopHeader() {
                 </div>
 
                 <div className="p-4 space-y-2 pb-24">
-                  <Link
-                    href="/dashboard/history"
-                    onClick={() => setActiveSheet(null)}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left border-0 outline-none decoration-none"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-white text-green-700 border border-gray-100 flex items-center justify-center shrink-0 shadow-sm">
-                      <HistoryIcon className="w-5 h-5 text-green-700" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-extrabold text-[#1A2E35]">
-                        Meal History
-                      </p>
-                      <p className="text-xs text-gray-400 font-medium truncate mt-0.5">
-                        View your full chronological meal records
-                      </p>
-                    </div>
-                  </Link>
+                  {showAdminProfileMenu ? (
+                    ADMIN_PROFILE_MENU_ITEMS.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setActiveSheet(null)}
+                          className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left border-0 outline-none decoration-none"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-white text-green-700 border border-gray-100 flex items-center justify-center shrink-0 shadow-sm">
+                            <IconComponent className="w-5 h-5 text-green-700" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-extrabold text-[#1A2E35]">
+                              {item.label}
+                            </p>
+                            <p className="text-xs text-gray-400 font-medium truncate mt-0.5">
+                              {item.description}
+                            </p>
+                          </div>
+                        </Link>
+                      );
+                    })
+                  ) : (
+                    <>
+                      <Link
+                        href="/dashboard/history"
+                        onClick={() => setActiveSheet(null)}
+                        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left border-0 outline-none decoration-none"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-white text-green-700 border border-gray-100 flex items-center justify-center shrink-0 shadow-sm">
+                          <HistoryIcon className="w-5 h-5 text-green-700" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-extrabold text-[#1A2E35]">
+                            Meal History
+                          </p>
+                          <p className="text-xs text-gray-400 font-medium truncate mt-0.5">
+                            View your full chronological meal records
+                          </p>
+                        </div>
+                      </Link>
 
-                  <Link
-                    href="/dashboard/setting"
-                    onClick={() => setActiveSheet(null)}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left border-0 outline-none decoration-none"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center shrink-0 shadow-sm">
-                      <SettingsIcon className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-extrabold text-[#1A2E35]">
-                        Settings
-                      </p>
-                      <p className="text-xs text-gray-400 font-medium truncate mt-0.5">
-                        Update configuration and layout preferences
-                      </p>
-                    </div>
-                  </Link>
+                      <Link
+                        href="/dashboard/setting"
+                        onClick={() => setActiveSheet(null)}
+                        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50/60 active:bg-green-50/40 text-[#1A2E35] transition-colors text-left border-0 outline-none decoration-none"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center shrink-0 shadow-sm">
+                          <SettingsIcon className="w-5 h-5 text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-extrabold text-[#1A2E35]">
+                            Settings
+                          </p>
+                          <p className="text-xs text-gray-400 font-medium truncate mt-0.5">
+                            Update configuration and layout preferences
+                          </p>
+                        </div>
+                      </Link>
+                    </>
+                  )}
 
                   <div className="border-t border-gray-100 mt-2 pt-3">
                     <button

@@ -1,4 +1,9 @@
-import { HistoryIcon, SettingsIcon } from "@/components/icons/NavIcons";
+import { FiRepeat } from "react-icons/fi";
+import {
+  FeedbackIcon,
+  HistoryIcon,
+  SettingsIcon,
+} from "@/components/icons/NavIcons";
 
 export interface ProfileMenuItem {
   label: string;
@@ -19,5 +24,20 @@ export const PROFILE_MENU_ITEMS: ProfileMenuItem[] = [
     href: "/dashboard/setting",
     icon: SettingsIcon,
     description: "Manage your account and food preferences",
+  },
+];
+
+export const ADMIN_PROFILE_MENU_ITEMS: ProfileMenuItem[] = [
+  {
+    href: "/admin/feedback",
+    label: "Feedback & Reports",
+    description: "Review feedback from ChopBeta users",
+    icon: FeedbackIcon,
+  },
+  {
+    href: "/dashboard",
+    label: "Switch to user dashboard",
+    description: "Explore ChopBeta with the user experience",
+    icon: FiRepeat,
   },
 ];
