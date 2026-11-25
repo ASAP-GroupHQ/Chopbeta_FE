@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiChevronDown,
@@ -19,11 +20,17 @@ import {
   MOCK_NOTIFICATIONS,
   NotificationItem,
 } from "@/constants/notifications";
-import { PROFILE_MENU_ITEMS } from "@/constants/navigation";
+import {
+  ADMIN_PROFILE_MENU_ITEMS,
+  PROFILE_MENU_ITEMS,
+} from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export default function HeaderActions() {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
+  const showAdminProfileMenu =
+    pathname.startsWith("/admin") && user?.role === "admin";
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -103,6 +110,9 @@ export default function HeaderActions() {
 
   // Profile image URL or null
   const avatarUrl = user?.profilePicture || user?.avatar || null;
+  const profileMenuItems = showAdminProfileMenu
+    ? ADMIN_PROFILE_MENU_ITEMS
+    : PROFILE_MENU_ITEMS;
 
   return (
     <div className="hidden lg:flex items-center gap-3 relative z-40">
@@ -290,7 +300,7 @@ export default function HeaderActions() {
               </div>
 
               <div className="space-y-0.5">
-                {PROFILE_MENU_ITEMS.map((item) => {
+                {profileMenuItems.map((item) => {
                   const IconComponent = item.icon;
                   return (
                     <Link
