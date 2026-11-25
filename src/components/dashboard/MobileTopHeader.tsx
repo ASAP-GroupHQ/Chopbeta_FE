@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiBarChart2,
   FiCheckSquare,
   FiInfo,
+  FiRepeat,
   FiTrendingDown,
   FiUser,
 } from "react-icons/fi";
@@ -25,6 +27,8 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function MobileTopHeader() {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
+  const isAdminArea = pathname.startsWith("/admin");
 
   const [activeSheet, setActiveSheet] = useState<
     "notifications" | "profile" | null
@@ -104,6 +108,25 @@ export default function MobileTopHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
+          {user?.role === "admin" && (
+            <Link
+              href={isAdminArea ? "/dashboard" : "/admin"}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-white hover:text-green-800 active:scale-90"
+              aria-label={
+                isAdminArea
+                  ? "Switch to user dashboard"
+                  : "Switch to admin dashboard"
+              }
+              title={
+                isAdminArea
+                  ? "Switch to user dashboard"
+                  : "Switch to admin dashboard"
+              }
+            >
+              <FiRepeat size={19} aria-hidden="true" />
+            </Link>
+          )}
+
           {/* Help Button */}
           <Link
             href="/dashboard/chat"

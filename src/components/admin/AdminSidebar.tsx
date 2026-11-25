@@ -4,13 +4,14 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { FiRepeat } from "react-icons/fi";
 import { SIDEBAR_ITEMS } from "@/constants/admin-nav";
 import { LogoutIcon } from "@/components/icons/NavIcons";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -66,11 +67,21 @@ export default function AdminSidebar() {
         })}
       </nav>
 
+      {user?.role === "admin" && (
+        <Link
+          href="/dashboard"
+          className="mt-4 flex items-center gap-3.5 rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3.5 text-sm font-bold text-[#1E6B3C] transition-colors hover:bg-emerald-100/70"
+        >
+          <FiRepeat className="h-5 w-5" aria-hidden="true" />
+          <span>Switch to user dashboard</span>
+        </Link>
+      )}
+
       {/* Logout Action */}
       <button
         type="button"
         onClick={handleLogout}
-        className="mt-auto flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-bold text-[#EF4444] hover:bg-red-50/50 transition-all group cursor-pointer w-full text-left"
+        className="mt-2 flex w-full cursor-pointer items-center gap-3.5 rounded-xl px-4 py-3.5 text-left text-sm font-bold text-[#EF4444] transition-all hover:bg-red-50/50 group"
       >
         <LogoutIcon className="w-5 h-5 text-[#EF4444] group-hover:scale-105 transition-transform" />
         <span>Logout</span>

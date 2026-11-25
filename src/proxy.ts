@@ -22,11 +22,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Admin trying to access standard user dashboard (Redirect them to Admin dashboard)
-  if (isUserDashboard && !isAdminDashboard && userRole === "admin") {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
-
   return NextResponse.next();
 }
 
