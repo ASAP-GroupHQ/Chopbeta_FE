@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { motion } from "framer-motion";
-import { Soup, UtensilsCrossed } from "lucide-react";
+import { Activity, UtensilsCrossed } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -22,6 +22,7 @@ import { adminDashboardService } from "@/services/admin-dashboard";
 import { adminAnalyticsService } from "@/services/admin-analytics";
 import type {
   AdminMealActivity,
+  AdminRecentActivity,
   AdminTopMeal,
 } from "@/types/admin-dashboard";
 
@@ -37,6 +38,7 @@ const containerVariants = {
 };
 
 type ChartWeek = "this-week" | "last-week";
+const RECENT_ACTIVITIES_PAGE_SIZE = 10;
 
 export default function AdminDashboardPage() {
   const [greeting] = useState(() => {
@@ -55,6 +57,13 @@ export default function AdminDashboardPage() {
   const [generatedMealActivity, setGeneratedMealActivity] = useState<
     AdminMealActivity[]
   >([]);
+  const [recentActivities, setRecentActivities] = useState<
+    AdminRecentActivity[]
+  >([]);
+  const [recentActivitiesLoading, setRecentActivitiesLoading] = useState(true);
+  const [recentActivitiesError, setRecentActivitiesError] = useState<
+    string | null
+  >(null);
   const [topMeals, setTopMeals] = useState<AdminTopMeal[]>([]);
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
   const [totalMeals, setTotalMeals] = useState<number | null>(null);
@@ -100,6 +109,30 @@ export default function AdminDashboardPage() {
       adminDashboardService.getTotalMeals(),
       setTotalMeals,
     );
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    adminDashboardService
+      .getRecentActivities(1, RECENT_ACTIVITIES_PAGE_SIZE)
+      .then((activities) => {
+        if (!active) return;
+        setRecentActivities(activities);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setRecentActivitiesError(
+          error instanceof Error ? error.message : "The request failed.",
+        );
+      })
+      .finally(() => {
+        if (active) setRecentActivitiesLoading(false);
+      });
+
     return () => {
       active = false;
     };
@@ -203,14 +236,6 @@ export default function AdminDashboardPage() {
   };
   const chartData = makeChartData(generatedMealActivity);
   const maxTopMealCount = Math.max(1, ...topMeals.map((meal) => meal.count));
-  const recentActivities = generatedMealActivity
-    .slice(0, 4)
-    .map((activity, index) => ({
-      id: activity.mealId,
-      title: activity.mealTitle ?? activity.mealId,
-      time: formatActivityDate(activity.generatedAt),
-      markerColor: ["bg-[#267447]", "bg-[#E85D26]", "bg-[#B95AC5]", "bg-[#22C55E]"][index],
-    }));
 
   return (
     <motion.div
@@ -299,52 +324,66 @@ export default function AdminDashboardPage() {
             <h3 className="text-base font-bold text-[#1A2E35]">
               Recent Activities
             </h3>
-            <Link
-              href="/admin/user-management"
-              className="text-xs font-bold text-green-700 hover:underline"
-            >
-              View all
-            </Link>
+            <span className="rounded-full bg-[#F1F7F2] px-2.5 py-1 text-[10px] font-bold text-[#267447]">
+              Latest {RECENT_ACTIVITIES_PAGE_SIZE}
+            </span>
           </div>
-          <div className="relative mt-6 space-y-5 pl-6 sm:space-y-6">
-            <span
-              aria-hidden="true"
-              className="absolute bottom-3 left-[5px] top-3 w-px bg-[#E5E7EB]"
-            />
-            {recentActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className="relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3"
-              >
+          <div className="relative mt-6 max-h-[420px] space-y-5 overflow-y-auto pl-6 pr-1 sm:space-y-6">
+            {!recentActivitiesLoading &&
+              !recentActivitiesError &&
+              recentActivities.length > 0 && (
                 <span
                   aria-hidden="true"
-                  className={`absolute -left-6 top-3 h-[11px] w-[11px] rounded-full border-2 border-white ${activity.markerColor}`}
+                  className="absolute bottom-3 left-[5px] top-3 w-px bg-[#E5E7EB]"
                 />
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-[#267447] ring-1 ring-black/5">
-                    <Soup className="h-4 w-4" aria-hidden="true" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-[#1A2E35]">
-                      {activity.title}
-                    </p>
-                    <p className="mt-0.5 text-[11px] leading-4 text-gray-500">
-                      Generated meal
-                    </p>
-                  </div>
+              )}
+            {recentActivitiesLoading ? (
+              <p
+                role="status"
+                className="py-4 text-center text-xs text-gray-500"
+              >
+                Loading recent activities…
+              </p>
+            ) : recentActivitiesError ? (
+              <p role="alert" className="py-4 text-center text-xs text-red-600">
+                Could not load recent activities: {recentActivitiesError}
+              </p>
+            ) : recentActivities.map((activity, index) => (
+              <div key={activity._id} className="relative flex items-start gap-3">
+                <span
+                  aria-hidden="true"
+                  className={`absolute -left-6 top-3 h-[11px] w-[11px] rounded-full border-2 border-white ${
+                    [
+                      "bg-[#267447]",
+                      "bg-[#E85D26]",
+                      "bg-[#B95AC5]",
+                      "bg-[#22C55E]",
+                    ][index % 4]
+                  }`}
+                />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-[#267447] ring-1 ring-black/5">
+                  <Activity className="h-4 w-4" aria-hidden="true" />
                 </div>
-                {activity.time && (
-                  <span className="shrink-0 whitespace-nowrap text-right text-[10px] font-medium text-gray-400 sm:text-[11px]">
-                    {activity.time}
-                  </span>
-                )}
+                <div className="min-w-0 flex-1">
+                  <p
+                    title={activity.description}
+                    className="line-clamp-2 text-xs font-bold leading-5 text-[#1A2E35]"
+                  >
+                    {activity.description}
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-gray-500">
+                    Admin activity
+                  </p>
+                </div>
               </div>
             ))}
-            {recentActivities.length === 0 && (
-              <p className="py-4 text-center text-xs text-gray-500">
-                No recent generated meals.
-              </p>
-            )}
+            {!recentActivitiesLoading &&
+              !recentActivitiesError &&
+              recentActivities.length === 0 && (
+                <p className="py-4 text-center text-xs text-gray-500">
+                  No recent activities yet.
+                </p>
+              )}
           </div>
         </div>
       </div>
@@ -544,8 +583,3 @@ function makeChartData(
     .map(({ day, plans }) => ({ day, plans }));
 }
 
-function formatActivityDate(value: string | undefined): string | null {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toLocaleString();
-}

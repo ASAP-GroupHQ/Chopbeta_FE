@@ -1,5 +1,8 @@
 import { apiClient } from "@/services/api-client";
-import type { AdminMealActivity } from "@/types/admin-dashboard";
+import type {
+  AdminMealActivity,
+  AdminRecentActivity,
+} from "@/types/admin-dashboard";
 
 interface ApiEnvelope<T> {
   data: T;
@@ -41,6 +44,16 @@ const countFromPayload = (
   if (Array.isArray(payload[listKey])) return payload[listKey].length;
   throw new Error(`The ${totalKey} API response was incomplete.`);
 };
+
+const isAdminRecentActivity = (
+  value: unknown,
+): value is AdminRecentActivity =>
+  typeof value === "object" &&
+  value !== null &&
+  "_id" in value &&
+  typeof value._id === "string" &&
+  "description" in value &&
+  typeof value.description === "string";
 
 export const adminDashboardService = {
   async getTotalUsers(): Promise<number> {
@@ -114,5 +127,25 @@ export const adminDashboardService = {
       params: { queryDate: date },
     });
     return response.data.data?.retentionRate ?? null;
+  },
+
+  async getRecentActivities(
+    page: number,
+    pageSize: number,
+  ): Promise<AdminRecentActivity[]> {
+    const response = await apiClient.get<ApiEnvelope<unknown>>(
+      "/admin/dashboard/recent-activities",
+      { params: { page, pageSize } },
+    );
+    const activities = response.data.data;
+
+    if (
+      !Array.isArray(activities) ||
+      !activities.every(isAdminRecentActivity)
+    ) {
+      throw new Error("The recent activities API response was invalid.");
+    }
+
+    return activities;
   },
 };
