@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 import { motion } from "framer-motion";
+import { Soup, UtensilsCrossed } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -15,11 +15,15 @@ import {
   Tooltip,
 } from "recharts";
 import {
-  ADMIN_STATS_CARDS,
   ADMIN_QUICK_ACTIONS,
-  ADMIN_RECENT_ACTIVITIES,
-  ADMIN_POPULAR_MEALS,
+  ADMIN_STATS_CARDS,
 } from "@/constants/admin-dashboard";
+import { adminDashboardService } from "@/services/admin-dashboard";
+import { adminAnalyticsService } from "@/services/admin-analytics";
+import type {
+  AdminMealActivity,
+  AdminTopMeal,
+} from "@/types/admin-dashboard";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -34,42 +38,179 @@ const containerVariants = {
 
 type ChartWeek = "this-week" | "last-week";
 
-const DUMMY_GENERATED_MEAL_DATA: Record<
-  ChartWeek,
-  { day: string; plans: number }[]
-> = {
-  "this-week": [
-    { day: "Mon", plans: 185 },
-    { day: "Tue", plans: 305 },
-    { day: "Wed", plans: 238 },
-    { day: "Thu", plans: 75 },
-    { day: "Fri", plans: 210 },
-    { day: "Sat", plans: 215 },
-    { day: "Sun", plans: 180 },
-  ],
-  "last-week": [
-    { day: "Mon", plans: 140 },
-    { day: "Tue", plans: 220 },
-    { day: "Wed", plans: 195 },
-    { day: "Thu", plans: 265 },
-    { day: "Fri", plans: 185 },
-    { day: "Sat", plans: 245 },
-    { day: "Sun", plans: 205 },
-  ],
-};
-
 export default function AdminDashboardPage() {
-  const [greeting, setGreeting] = useState("Welcome Back Admin!");
+  const [greeting] = useState(() => {
+    const currentHour = new Date().getHours();
+    if (currentHour < 12) return "Good Morning, Admin!";
+    if (currentHour < 16) return "Good Afternoon, Admin!";
+    return "Good Evening, Admin!";
+  });
   const [selectedWeek, setSelectedWeek] = useState<ChartWeek>("this-week");
+  const [dailyActiveUsers, setDailyActiveUsers] = useState<number | null>(null);
+  const [completedMeals, setCompletedMeals] = useState<number | null>(null);
+  const [plannedMeals, setPlannedMeals] = useState<number | null>(null);
+  const [userRetentionRate, setUserRetentionRate] = useState<string | null>(
+    null,
+  );
+  const [generatedMealActivity, setGeneratedMealActivity] = useState<
+    AdminMealActivity[]
+  >([]);
+  const [topMeals, setTopMeals] = useState<AdminTopMeal[]>([]);
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+  const [totalMeals, setTotalMeals] = useState<number | null>(null);
+  const [endpointErrors, setEndpointErrors] = useState<Record<string, string>>(
+    {},
+  );
 
   useEffect(() => {
-    const currentHour = new Date().getHours();
-    if (currentHour < 12) setGreeting("Good Morning, Admin!");
-    else if (currentHour < 16) setGreeting("Good Afternoon, Admin!");
-    else setGreeting("Good Evening, Admin!");
+    let active = true;
+    const loadEndpoint = <T,>(
+      key: string,
+      request: Promise<T>,
+      onSuccess: (value: T) => void,
+    ) => {
+      request
+        .then((value) => {
+          if (!active) return;
+          onSuccess(value);
+          setEndpointErrors((current) => {
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          const message =
+            error instanceof Error ? error.message : "Please try again.";
+          setEndpointErrors((current) => ({
+            ...current,
+            [key]: `Could not load ${key}: ${message}`,
+          }));
+        });
+    };
+
+    loadEndpoint(
+      "Total users",
+      adminDashboardService.getTotalUsers(),
+      setTotalUsers,
+    );
+    loadEndpoint(
+      "Total meals",
+      adminDashboardService.getTotalMeals(),
+      setTotalMeals,
+    );
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const chartData = DUMMY_GENERATED_MEAL_DATA[selectedWeek];
+  useEffect(() => {
+    let active = true;
+    const date = new Date();
+    if (selectedWeek === "last-week") date.setDate(date.getDate() - 7);
+    const queryDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    const loadEndpoint = <T,>(
+      key: string,
+      request: Promise<T>,
+      onSuccess: (value: T) => void,
+    ) => {
+      request
+        .then((value) => {
+          if (!active) return;
+          onSuccess(value);
+          setEndpointErrors((current) => {
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          const message =
+            error instanceof Error ? error.message : "Please try again.";
+          setEndpointErrors((current) => ({
+            ...current,
+            [key]: `Could not load ${key}: ${message}`,
+          }));
+        });
+    };
+
+    loadEndpoint(
+      "Daily active users",
+      adminDashboardService.getDailyActiveUsers(queryDate),
+      setDailyActiveUsers,
+    );
+    loadEndpoint(
+      "Completed meals",
+      adminDashboardService.getCompletedMeals(queryDate),
+      setCompletedMeals,
+    );
+    loadEndpoint(
+      "Generated meals",
+      adminDashboardService.getGeneratedMeals(queryDate),
+      setGeneratedMealActivity,
+    );
+    loadEndpoint(
+      "Planned meals",
+      adminDashboardService.getPlannedMeals(queryDate),
+      setPlannedMeals,
+    );
+    loadEndpoint(
+      "Users retention rate",
+      adminDashboardService.getUserRetentionRate(queryDate),
+      setUserRetentionRate,
+    );
+    return () => {
+      active = false;
+    };
+  }, [selectedWeek]);
+
+  useEffect(() => {
+    let active = true;
+    adminAnalyticsService
+      .getTopMeals("7 Days")
+      .then((popularMeals) => {
+        if (!active) return;
+        setTopMeals(popularMeals);
+        setEndpointErrors((current) => {
+          const next = { ...current };
+          delete next["Popular meals"];
+          return next;
+        });
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        const message =
+          error instanceof Error ? error.message : "Please try again.";
+        setEndpointErrors((current) => ({
+          ...current,
+          "Popular meals": `Could not load popular meals: ${message}`,
+        }));
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const statValues: Record<string, string> = {
+    "Total Users": totalUsers?.toLocaleString("en-NG") ?? "—",
+    "Daily Active Users": dailyActiveUsers?.toLocaleString("en-NG") ?? "—",
+    "Completed Meals": completedMeals?.toLocaleString("en-NG") ?? "—",
+    "Planned Meals": plannedMeals?.toLocaleString("en-NG") ?? "—",
+    "Users Retention Rate": userRetentionRate ?? "—",
+    "Total Meals": totalMeals?.toLocaleString("en-NG") ?? "—",
+  };
+  const chartData = makeChartData(generatedMealActivity);
+  const maxTopMealCount = Math.max(1, ...topMeals.map((meal) => meal.count));
+  const recentActivities = generatedMealActivity
+    .slice(0, 4)
+    .map((activity, index) => ({
+      id: activity.mealId,
+      title: activity.mealTitle ?? activity.mealId,
+      time: formatActivityDate(activity.generatedAt),
+      markerColor: ["bg-[#267447]", "bg-[#E85D26]", "bg-[#B95AC5]", "bg-[#22C55E]"][index],
+    }));
 
   return (
     <motion.div
@@ -110,40 +251,12 @@ export default function AdminDashboardPage() {
               </div>
               <div className="mt-2">
                 <h3 className="text-2xl font-bold leading-none tracking-tight text-[#222222]">
-                  {stat.value}
+                  {statValues[stat.title]}
                 </h3>
                 <div className="mt-2 flex items-center justify-between gap-1.5">
                   <p className="flex min-w-0 items-center gap-1 text-[10px] font-medium leading-4 text-[#267447]">
-                    <svg
-                      aria-hidden="true"
-                      className="h-3 w-3 shrink-0"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                    >
-                      <path
-                        d="M4 12L12 4M6 4h6v6"
-                        stroke="currentColor"
-                        strokeWidth="1.7"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span className="truncate">{stat.change}</span>
+                    <span className="truncate">Live data</span>
                   </p>
-                  <svg
-                    aria-hidden="true"
-                    className="h-4 w-4 shrink-0 text-[#267447]"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                  >
-                    <path
-                      d="M2.5 15.5L7.5 10.5L11 13.5L17.5 6.5M12.5 6.5H17.5V11.5"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
                 </div>
               </div>
             </div>
@@ -198,9 +311,9 @@ export default function AdminDashboardPage() {
               aria-hidden="true"
               className="absolute bottom-3 left-[5px] top-3 w-px bg-[#E5E7EB]"
             />
-            {ADMIN_RECENT_ACTIVITIES.map((activity) => (
+            {recentActivities.map((activity) => (
               <div
-                key={activity.name}
+                key={activity.id}
                 className="relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3"
               >
                 <span
@@ -208,29 +321,30 @@ export default function AdminDashboardPage() {
                   className={`absolute -left-6 top-3 h-[11px] w-[11px] rounded-full border-2 border-white ${activity.markerColor}`}
                 />
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-gray-100 ring-1 ring-black/5">
-                    <Image
-                      src={activity.avatar}
-                      alt=""
-                      fill
-                      sizes="36px"
-                      className="object-cover"
-                    />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-[#267447] ring-1 ring-black/5">
+                    <Soup className="h-4 w-4" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-xs font-bold text-[#1A2E35]">
-                      {activity.name}
+                      {activity.title}
                     </p>
                     <p className="mt-0.5 text-[11px] leading-4 text-gray-500">
-                      {activity.action}
+                      Generated meal
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 whitespace-nowrap text-right text-[10px] font-medium text-gray-400 sm:text-[11px]">
-                  {activity.time}
-                </span>
+                {activity.time && (
+                  <span className="shrink-0 whitespace-nowrap text-right text-[10px] font-medium text-gray-400 sm:text-[11px]">
+                    {activity.time}
+                  </span>
+                )}
               </div>
             ))}
+            {recentActivities.length === 0 && (
+              <p className="py-4 text-center text-xs text-gray-500">
+                No recent generated meals.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -260,11 +374,16 @@ export default function AdminDashboardPage() {
             </select>
           </div>
           <div className="h-[260px] w-full text-xs sm:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={chartData}
-                margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
-              >
+            {chartData.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                No generated-meal activity for this period.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
+                >
                 <CartesianGrid
                   vertical={false}
                   strokeDasharray="3 3"
@@ -315,8 +434,9 @@ export default function AdminDashboardPage() {
                   }}
                   isAnimationActive={false}
                 />
-              </LineChart>
-            </ResponsiveContainer>
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -335,23 +455,17 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="space-y-4 sm:space-y-5">
-            {ADMIN_POPULAR_MEALS.map((meal) => (
+            {topMeals.map((meal) => (
               <div
-                key={meal.name}
+                key={meal.mealId}
                 className="grid grid-cols-[48px_minmax(0,1fr)_auto_auto] items-center gap-x-2.5 gap-y-2 sm:grid-cols-[52px_minmax(0,1fr)_auto_auto] sm:gap-x-3"
               >
-                <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-gray-100">
-                  <Image
-                    src={meal.image}
-                    alt={meal.name}
-                    fill
-                    sizes="48px"
-                    className="object-cover"
-                  />
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-gray-100 text-[#267447]">
+                  <UtensilsCrossed className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div className="min-w-0 self-center">
                   <h4 className="truncate text-xs font-bold text-[#1A2E35] sm:text-sm">
-                    {meal.name}
+                    {meal.mealTitle}
                   </h4>
                   <p className="mt-0.5 truncate text-[10px] font-medium text-gray-500">
                     {meal.category}
@@ -368,24 +482,70 @@ export default function AdminDashboardPage() {
                 <div
                   className="col-start-2 col-end-5 h-1.5 overflow-hidden rounded-full bg-[#E3F0E9]"
                   role="progressbar"
-                  aria-label={`${meal.name} popularity`}
+                  aria-label={`${meal.mealTitle} popularity`}
                   aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={Number.parseInt(meal.progress, 10)}
+                  aria-valuemax={maxTopMealCount}
+                  aria-valuenow={meal.count}
                 >
                   <div
                     className="h-full rounded-full bg-[#2E8B57] transition-[width]"
-                    style={{ width: meal.progress }}
+                    style={{
+                      width: `${(meal.count / maxTopMealCount) * 100}%`,
+                    }}
                   />
                 </div>
                 <span className="col-start-4 row-start-1 whitespace-nowrap text-[10px] font-medium text-[#267447] sm:text-xs">
-                  ↑ {meal.trend}
+                  {meal.count.toLocaleString("en-NG")}
                 </span>
               </div>
             ))}
+            {topMeals.length === 0 && (
+              <p className="py-4 text-center text-xs text-gray-500">
+                No popular-meal data is available for this period.
+              </p>
+            )}
           </div>
         </div>
       </div>
+      {Object.entries(endpointErrors).map(([endpoint, error]) => (
+        <p key={endpoint} role="alert" className="text-sm text-red-600">
+          {error}
+        </p>
+      ))}
     </motion.div>
   );
+}
+
+function makeChartData(
+  activities: AdminMealActivity[],
+): { day: string; plans: number }[] {
+  const counts = new Map<string, { timestamp: number; day: string; plans: number }>();
+  for (const activity of activities) {
+    if (!activity.generatedAt) continue;
+    const date = new Date(activity.generatedAt);
+    if (Number.isNaN(date.getTime())) continue;
+    const key = date.toISOString().slice(0, 10);
+    const point = counts.get(key);
+    if (point) {
+      point.plans += 1;
+    } else {
+      counts.set(key, {
+        timestamp: date.getTime(),
+        day: date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        plans: 1,
+      });
+    }
+  }
+  return [...counts.values()]
+    .sort((first, second) => first.timestamp - second.timestamp)
+    .map(({ day, plans }) => ({ day, plans }));
+}
+
+function formatActivityDate(value: string | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toLocaleString();
 }

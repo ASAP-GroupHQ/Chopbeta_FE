@@ -1,7 +1,39 @@
 import { Activity, ArrowRight, Soup, UsersRound } from "lucide-react";
-import { QUICK_INSIGHTS } from "@/constants/analytics-data";
+import type { AdminAnalyticsData } from "@/types/admin-analytics";
 
-export default function QuickInsights() {
+export default function QuickInsights({ data }: { data: AdminAnalyticsData }) {
+  const topMeal = data.topMeals[0];
+  const topCategory = data.mealCategories.reduce(
+    (best, category) =>
+      category.value > (best?.value ?? -1) ? category : best,
+    data.mealCategories[0],
+  );
+  const insights = [
+    {
+      title: topMeal ? `Top meal: ${topMeal.mealTitle}` : "Top meal",
+      detail: topMeal
+        ? `Generated ${topMeal.count.toLocaleString("en-NG")} times.`
+        : "No meal generation data is available for this period.",
+      icon: "meal",
+      color: "#2f925d",
+    },
+    {
+      title: "User growth",
+      detail: data.growthPercentage !== null
+        ? `Growth rate is ${data.growthPercentage}% for the selected period.`
+        : "No user growth data is available for this period.",
+      icon: "users",
+      color: "#7867ff",
+    },
+    {
+      title: "Most represented category",
+      detail: topCategory
+        ? `${topCategory.name} accounts for ${topCategory.value}% of recorded generated meals.`
+        : "No category data is available for this period.",
+      icon: "growth",
+      color: "#369464",
+    },
+  ];
   return (
     <article className="min-w-0 space-y-2">
       <div className="flex items-center gap-2 px-1 py-1">
@@ -16,7 +48,7 @@ export default function QuickInsights() {
         </div>
       </div>
       <div className="space-y-2">
-        {QUICK_INSIGHTS.map((item) => (
+        {insights.map((item) => (
           <article
             key={item.title}
             className="group flex items-center gap-3 rounded-xl border border-[#eeeaf0] bg-white/80 px-3 py-3 shadow-[0_2px_8px_rgba(47,39,68,0.025)] transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_5px_14px_rgba(47,39,68,0.07)] sm:px-4"
@@ -24,14 +56,7 @@ export default function QuickInsights() {
             <InsightIcon type={item.icon} color={item.color} />
             <div className="min-w-0 flex-1">
               <h3 className="text-[11px] font-semibold text-[#37374b] sm:text-xs">
-                {item.title === "Meal generation increased by 22%" ? (
-                  <>
-                    Meal generation increased by{" "}
-                    <span className="text-[#339464]">22%</span>
-                  </>
-                ) : (
-                  item.title
-                )}
+                {item.title}
               </h3>
               <p className="mt-1 text-[10px] leading-relaxed text-[#858598]">
                 {item.detail}

@@ -1,14 +1,14 @@
 "use client";
 
-import { ArrowRight, Eye, Star, Trash2 } from "lucide-react";
-import type { AdminFeedback } from "@/constants/admin-feedback";
+import { ArrowRight, CircleCheck, Eye, Star } from "lucide-react";
+import type { AdminFeedback } from "@/types/admin-feedback";
 
 interface RecentFeedbackProps {
   feedback: AdminFeedback[];
   isShowingAll: boolean;
   onToggleAll: () => void;
   onView: (item: AdminFeedback) => void;
-  onDelete: (item: AdminFeedback) => void;
+  onAdvance: (item: AdminFeedback) => void;
 }
 
 export default function RecentFeedback({
@@ -16,7 +16,7 @@ export default function RecentFeedback({
   isShowingAll,
   onToggleAll,
   onView,
-  onDelete,
+  onAdvance,
 }: RecentFeedbackProps) {
   return (
     <section className="overflow-hidden rounded-2xl border border-[#e9e5ed] bg-white shadow-[0_2px_10px_rgba(47,39,68,0.035)]">
@@ -50,7 +50,10 @@ export default function RecentFeedback({
               </div>
               <StatusBadge status={item.status} />
             </div>
-            <CategoryBadge type={item.type} />
+            <div className="flex items-center gap-2">
+              <CategoryBadge category={item.category} />
+              <span className="text-[10px] text-[#858598]">{item.type}</span>
+            </div>
             <p className="text-xs leading-relaxed text-[#626276]">
               {item.message}
             </p>
@@ -61,7 +64,8 @@ export default function RecentFeedback({
               </div>
               <RowActions
                 onView={() => onView(item)}
-                onDelete={() => onDelete(item)}
+                onAdvance={() => onAdvance(item)}
+                canAdvance={item.status !== "Resolved"}
               />
             </div>
           </article>
@@ -74,7 +78,8 @@ export default function RecentFeedback({
           <thead>
             <tr className="bg-[#f6f5f8] text-[11px] font-semibold text-[#5b5b6d]">
               <th className="px-4 py-3">User</th>
-              <th className="px-3 py-3">Feedback Type</th>
+              <th className="px-3 py-3">Category</th>
+              <th className="px-3 py-3">Type</th>
               <th className="px-3 py-3">Rating</th>
               <th className="px-3 py-3">Message</th>
               <th className="px-3 py-3">Date</th>
@@ -97,7 +102,10 @@ export default function RecentFeedback({
                   </div>
                 </td>
                 <td className="px-3 py-3">
-                  <CategoryBadge type={item.type} />
+                  <CategoryBadge category={item.category} />
+                </td>
+                <td className="px-3 py-3 text-xs text-[#626276]">
+                  {item.type}
                 </td>
                 <td className="px-3 py-3">
                   <RatingStars rating={item.rating} />
@@ -115,7 +123,8 @@ export default function RecentFeedback({
                   <div className="flex justify-end">
                     <RowActions
                       onView={() => onView(item)}
-                      onDelete={() => onDelete(item)}
+                      onAdvance={() => onAdvance(item)}
+                      canAdvance={item.status !== "Resolved"}
                     />
                   </div>
                 </td>
@@ -123,7 +132,7 @@ export default function RecentFeedback({
             ))}
             {feedback.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10">
+                <td colSpan={8} className="px-4 py-10">
                   <EmptyFeedback />
                 </td>
               </tr>
@@ -153,17 +162,17 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
-function CategoryBadge({ type }: { type: AdminFeedback["type"] }) {
-  const styles: Record<AdminFeedback["type"], string> = {
+function CategoryBadge({ category }: { category: AdminFeedback["category"] }) {
+  const styles: Record<AdminFeedback["category"], string> = {
     Suggestion: "bg-[#edf5ef] text-[#397c53]",
     Compliment: "bg-[#edf3fa] text-[#4c7eaf]",
     Complaint: "bg-[#fbefed] text-[#b7655a]",
   };
   return (
     <span
-      className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold ${styles[type]}`}
+      className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold ${styles[category]}`}
     >
-      {type}
+      {category}
     </span>
   );
 }
@@ -208,10 +217,12 @@ function RatingStars({ rating }: { rating: number }) {
 
 function RowActions({
   onView,
-  onDelete,
+  onAdvance,
+  canAdvance,
 }: {
   onView: () => void;
-  onDelete: () => void;
+  onAdvance: () => void;
+  canAdvance: boolean;
 }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -223,14 +234,16 @@ function RowActions({
       >
         <Eye className="h-4 w-4" />
       </button>
-      <button
-        type="button"
-        aria-label="Delete feedback"
-        onClick={onDelete}
-        className="rounded-full bg-[#fbefed] p-2 text-[#bd665c] transition hover:bg-[#f5dfdb]"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
+      {canAdvance && (
+        <button
+          type="button"
+          aria-label="Advance feedback status"
+          onClick={onAdvance}
+          className="rounded-full bg-[#edf5ef] p-2 text-[#438469] transition hover:bg-[#e1ebe5]"
+        >
+          <CircleCheck className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

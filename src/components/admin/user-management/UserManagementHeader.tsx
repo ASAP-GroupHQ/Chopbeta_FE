@@ -8,7 +8,7 @@ export default function UserManagementHeader() {
           User Management
         </h1>
         <p className="text-xs font-medium text-gray-500 sm:text-sm">
-          View, manage and monitor all registered users on ChopBeta.
+          View and monitor registered users on ChopBeta.
         </p>
       </div>
       <div className="flex items-center justify-between gap-3 sm:justify-end">

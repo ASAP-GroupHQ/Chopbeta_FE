@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import { FiMail, FiLock } from "react-icons/fi";
 import Link from "next/link";
@@ -26,6 +26,51 @@ export default function LoginPage() {
   const [sessionLimitError, setSessionLimitError] = useState<string | null>(
     null,
   );
+  const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
+
+  useEffect(() => {
+    if (retryAfterSeconds <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setRetryAfterSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [retryAfterSeconds]);
+
+  const getRetryAfterSeconds = (error: unknown): number => {
+    if (!isAxiosError(error) || !error.response) return 30;
+
+    const headers = error.response.headers as Record<string, unknown>;
+    const headerValue = headers["retry-after"] ?? headers["Retry-After"];
+    if (typeof headerValue === "string" || typeof headerValue === "number") {
+      const numericValue = Number(headerValue);
+      if (Number.isFinite(numericValue) && numericValue >= 0) {
+        return Math.ceil(numericValue);
+      }
+
+      const retryDate = Date.parse(String(headerValue));
+      if (Number.isFinite(retryDate)) {
+        return Math.max(1, Math.ceil((retryDate - Date.now()) / 1000));
+      }
+    }
+
+    const data = error.response.data as
+      | { retryAfter?: unknown; retry_after?: unknown }
+      | undefined;
+    const retryAfter = data?.retryAfter ?? data?.retry_after;
+    if (typeof retryAfter === "number" && retryAfter >= 0) {
+      return Math.ceil(retryAfter);
+    }
+    if (typeof retryAfter === "string") {
+      const numericValue = Number(retryAfter);
+      if (Number.isFinite(numericValue) && numericValue >= 0) {
+        return Math.ceil(numericValue);
+      }
+    }
+
+    return 30;
+  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +98,9 @@ export default function LoginPage() {
       if (isAxiosError(error) && error.response?.status === 403) {
         setSessionLimitError(null);
         setIsSessionLimitOpen(true);
+      }
+      if (isAxiosError(error) && error.response?.status === 429) {
+        setRetryAfterSeconds(getRetryAfterSeconds(error));
       }
     } finally {
       setIsLoading(false);
@@ -254,6 +302,16 @@ export default function LoginPage() {
               </div>
 
               <form className="space-y-5 w-full" onSubmit={handleLoginSubmit}>
+                {retryAfterSeconds > 0 && (
+                  <div
+                    role="alert"
+                    className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                  >
+                    Too many login attempts. Try again in{" "}
+                    <strong>{retryAfterSeconds}s</strong>.
+                  </div>
+                )}
+
                 <AuthInput
                   label="Email Address"
                   type="email"
@@ -301,10 +359,12 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || retryAfterSeconds > 0}
                   className="w-full py-3.5 bg-green-800 hover:bg-green-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-md active:scale-[0.99] mt-2 text-center cursor-pointer disabled:opacity-50"
                 >
-                  Login
+                  {retryAfterSeconds > 0
+                    ? `Try again in ${retryAfterSeconds}s`
+                    : "Login"}
                 </button>
               </form>
 

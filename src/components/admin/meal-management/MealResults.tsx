@@ -1,7 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Eye, Pencil, Search, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Pencil,
+  Search,
+  Trash2,
+  UtensilsCrossed,
+} from "lucide-react";
 import type { ManagedMeal } from "@/components/admin/meal-management/MealActionDialog";
 
 interface MealResultsProps {
@@ -194,13 +202,20 @@ function MealImage({
         isCard ? "h-14 w-14 rounded-xl" : "h-10 w-10 rounded-lg"
       }`}
     >
-      <Image
-        src={meal.image}
-        alt={meal.name}
-        fill
-        sizes={isCard ? "56px" : "40px"}
-        className="object-cover"
-      />
+      {meal.image ? (
+        <Image
+          src={meal.image}
+          alt={meal.name}
+          fill
+          unoptimized
+          sizes={isCard ? "56px" : "40px"}
+          className="object-cover"
+        />
+      ) : (
+        <span className="flex h-full items-center justify-center text-gray-500">
+          <UtensilsCrossed className="h-5 w-5" aria-hidden="true" />
+        </span>
+      )}
     </div>
   );
 }

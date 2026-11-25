@@ -1,13 +1,12 @@
 "use client";
 
-import Image from "next/image";
-import { Crown } from "lucide-react";
-import { TOP_MEALS } from "@/constants/analytics-data";
+import { Crown, UtensilsCrossed } from "lucide-react";
+import type { AnalyticsTopMeal } from "@/types/admin-analytics";
 
 const cardClass =
   "min-w-0 overflow-hidden rounded-xl border border-[#e8e4ed] bg-white/80 shadow-[0_2px_8px_rgba(47,39,68,0.035)]";
 
-export default function TopMeals() {
+export default function TopMeals({ meals }: { meals: AnalyticsTopMeal[] }) {
   return (
     <article className={`${cardClass} self-start`}>
       <div className="flex items-center gap-2 border-b border-[#ebe8ef] px-3 py-3 sm:px-4">
@@ -27,9 +26,9 @@ export default function TopMeals() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#eeebf1]">
-            {TOP_MEALS.map((meal, index) => (
+            {meals.map((meal, index) => (
               <tr
-                key={`${meal.name}-${index}`}
+                key={`${meal.mealId}-${index}`}
                 className="transition-colors hover:bg-[#fbfaff]"
               >
                 <td className="px-3 py-2 text-[10px] font-semibold text-[#77778a]">
@@ -39,17 +38,11 @@ export default function TopMeals() {
                 </td>
                 <td className="px-2 py-2">
                   <div className="flex items-center gap-2">
-                    <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-[#eeeaf0] bg-[#f1edf2]">
-                      <Image
-                        src={meal.image}
-                        alt={meal.name}
-                        fill
-                        sizes="36px"
-                        className="object-cover"
-                      />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#eeeaf0] bg-[#f1edf2] text-[#7a7a8c]">
+                      <UtensilsCrossed className="h-4 w-4" aria-hidden="true" />
                     </div>
                     <span className="whitespace-nowrap text-[10px] font-semibold text-[#3c3c50]">
-                      {meal.name}
+                      {meal.mealTitle}
                     </span>
                   </div>
                 </td>
@@ -57,10 +50,20 @@ export default function TopMeals() {
                   <CategoryBadge category={meal.category} />
                 </td>
                 <td className="px-3 py-2 text-right text-[10px] font-semibold text-[#4b4b60]">
-                  {meal.count}
+                  {meal.count.toLocaleString("en-NG")}
                 </td>
               </tr>
             ))}
+            {meals.length === 0 && (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-3 py-8 text-center text-xs text-[#858598]"
+                >
+                  No meal data available for this period.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

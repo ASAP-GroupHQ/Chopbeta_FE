@@ -8,12 +8,13 @@ import {
   Tooltip,
 } from "recharts";
 import { ChartNoAxesColumnIncreasing, ChevronDown } from "lucide-react";
-import {
-  FEEDBACK_OVERVIEW,
-  type FeedbackCategory,
-} from "@/constants/admin-feedback";
+import type {
+  FeedbackCategory,
+  FeedbackOverviewItem,
+} from "@/types/admin-feedback";
 
 interface FeedbackOverviewProps {
+  overview: FeedbackOverviewItem[];
   selectedCategory: "All Categories" | FeedbackCategory;
   onCategoryChange: (category: "All Categories" | FeedbackCategory) => void;
 }
@@ -26,15 +27,14 @@ const tooltipStyle = {
 };
 
 export default function FeedbackOverview({
+  overview,
   selectedCategory,
   onCategoryChange,
 }: FeedbackOverviewProps) {
   const chartData =
     selectedCategory === "All Categories"
-      ? FEEDBACK_OVERVIEW
-      : FEEDBACK_OVERVIEW.filter((item) => item.name === selectedCategory).map(
-          (item) => ({ ...item, value: 100 }),
-        );
+      ? overview
+      : overview.filter((item) => item.name === selectedCategory);
 
   return (
     <article className="min-w-0 overflow-hidden rounded-2xl border border-[#e9e5ed] bg-white p-4 shadow-[0_2px_10px_rgba(47,39,68,0.035)] sm:p-5">
@@ -58,7 +58,7 @@ export default function FeedbackOverview({
             className="h-9 appearance-none rounded-lg border border-[#e7e4eb] bg-white py-1.5 pl-3 pr-8 text-[11px] font-medium text-[#5b5b6d] outline-none focus:border-[#4c9869]"
           >
             <option>All Categories</option>
-            {FEEDBACK_OVERVIEW.map(({ name }) => (
+            {overview.map(({ name }) => (
               <option key={name}>{name}</option>
             ))}
           </select>
@@ -70,6 +70,12 @@ export default function FeedbackOverview({
       </div>
 
       <div className="flex min-h-[210px] flex-col items-center justify-center gap-2 pt-2 sm:flex-row sm:gap-4">
+        {chartData.length === 0 ? (
+          <p className="text-xs text-[#858598]">
+            No feedback category data is available.
+          </p>
+        ) : (
+          <>
         <div className="relative h-[190px] w-full max-w-[220px] shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -118,6 +124,8 @@ export default function FeedbackOverview({
             </li>
           ))}
         </ul>
+          </>
+        )}
       </div>
     </article>
   );

@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, UserRound, Users } from "lucide-react";
 import UserActionsMenu from "./UserActionsMenu";
 import type { AdminUser } from "./types";
 
@@ -14,9 +13,6 @@ interface UserResultsProps {
   pageCount: number;
   onPageChange: (page: number) => void;
   onView: (user: AdminUser) => void;
-  onEdit: (user: AdminUser) => void;
-  onActivate: (user: AdminUser) => void;
-  onDeactivate: (user: AdminUser) => void;
 }
 
 export default function UserResults({
@@ -28,9 +24,6 @@ export default function UserResults({
   pageCount,
   onPageChange,
   onView,
-  onEdit,
-  onActivate,
-  onDeactivate,
 }: UserResultsProps) {
   return (
     <>
@@ -39,12 +32,9 @@ export default function UserResults({
           <article key={user.id} className="p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <Image
-                  src={user.avatar}
-                  alt=""
-                  width={44}
-                  height={44}
-                  className="h-11 w-11 shrink-0 rounded-full object-cover"
+                <UserAvatar
+                  name={user.name}
+                  profilePicture={user.profilePicture}
                 />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[#26342b]">
@@ -65,11 +55,7 @@ export default function UserResults({
               <Detail label="Last active" value={user.lastActive} />
               <UserActionsMenu
                 userName={user.name}
-                status={user.status}
                 onView={() => onView(user)}
-                onEdit={() => onEdit(user)}
-                onActivate={() => onActivate(user)}
-                onDeactivate={() => onDeactivate(user)}
               />
             </div>
           </article>
@@ -101,12 +87,9 @@ export default function UserResults({
               >
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <Image
-                      src={user.avatar}
-                      alt=""
-                      width={42}
-                      height={42}
-                      className="h-10 w-10 shrink-0 rounded-full object-cover"
+                    <UserAvatar
+                      name={user.name}
+                      profilePicture={user.profilePicture}
                     />
                     <div>
                       <p className="whitespace-nowrap text-sm font-semibold text-[#26342b]">
@@ -141,11 +124,7 @@ export default function UserResults({
                 <td className="px-4 py-4">
                   <UserActionsMenu
                     userName={user.name}
-                    status={user.status}
                     onView={() => onView(user)}
-                    onEdit={() => onEdit(user)}
-                    onActivate={() => onActivate(user)}
-                    onDeactivate={() => onDeactivate(user)}
                   />
                 </td>
               </tr>
@@ -216,14 +195,25 @@ export default function UserResults({
 
 function StatusBadge({ status }: { status: string }) {
   const isActive = status === "Active";
+  const isInactive = status === "Inactive";
   return (
     <span
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
-        isActive ? "bg-[#eaf6ee] text-[#27804a]" : "bg-[#fff0eb] text-[#cf6245]"
+        isActive
+          ? "bg-[#eaf6ee] text-[#27804a]"
+          : isInactive
+            ? "bg-[#fff0eb] text-[#cf6245]"
+            : "bg-[#f0f1f3] text-[#858896]"
       }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-[#31a15b]" : "bg-[#e37958]"}`}
+        className={`h-1.5 w-1.5 rounded-full ${
+          isActive
+            ? "bg-[#31a15b]"
+            : isInactive
+              ? "bg-[#e37958]"
+              : "bg-[#9a9ca5]"
+        }`}
       />
       {status}
     </span>
@@ -250,5 +240,38 @@ function EmptyState() {
         Try changing your search or filters.
       </p>
     </div>
+  );
+}
+
+function UserAvatar({
+  name,
+  profilePicture,
+}: {
+  name: string;
+  profilePicture?: string;
+}) {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("");
+
+  return (
+    <span
+      aria-label={name ? `${name}'s avatar` : "User avatar"}
+      className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#eef5f0] text-[#31844d]"
+    >
+      {profilePicture ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={profilePicture}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        initials || <UserRound className="h-5 w-5" aria-hidden="true" />
+      )}
+    </span>
   );
 }

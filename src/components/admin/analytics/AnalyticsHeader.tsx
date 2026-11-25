@@ -11,12 +11,18 @@ interface AnalyticsHeaderProps {
   selectedRange: AnalyticsTimeRange;
   showCustomRange: boolean;
   onSelectRange: (range: AnalyticsTimeRange) => void;
+  customStartDate: string;
+  customEndDate: string;
+  onCustomDateChange: (field: "startDate" | "endDate", value: string) => void;
 }
 
 export default function AnalyticsHeader({
   selectedRange,
   showCustomRange,
   onSelectRange,
+  customStartDate,
+  customEndDate,
+  onCustomDateChange,
 }: AnalyticsHeaderProps) {
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -67,21 +73,27 @@ export default function AnalyticsHeader({
                 <input
                   type="date"
                   aria-label="Custom range start date"
-                  defaultValue="2025-04-25"
+                  value={customStartDate}
+                  onChange={(event) =>
+                    onCustomDateChange("startDate", event.target.value)
+                  }
                   className="w-[116px] bg-transparent text-[10px] outline-none"
                 />
                 <span>–</span>
                 <input
                   type="date"
                   aria-label="Custom range end date"
-                  defaultValue="2025-05-24"
+                  value={customEndDate}
+                  onChange={(event) =>
+                    onCustomDateChange("endDate", event.target.value)
+                  }
                   className="w-[116px] bg-transparent text-[10px] outline-none"
                 />
               </div>
             ) : (
               <>
                 <span className="whitespace-nowrap">
-                  Apr 25, 2025 - May 24, 2025
+                  {formatDate(customStartDate)} - {formatDate(customEndDate)}
                 </span>
                 <ChevronDown className="h-4 w-4 shrink-0" />
               </>
@@ -94,4 +106,15 @@ export default function AnalyticsHeader({
       </div>
     </header>
   );
+}
+
+function formatDate(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
 }
