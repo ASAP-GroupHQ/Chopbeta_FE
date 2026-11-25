@@ -5,7 +5,7 @@ import { FiArrowLeft, FiFileText, FiLock } from "react-icons/fi";
 
 export type LegalDocumentType = "terms" | "privacy" | "about";
 
-const contactEmail = "asapgrouphq@gmail.com";
+const contactEmail = "support.chopbeta@gmail.com";
 const updatedDate = "1 October, 2026";
 
 const documentMetadata: Record<

@@ -153,7 +153,7 @@ function SupportSection() {
           </p>
         </div>
         <a
-          href="mailto:asapgrouphq@gmail.com?subject=ChopBeta%20Support"
+          href="mailto:support.chopbeta@gmail.com?subject=ChopBeta%20Support"
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#185A31] active:scale-[0.98]"
         >
           <FiMail /> Email support <FiArrowUpRight />
@@ -297,7 +297,7 @@ function ContactSection() {
           <FiArrowUpRight className="text-gray-300 transition group-hover:text-[#1E6B3C]" />
         </a>
         <a
-          href="mailto:asapgrouphq@gmail.com"
+          href="mailto:support.chopbeta@gmail.com"
           className="group flex items-center gap-4 py-4 transition-colors hover:text-[#1E6B3C]"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-[#1E6B3C]">
@@ -308,7 +308,7 @@ function ContactSection() {
               Support email
             </span>
             <span className="mt-1 block break-all text-sm font-bold text-[#1A2E35]">
-              asapgrouphq@gmail.com
+              support.chopbeta@gmail.com
             </span>
           </span>
           <FiArrowUpRight className="text-gray-300 transition group-hover:text-[#1E6B3C]" />
@@ -335,10 +335,10 @@ function ContactSection() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-xs font-semibold text-gray-400">
-              KIRA · ChopBeta AI Assistant
+              KIRA · Coming soon
             </span>
             <span className="mt-1 block text-sm font-bold text-[#1A2E35]">
-              Start a chat for guided help
+              AI-guided help is in the works
             </span>
           </span>
           <FiArrowUpRight className="text-gray-300 transition group-hover:text-[#1E6B3C]" />

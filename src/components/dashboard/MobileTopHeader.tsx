@@ -108,8 +108,8 @@ export default function MobileTopHeader() {
           <Link
             href="/dashboard/chat"
             className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-white hover:text-green-800 active:scale-90 cursor-pointer"
-            aria-label="Chat with KIRA, ChopBeta assistant"
-            title="Chat with KIRA"
+            aria-label="KIRA, ChopBeta assistant — coming soon"
+            title="KIRA coming soon"
           >
             <svg
               width="22"
