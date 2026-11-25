@@ -117,7 +117,7 @@ export default function UserDirectoryFilters({
               className="mt-1.5 h-10 w-full rounded-lg border border-[#e1e7e2] bg-white px-3 text-sm font-normal text-[#344239] outline-none focus:border-[#31844d]"
             >
               <option>All roles</option>
-              <option>Student</option>
+              <option>User</option>
               <option>Admin</option>
             </select>
           </label>

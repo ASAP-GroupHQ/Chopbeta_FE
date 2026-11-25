@@ -2,24 +2,34 @@
 
 import type { FormEvent } from "react";
 import { ChevronDown, Search as SearchIcon } from "lucide-react";
-import type { FeedbackCategory, FeedbackStatus } from "@/constants/admin-feedback";
+import type {
+  FeedbackCategory,
+  FeedbackSentiment,
+  FeedbackStatus,
+} from "@/types/admin-feedback";
 
 interface FeedbackFiltersProps {
   searchQuery: string;
-  selectedType: "All Types" | FeedbackCategory;
+  selectedCategory: "All Categories" | FeedbackCategory;
+  selectedType: "All Types" | FeedbackSentiment;
   selectedStatus: "All Status" | FeedbackStatus;
   onSearchChange: (value: string) => void;
   onSearch: () => void;
-  onTypeChange: (value: "All Types" | FeedbackCategory) => void;
+  onCategoryChange: (
+    value: "All Categories" | FeedbackCategory,
+  ) => void;
+  onTypeChange: (value: "All Types" | FeedbackSentiment) => void;
   onStatusChange: (value: "All Status" | FeedbackStatus) => void;
 }
 
 export default function FeedbackFilters({
   searchQuery,
+  selectedCategory,
   selectedType,
   selectedStatus,
   onSearchChange,
   onSearch,
+  onCategoryChange,
   onTypeChange,
   onStatusChange,
 }: FeedbackFiltersProps) {
@@ -31,7 +41,7 @@ export default function FeedbackFilters({
   return (
     <form
       onSubmit={submitSearch}
-      className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_150px_auto] sm:items-center"
+      className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_150px_150px_auto] sm:items-center"
     >
       <label className="relative min-w-0">
         <span className="sr-only">Search feedback</span>
@@ -43,17 +53,25 @@ export default function FeedbackFilters({
           type="search"
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search meals by name, email or keyword......"
+          placeholder="Search feedback by name, email or keyword..."
           className="h-10 w-full rounded-lg border border-[#e7e4eb] bg-white pl-9 pr-3 text-xs font-medium text-[#303044] outline-none transition placeholder:text-[#9292a2] focus:border-[#4c9869] focus:ring-2 focus:ring-[#4c9869]/10"
         />
       </label>
 
       <FilterSelect
+        label="Filter by category"
+        value={selectedCategory}
+        options={["All Categories", "Suggestion", "Compliment", "Complaint"]}
+        onChange={(value) =>
+          onCategoryChange(value as "All Categories" | FeedbackCategory)
+        }
+      />
+      <FilterSelect
         label="Filter by feedback type"
         value={selectedType}
-        options={["All Types", "Suggestion", "Compliment", "Complaint"]}
+        options={["All Types", "Positive", "Neutral", "Negative"]}
         onChange={(value) =>
-          onTypeChange(value as "All Types" | FeedbackCategory)
+          onTypeChange(value as "All Types" | FeedbackSentiment)
         }
       />
       <FilterSelect

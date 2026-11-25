@@ -4,7 +4,7 @@ import {
   NeutralFeedbackIcon,
   PositiveFeedbackIcon,
 } from "@/components/icons/AdminIcons";
-import { FEEDBACK_STATS } from "@/constants/admin-feedback";
+import type { FeedbackStats as FeedbackStatsData } from "@/types/admin-feedback";
 
 const icons = {
   total: FeedbackTotalIcon,
@@ -19,13 +19,23 @@ const toneStyles = {
   rose: "border-[#f0dede] bg-[#fdf8f8]",
 };
 
-export default function FeedbackStats() {
+export default function FeedbackStats({
+  stats,
+}: {
+  stats: FeedbackStatsData | null;
+}) {
+  const feedbackStats = [
+    { label: "Total feedback", value: stats?.total, tone: "green", icon: "total" },
+    { label: "Positive feedback", value: stats?.positive, tone: "green", icon: "positive" },
+    { label: "Neutral feedback", value: stats?.neutral, tone: "amber", icon: "neutral" },
+    { label: "Negative feedback", value: stats?.negative, tone: "rose", icon: "negative" },
+  ] as const;
   return (
     <section
       aria-label="Feedback summary"
       className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4"
     >
-      {FEEDBACK_STATS.map((stat) => {
+      {feedbackStats.map((stat) => {
         const Icon = icons[stat.icon];
         return (
           <article
@@ -35,35 +45,12 @@ export default function FeedbackStats() {
             <Icon className="h-11 w-11 shrink-0" />
             <div className="min-w-0">
               <p className="text-2xl font-bold leading-none tracking-tight text-[#202035]">
-                {stat.value}
+                {stat.value?.toLocaleString("en-NG") ?? "—"}
               </p>
               <h2 className="mt-1.5 text-xs font-medium text-[#737387]">
                 {stat.label}
               </h2>
             </div>
-            <span className="ml-auto hidden h-8 w-8 items-center justify-center rounded-full bg-white/70 text-[#4c9869] sm:flex">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                className="h-4 w-4"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4 16.5 9.2 11l3.5 3.5L20 7"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M15.5 7H20v4.5"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
           </article>
         );
       })}

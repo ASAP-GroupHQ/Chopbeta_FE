@@ -3,30 +3,23 @@
 import Image from "next/image";
 import {
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   Ellipsis,
+  UtensilsCrossed,
 } from "lucide-react";
-import { PRICE_MANAGEMENT_DATA } from "@/constants/admin-management";
-
-export type ManagedPrice = (typeof PRICE_MANAGEMENT_DATA)[number];
+import type { ManagedPrice } from "@/types/admin-prices";
+export type { ManagedPrice } from "@/types/admin-prices";
 
 interface PriceTableProps {
   prices: ManagedPrice[];
+  isLoading: boolean;
   onPriceChange: (id: string, delta: number) => void;
   onDelete: (meal: ManagedPrice) => void;
 }
 
-const mealImages: Record<string, string> = {
-  "Rice & Beans": "/images/meals/beans and plantain.png",
-  "Pap & Akara": "/images/meals/Puff-puff.jpg",
-  Noodles: "/images/meals/quick-meal.png",
-  "Bread & Egg": "/images/meals/Fried-Rice.png",
-};
-
 export default function PriceTable({
   prices,
+  isLoading,
   onPriceChange,
   onDelete,
 }: PriceTableProps) {
@@ -48,23 +41,46 @@ export default function PriceTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#ebe9ef] text-[11px] font-medium text-[#343448] sm:text-xs">
-            {prices.map((item) => (
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={9}
+                  className="px-3 py-8 text-center text-xs text-[#858598]"
+                >
+                  Loading meal prices…
+                </td>
+              </tr>
+            ) : prices.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={9}
+                  className="px-3 py-8 text-center text-xs text-[#858598]"
+                >
+                  No meal price records are available.
+                </td>
+              </tr>
+            ) : (
+              prices.map((item) => (
               <tr
                 key={item.id}
                 className="transition-colors hover:bg-[#fbfaff]"
               >
                 <td className="px-3 py-1.5 sm:px-4">
                   <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-[#eeeaf0] bg-[#f1edf2]">
-                    <Image
-                      src={
-                        mealImages[item.name] ||
-                        "/images/meals/Ofada_rice.png"
-                      }
-                      alt={item.name}
-                      fill
-                      sizes="36px"
-                      className="object-cover"
-                    />
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        unoptimized
+                        sizes="36px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-full items-center justify-center text-[#7a7a8c]">
+                        <UtensilsCrossed className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-1.5 font-semibold text-[#303044]">
@@ -139,11 +155,12 @@ export default function PriceTable({
                   </button>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      <PricePagination />
+      <PricePagination count={prices.length} />
     </section>
   );
 }
@@ -168,43 +185,13 @@ function CategoryBadge({
   );
 }
 
-function PricePagination() {
+function PricePagination({ count }: { count: number }) {
   return (
-    <footer className="flex flex-col items-center justify-between gap-3 border-t border-[#eeebf1] px-3 py-3 text-[10px] sm:flex-row sm:px-4">
+    <footer className="border-t border-[#eeebf1] px-3 py-3 text-[10px] sm:px-4">
       <p className="font-medium text-[#858597]">
-        Showing <span className="font-semibold text-[#55556a]">1 - 10</span> of{" "}
-        <span className="font-semibold text-[#55556a]">2,458 users</span>
+        Showing <span className="font-semibold text-[#55556a]">{count}</span>{" "}
+        {count === 1 ? "meal" : "meals"}
       </p>
-      <div className="flex max-w-full items-center gap-1.5 overflow-x-auto">
-        <button
-          type="button"
-          className="flex items-center gap-1 whitespace-nowrap rounded-md border border-[#e6e4eb] bg-white px-2.5 py-1.5 font-medium text-[#8a8a9b] transition hover:bg-[#faf9fb]"
-        >
-          <ChevronLeft className="h-3.5 w-3.5" /> Previous
-        </button>
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((page) => (
-            <button
-              key={page}
-              type="button"
-              aria-current={page === 1 ? "page" : undefined}
-              className={`flex h-7 w-7 items-center justify-center rounded-md font-semibold transition ${
-                page === 1
-                  ? "bg-[#2e8b57] text-white shadow-sm"
-                  : "border border-[#e6e4eb] bg-white text-[#55556a] hover:bg-[#faf9fb]"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="flex items-center gap-1 whitespace-nowrap rounded-md border border-[#e6e4eb] bg-white px-2.5 py-1.5 font-semibold text-[#55556a] transition hover:bg-[#faf9fb]"
-        >
-          Next <ChevronRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
     </footer>
   );
 }

@@ -1,12 +1,55 @@
-import { ANALYTICS_STATS } from "@/constants/analytics-data";
+import {
+  ActiveUsersIcon,
+  AveragePriceIcon,
+  TotalMealsIcon,
+  TotalUserIcon,
+} from "@/components/icons/AdminIcons";
+import type { AdminAnalyticsData } from "@/types/admin-analytics";
 
-export default function AnalyticsStats() {
+const statCards = [
+  {
+    title: "Total Meal plans",
+    icon: TotalMealsIcon,
+    tint: "bg-[#eaf4ed]",
+  },
+  {
+    title: "Average Price",
+    icon: AveragePriceIcon,
+    tint: "bg-[#eaf4ed]",
+  },
+  {
+    title: "Total User",
+    icon: TotalUserIcon,
+    tint: "bg-[#f5eafa]",
+  },
+  {
+    title: "Active User",
+    icon: ActiveUsersIcon,
+    tint: "bg-[#eaf4ed]",
+  },
+] as const;
+
+export default function AnalyticsStats({
+  data,
+}: {
+  data: AdminAnalyticsData;
+}) {
+  const values: Record<string, string> = {
+    "Total Meal plans":
+      data.totalMealPlans?.toLocaleString("en-NG") ?? "—",
+    "Average Price":
+      data.averageMealPrice === null
+        ? "—"
+        : `₦${Math.round(data.averageMealPrice).toLocaleString("en-NG")}`,
+    "Total User": data.totalUsers?.toLocaleString("en-NG") ?? "—",
+    "Active User": data.activeUsers?.toLocaleString("en-NG") ?? "—",
+  };
   return (
     <section
       aria-label="Analytics summary"
       className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4"
     >
-      {ANALYTICS_STATS.map((stat) => {
+      {statCards.map((stat) => {
         const Icon = stat.icon;
         return (
           <article
@@ -23,40 +66,12 @@ export default function AnalyticsStats() {
                 {stat.title}
               </p>
               <p className="mt-0.5 text-lg font-bold leading-tight text-[#202035]">
-                {stat.value}
+                {values[stat.title]}
               </p>
-              <div className="mt-1 flex items-center gap-1.5">
-                <span className="rounded-full bg-[#e8f4ec] px-1.5 py-0.5 text-[9px] font-semibold text-[#339464]">
-                  ↑ {stat.trend}
-                </span>
-                <span className="text-[9px] font-medium text-[#89899a]">
-                  vs last 30 days
-                </span>
-              </div>
             </div>
-            <TrendSparkline color={stat.sparklineColor} />
           </article>
         );
       })}
     </section>
-  );
-}
-
-function TrendSparkline({ color }: { color: string }) {
-  return (
-    <svg
-      viewBox="0 0 42 22"
-      fill="none"
-      className="h-6 w-9 shrink-0"
-      aria-hidden="true"
-    >
-      <path
-        d="M2 19L13 11L23 14L39 3"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

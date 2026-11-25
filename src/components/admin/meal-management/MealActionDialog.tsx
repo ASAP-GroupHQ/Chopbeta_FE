@@ -11,9 +11,11 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
-import { MEALS_DATA } from "@/constants/admin-management";
-
-export type ManagedMeal = (typeof MEALS_DATA)[number];
+import type {
+  ManagedMeal,
+  MealEdits,
+} from "@/types/admin-meals";
+export type { ManagedMeal, MealEdits } from "@/types/admin-meals";
 export type MealDialogMode = "view" | "edit" | "delete";
 
 interface MealActionDialogProps {
@@ -23,17 +25,10 @@ interface MealActionDialogProps {
   onClose: () => void;
   onSave: (id: string, updates: MealEdits) => void;
   onDelete: (meal: ManagedMeal) => void;
+  onToggleStatus: (meal: ManagedMeal) => void;
 }
 
-export interface MealEdits {
-  name: string;
-  description: string;
-  category: string;
-  price: string;
-  calories: string;
-}
-
-const categories = ["Breakfast", "Lunch", "Dinner", "Quick meal"];
+const categories = ["breakfast", "lunch", "dinner", "snack", "quick meal"];
 
 const inputClassName =
   "mt-1.5 h-11 w-full rounded-xl border border-[#e4e9e5] bg-white px-3.5 text-sm text-[#28352d] outline-none transition placeholder:text-[#a0a9a2] focus:border-[#31844d] focus:ring-2 focus:ring-[#31844d]/10";
@@ -45,6 +40,7 @@ export default function MealActionDialog({
   onClose,
   onSave,
   onDelete,
+  onToggleStatus,
 }: MealActionDialogProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -148,13 +144,21 @@ export default function MealActionDialog({
             {mode === "view" && (
               <div className="space-y-5 px-5 py-5 sm:px-6">
                 <div className="relative h-48 overflow-hidden rounded-xl bg-[#f2f4f3] sm:h-56">
-                  <Image
-                    src={meal.image}
-                    alt={meal.name}
-                    fill
-                    sizes="(max-width: 640px) 100vw, 560px"
-                    className="object-cover"
-                  />
+                  {meal.image ? (
+                    <Image
+                      src={meal.image}
+                      alt={meal.name}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 640px) 100vw, 560px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[#7b887f]">
+                      <UtensilsCrossed className="h-12 w-12" aria-hidden="true" />
+                      <span className="sr-only">No meal image available</span>
+                    </div>
+                  )}
                 </div>
                 <p className="text-sm leading-relaxed text-[#657168]">
                   {meal.description}
@@ -168,7 +172,23 @@ export default function MealActionDialog({
                 <p className="whitespace-pre-line text-xs leading-relaxed text-[#89948d]">
                   Added {meal.dateAdded}
                 </p>
-                <DialogFooter onCancel={onClose} />
+                <div className="flex flex-col-reverse gap-2 border-t border-[#edf0ed] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="button"
+                    disabled={meal.status === "Unknown"}
+                    onClick={() => onToggleStatus(meal)}
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#dfe6e1] px-4 text-sm font-semibold text-[#526056] transition hover:bg-[#f5f8f5] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {meal.status === "Active" ? "Deactivate meal" : "Activate meal"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#1E6B3C] px-5 text-sm font-bold text-white transition hover:bg-[#185a31]"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             )}
 

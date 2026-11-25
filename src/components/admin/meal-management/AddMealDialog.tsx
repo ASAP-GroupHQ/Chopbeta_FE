@@ -10,13 +10,13 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { LoaderCircle, Plus, X } from "lucide-react";
-import type { MealWriteData } from "@/services/admin";
+import type { MealWriteData } from "@/types/admin-meals";
 
 interface AddMealDialogProps {
   isOpen: boolean;
   isSubmitting: boolean;
   onClose: () => void;
-  onSubmit: (meal: MealWriteData) => Promise<boolean>;
+  onSubmit: (meal: MealWriteData, image?: File) => Promise<boolean>;
 }
 
 const initialForm = {
@@ -37,11 +37,14 @@ export default function AddMealDialog({
   onSubmit,
 }: AddMealDialogProps) {
   const [form, setForm] = useState(initialForm);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const closeDialog = useCallback(() => {
     if (isSubmitting) return;
     setForm(initialForm);
+    setImageFile(null);
     onClose();
   }, [isSubmitting, onClose]);
 
@@ -56,6 +59,13 @@ export default function AddMealDialog({
       document.body.style.overflow = previousOverflow;
     };
   }, [isOpen]);
+
+  useEffect(
+    () => () => {
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    },
+    [imagePreviewUrl],
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -99,9 +109,10 @@ export default function AddMealDialog({
           fats: Number(form.fats),
         },
       },
-    });
+    }, imageFile ?? undefined);
     if (wasAdded) {
       setForm(initialForm);
+      setImageFile(null);
       onClose();
     }
   };
@@ -226,6 +237,43 @@ export default function AddMealDialog({
                     </select>
                   </label>
                   {numberInput("estimatedPrice", "Estimated price", "NGN")}
+                  <label className="block text-xs font-semibold text-[#526056] sm:col-span-2">
+                    Meal image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        setImageFile(file);
+                        setImagePreviewUrl(
+                          file ? URL.createObjectURL(file) : null,
+                        );
+                      }}
+                      className="mt-1.5 block w-full text-sm text-[#526056] file:mr-3 file:rounded-lg file:border-0 file:bg-[#eaf4ee] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#247443]"
+                      disabled={isSubmitting}
+                    />
+                    <span className="mt-1 block text-[11px] font-normal text-[#829087]">
+                      The selected image will be uploaded when you add the meal.
+                    </span>
+                    {imagePreviewUrl && imageFile && (
+                      <span className="mt-3 flex items-center gap-3 rounded-xl border border-[#e5ede7] bg-[#f8fbf8] p-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imagePreviewUrl}
+                          alt={`Preview of ${imageFile.name}`}
+                          className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                        />
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-semibold text-[#344239]">
+                            {imageFile.name}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] font-normal text-[#829087]">
+                            Ready to upload
+                          </span>
+                        </span>
+                      </span>
+                    )}
+                  </label>
                   <label className="block text-xs font-semibold text-[#526056] sm:col-span-2">
                     Description
                     <textarea

@@ -1,6 +1,11 @@
 import { MEAL_STATS } from "@/constants/admin-management";
+import type { MealStats as MealStatsData } from "@/types/admin-meals";
 
-export default function MealStats() {
+export default function MealStats({
+  stats,
+}: {
+  stats: Partial<MealStatsData> | null;
+}) {
   return (
     <section
       aria-label="Meal statistics"
@@ -8,6 +13,12 @@ export default function MealStats() {
     >
       {MEAL_STATS.map((stat) => {
         const Icon = stat.icon;
+        const values: Record<string, number | undefined> = {
+          "Total Meals": stats?.totalMeals,
+          "Active Meals": stats?.activeMeals,
+          "Inactive Meals": stats?.inactiveMeals,
+          Categories: stats?.categories,
+        };
         return (
           <article
             key={stat.title}
@@ -21,7 +32,7 @@ export default function MealStats() {
                 {stat.title}
               </span>
               <h2 className="text-xl font-black leading-tight text-[#1A2E35] sm:text-2xl">
-                {stat.value}
+                {values[stat.title]?.toLocaleString() ?? "—"}
               </h2>
               <p className="text-[10px] font-medium text-gray-500">
                 {stat.subtitle}

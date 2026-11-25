@@ -4,20 +4,20 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Star, X } from "lucide-react";
-import type { AdminFeedback } from "@/constants/admin-feedback";
+import type { AdminFeedback } from "@/types/admin-feedback";
 
 interface FeedbackDetailsDialogProps {
   feedback: AdminFeedback | null;
-  mode: "view" | "delete" | null;
+  mode: "view" | "advance" | null;
   onClose: () => void;
-  onConfirmDelete: () => void;
+  onConfirmAdvance: () => void;
 }
 
 export default function FeedbackDetailsDialog({
   feedback,
   mode,
   onClose,
-  onConfirmDelete,
+  onConfirmAdvance,
 }: FeedbackDetailsDialogProps) {
   useEffect(() => {
     if (!feedback) return;
@@ -43,7 +43,7 @@ export default function FeedbackDetailsDialog({
           }}
         >
           <motion.section
-            role={mode === "delete" ? "alertdialog" : "dialog"}
+            role={mode === "advance" ? "alertdialog" : "dialog"}
             aria-modal="true"
             aria-labelledby="feedback-dialog-title"
             className="w-full max-w-lg rounded-2xl border border-[#e9e5ed] bg-white p-5 shadow-[0_24px_70px_rgba(20,20,35,0.22)] sm:p-6"
@@ -59,7 +59,7 @@ export default function FeedbackDetailsDialog({
                   id="feedback-dialog-title"
                   className="text-lg font-bold text-[#202035]"
                 >
-                  {mode === "delete" ? "Delete feedback?" : "Feedback details"}
+                  {mode === "advance" ? "Update feedback status?" : "Feedback details"}
                 </h2>
                 <p className="mt-1 text-xs text-[#858598]">
                   {feedback.name} · {feedback.date}
@@ -79,7 +79,8 @@ export default function FeedbackDetailsDialog({
               <>
                 <div className="mt-5 grid gap-3 rounded-xl bg-[#f8faf8] p-4 text-sm sm:grid-cols-2">
                   <DialogDetail label="Email" value={feedback.email} />
-                  <DialogDetail label="Feedback type" value={feedback.type} />
+                  <DialogDetail label="Category" value={feedback.category} />
+                  <DialogDetail label="Type" value={feedback.type} />
                   <DialogDetail label="Status" value={feedback.status} />
                   <div>
                     <p className="text-xs text-[#858598]">Rating</p>
@@ -107,8 +108,8 @@ export default function FeedbackDetailsDialog({
                 <div className="mt-5 flex items-start gap-3 rounded-xl bg-[#fff7f5] p-4 text-sm text-[#765b57]">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[#c96b5e]" />
                   <p>
-                    This will remove the feedback from the current sample list.
-                    This action cannot be undone.
+                    This will move this feedback to the next status in the review
+                    workflow.
                   </p>
                 </div>
                 <div className="mt-5 flex justify-end gap-2">
@@ -121,10 +122,10 @@ export default function FeedbackDetailsDialog({
                   </button>
                   <button
                     type="button"
-                    onClick={onConfirmDelete}
-                    className="rounded-lg bg-[#bd5147] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#a6433a]"
+                    onClick={onConfirmAdvance}
+                    className="rounded-lg bg-[#216a40] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#195633]"
                   >
-                    Delete feedback
+                    Update status
                   </button>
                 </div>
               </>

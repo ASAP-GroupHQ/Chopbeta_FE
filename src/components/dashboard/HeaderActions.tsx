@@ -110,8 +110,8 @@ export default function HeaderActions() {
       <Link
         href="/dashboard/chat"
         className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.02)] text-[#1A2E35] hover:bg-gray-50 transition-all cursor-pointer active:scale-95"
-        aria-label="Chat with KIRA, ChopBeta assistant"
-        title="Chat with KIRA"
+        aria-label="KIRA, ChopBeta assistant — coming soon"
+        title="KIRA coming soon"
       >
         <FiHelpCircle size={20} className="stroke-[2.2]" />
       </Link>

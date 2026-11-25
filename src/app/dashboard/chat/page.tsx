@@ -1,111 +1,37 @@
-"use client";
-
-import React, { FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   FiArrowLeft,
-  FiArrowUp,
-  FiChevronRight,
+  FiArrowUpRight,
+  FiHeart,
   FiMessageCircle,
-  FiPlus,
   FiShield,
+  FiTrendingUp,
 } from "react-icons/fi";
 import HeaderActions from "@/components/dashboard/HeaderActions";
 
-interface ChatMessage {
-  id: number;
-  role: "assistant" | "user";
-  text: string;
-  time: string;
-}
-
-const SUGGESTED_PROMPTS = [
-  "Help me plan meals on a budget",
-  "How do I update my food preferences?",
-  "How can I track a meal?",
+const plannedFeatures = [
+  {
+    icon: FiMessageCircle,
+    title: "Meal-planning guidance",
+    description: "Ideas to help make your food budget go further.",
+  },
+  {
+    icon: FiHeart,
+    title: "Help that fits your preferences",
+    description: "Guidance shaped around the foods you enjoy and avoid.",
+  },
+  {
+    icon: FiTrendingUp,
+    title: "Practical next steps",
+    description: "Simple ways to get more from your ChopBeta routine.",
+  },
 ];
 
-function assistantReply(message: string) {
-  const text = message.toLowerCase();
-
-  if (text.includes("budget") || text.includes("plan") || text.includes("generate")) {
-    return "To build a plan, open Generate Meal from your dashboard, enter your budget or choose a quick amount, then select Generate Meal. You can open any suggestion to review its estimated price and nutrition before adding it to your plan.";
-  }
-  if (text.includes("allerg") || text.includes("dislike") || text.includes("preference")) {
-    return "You can manage that in Settings → Dietary Preferences. Choose the foods you need to avoid or dislike, add any custom items, and save your changes. Future suggestions can then take those preferences into account.";
-  }
-  if (text.includes("track") || text.includes("eaten")) {
-    return "Open Track from your dashboard to see today’s planned meals. Use the status control beside a meal to mark it as eaten and update your daily progress.";
-  }
-  if (text.includes("account") || text.includes("password") || text.includes("login") || text.includes("sign in")) {
-    return "For profile settings, open Settings → Personal Details. For sign-in or password help, email asapgrouphq@gmail.com and include the email address on your ChopBeta account.";
-  }
-  if (text.includes("contact") || text.includes("human") || text.includes("support")) {
-    return "You can reach the support team at asapgrouphq@gmail.com or call +234 (0) 707 435 7521. Include a short description of what you need help with.";
-  }
-
-  return "I can help you find your way around meal planning, budgets, dietary preferences, tracking, and account settings. Tell me a little more about what you’re trying to do, or choose one of the suggestions below.";
-}
-
-function formatTime(date: Date) {
-  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
 export default function KiraChatPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      role: "assistant",
-      text: "Hi, I’m KIRA, your ChopBeta assistant. What can I help you figure out today?",
-      time: formatTime(new Date()),
-    },
-  ]);
-  const [draft, setDraft] = useState("");
-  const [isReplying, setIsReplying] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, isReplying]);
-
-  const sendMessage = (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || isReplying) return;
-
-    const sentAt = new Date();
-    setMessages((previous) => [
-      ...previous,
-      { id: sentAt.getTime(), role: "user", text: trimmed, time: formatTime(sentAt) },
-    ]);
-    setDraft("");
-    setIsReplying(true);
-
-    window.setTimeout(() => {
-      const repliedAt = new Date();
-      setMessages((previous) => [
-        ...previous,
-        {
-          id: repliedAt.getTime(),
-          role: "assistant",
-          text: assistantReply(trimmed),
-          time: formatTime(repliedAt),
-        },
-      ]);
-      setIsReplying(false);
-    }, 700);
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    sendMessage(draft);
-  };
-
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-13rem)] max-w-5xl flex-col pb-2 lg:min-h-[calc(100dvh-8rem)]">
-      <header className="mb-4 flex items-center justify-between gap-4 sm:mb-6">
+    <div className="mx-auto flex min-h-[calc(100dvh-13rem)] max-w-5xl flex-col pb-6 lg:min-h-[calc(100dvh-8rem)]">
+      <header className="mb-5 flex items-center justify-between gap-4 sm:mb-7">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/dashboard"
@@ -115,131 +41,122 @@ export default function KiraChatPage() {
             <FiArrowLeft />
           </Link>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1E6B3C]">ChopBeta assistant</p>
-            <h1 className="truncate text-xl font-black text-[#1A2E35] sm:text-2xl">Chat with KIRA</h1>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1E6B3C]">
+              Your ChopBeta assistant
+            </p>
+            <h1 className="truncate text-xl font-black text-[#1A2E35] sm:text-2xl">
+              Meet KIRA
+            </h1>
           </div>
         </div>
         <HeaderActions />
       </header>
 
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_12px_36px_rgba(26,46,53,0.07)]">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3.5 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#EAF6EE]">
-              <Image src="/chopbeta-favicon.png" alt="KIRA assistant" width={28} height={28} className="object-contain" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-extrabold text-[#1A2E35]">KIRA</p>
-              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                ChopBeta AI Assistant
+      <main className="flex flex-1 items-center">
+        <section className="relative isolate w-full overflow-hidden rounded-[2rem] border border-[#E5EEE7] bg-gradient-to-br from-white via-[#F8FBF8] to-[#EAF6EE] px-5 py-8 shadow-[0_16px_44px_rgba(26,46,53,0.07)] sm:px-9 sm:py-10 lg:px-12 lg:py-12">
+          <div
+            aria-hidden="true"
+            className="absolute -right-20 -top-24 -z-10 h-72 w-72 rounded-full bg-[#D9EFDF]/70 blur-3xl"
+          />
+          <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#D7EBDD] bg-white/80 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#1E6B3C] shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#E4A642]" />
+                Coming soon
+              </span>
+              <h2 className="mt-5 max-w-lg text-3xl font-black leading-tight tracking-tight text-[#1A2E35] sm:text-4xl">
+                A little more help is on its way.
+              </h2>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-[#62716A] sm:text-base">
+                KIRA is being thoughtfully built to support your food journey.
+                We&apos;re putting something special together, and we can&apos;t
+                wait to introduce her in a future update.
+              </p>
+
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-5 py-3 text-sm font-bold text-white shadow-[0_6px_16px_rgba(30,107,60,0.2)] transition hover:bg-[#185A31] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1E6B3C]"
+                >
+                  Back to your dashboard
+                  <FiArrowUpRight aria-hidden="true" />
+                </Link>
+                <a
+                  href="mailto:support.chopbeta@gmail.com"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#DCE7DE] bg-white/80 px-5 py-3 text-sm font-bold text-[#3D5146] transition hover:border-[#B9D7C1] hover:text-[#1E6B3C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1E6B3C]"
+                >
+                  Contact support
+                </a>
+              </div>
+              <p className="mt-4 text-xs leading-relaxed text-gray-400">
+                In the meantime, your meal plans, tracking, and preferences are
+                ready to explore from your dashboard.
               </p>
             </div>
-          </div>
-          <span className="hidden items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1.5 text-[10px] font-semibold text-gray-500 sm:inline-flex">
-            <FiShield className="text-[#1E6B3C]" /> Personal, helpful guidance
-          </span>
-        </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto bg-[#FCFDFC] px-4 py-5 sm:px-6 sm:py-7">
-          <div className="mx-auto flex max-w-md items-center justify-center gap-2 text-[10px] font-semibold text-gray-400">
-            <span className="h-px flex-1 bg-gray-100" />
-            TODAY
-            <span className="h-px flex-1 bg-gray-100" />
-          </div>
-
-          <AnimatePresence initial={false}>
-            {messages.map((message) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div className={`flex max-w-[88%] items-end gap-2.5 sm:max-w-[76%] ${message.role === "user" ? "flex-row-reverse" : ""}`}>
-                  {message.role === "assistant" ? (
-                    <div className="mb-5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#EAF6EE]">
-                      <Image src="/chopbeta-favicon.png" alt="" width={17} height={17} className="object-contain" />
-                    </div>
-                  ) : null}
-                  <div>
-                    <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${message.role === "user" ? "rounded-br-md bg-[#1E6B3C] text-white" : "rounded-bl-md border border-gray-100 bg-white text-[#34433B] shadow-sm"}`}>
-                      {message.text}
-                    </div>
-                    <p className={`mt-1.5 text-[10px] text-gray-400 ${message.role === "user" ? "text-right" : ""}`}>{message.time}</p>
+            <aside
+              aria-label="A preview of planned KIRA features"
+              className="rounded-3xl border border-white/90 bg-white/85 p-5 shadow-[0_12px_34px_rgba(26,46,53,0.08)] backdrop-blur sm:p-6"
+            >
+              <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EAF6EE]">
+                    <Image
+                      src="/chopbeta-favicon.png"
+                      alt=""
+                      width={30}
+                      height={30}
+                      className="object-contain"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-extrabold text-[#1A2E35]">
+                      KIRA
+                    </p>
+                    <p className="mt-0.5 text-xs font-medium text-gray-500">
+                      Your future food companion
+                    </p>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {isReplying && (
-            <div className="flex items-end gap-2.5">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#EAF6EE]">
-                <Image src="/chopbeta-favicon.png" alt="" width={17} height={17} className="object-contain" />
+                <span className="shrink-0 rounded-full bg-[#F1F7F2] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-[#1E6B3C]">
+                  In the works
+                </span>
               </div>
-              <div className="flex h-10 items-center gap-1 rounded-2xl rounded-bl-md border border-gray-100 bg-white px-4 shadow-sm" aria-label="KIRA is replying">
-                {[0, 1, 2].map((dot) => (
-                  <motion.span key={dot} animate={{ y: [0, -3, 0] }} transition={{ duration: 0.65, repeat: Infinity, delay: dot * 0.12 }} className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                ))}
+
+              <div className="py-5">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-400">
+                  What we&apos;re working towards
+                </p>
+                <ul className="mt-4 space-y-4">
+                  {plannedFeatures.map(({ icon: Icon, title, description }) => (
+                    <li key={title} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F0F7F1] text-[#1E6B3C]">
+                        <Icon size={16} aria-hidden="true" />
+                      </span>
+                      <span>
+                        <span className="block text-sm font-bold text-[#263B30]">
+                          {title}
+                        </span>
+                        <span className="mt-1 block text-xs leading-relaxed text-gray-500">
+                          {description}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
 
-        {messages.length === 1 && (
-          <div className="border-t border-gray-100 px-4 pt-3 sm:px-6">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">You could ask</p>
-            <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-none">
-              {SUGGESTED_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => sendMessage(prompt)}
-                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-[#1E6B3C]"
-                >
-                  {prompt} <FiChevronRight size={13} />
-                </button>
-              ))}
-            </div>
+              <div className="flex items-center gap-2 rounded-xl bg-[#F8FAF8] px-3.5 py-3 text-xs font-medium leading-relaxed text-gray-500">
+                <FiShield
+                  className="shrink-0 text-[#1E6B3C]"
+                  aria-hidden="true"
+                />
+                Designed to make everyday meal decisions feel easier.
+              </div>
+            </aside>
           </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="border-t border-gray-100 bg-white p-3 sm:px-5 sm:py-4">
-          <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-[#FAFCFA] p-1.5 transition focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-100">
-            <button
-              type="button"
-              aria-label="Focus message input"
-              onClick={() => inputRef.current?.focus()}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-400 transition hover:bg-white hover:text-[#1E6B3C]"
-            >
-              <FiPlus />
-            </button>
-            <input
-              ref={inputRef}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Message KIRA..."
-              aria-label="Message KIRA"
-              className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-[#1A2E35] outline-none placeholder:text-gray-400"
-            />
-            <motion.button
-              type="submit"
-              whileTap={{ scale: 0.92 }}
-              disabled={!draft.trim() || isReplying}
-              aria-label="Send message"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1E6B3C] text-white transition hover:bg-[#185A31] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-            >
-              <FiArrowUp size={18} />
-            </motion.button>
-          </div>
-          <p className="mt-2 text-center text-[10px] leading-relaxed text-gray-400">
-            KIRA can guide you through ChopBeta. For account-specific help, contact asapgrouphq@gmail.com.
-          </p>
-        </form>
-      </section>
+        </section>
+      </main>
     </div>
   );
 }
