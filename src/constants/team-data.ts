@@ -66,11 +66,4 @@ export const ASAP_TEAM: TeamMember[] = [
     role: "Product Designer",
     image: "/images/team/monarch.jpeg",
   },
-
-  {
-    id: 11,
-    name: "Obatuga Boluwatife",
-    role: "Social Media Manager",
-    image: "/images/team/boluwatife.jpeg",
-  },
 ];
