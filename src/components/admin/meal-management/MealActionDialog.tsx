@@ -6,6 +6,8 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
+  ImagePlus,
+  LoaderCircle,
   Pencil,
   Trash2,
   UtensilsCrossed,
@@ -22,8 +24,9 @@ interface MealActionDialogProps {
   isOpen: boolean;
   meal: ManagedMeal | null;
   mode: MealDialogMode;
+  isSaving: boolean;
   onClose: () => void;
-  onSave: (id: string, updates: MealEdits) => void;
+  onSave: (id: string, updates: MealEdits, image?: File) => Promise<boolean>;
   onDelete: (meal: ManagedMeal) => void;
   onToggleStatus: (meal: ManagedMeal) => void;
 }
@@ -37,6 +40,7 @@ export default function MealActionDialog({
   isOpen,
   meal,
   mode,
+  isSaving,
   onClose,
   onSave,
   onDelete,
@@ -51,7 +55,7 @@ export default function MealActionDialog({
     closeButtonRef.current?.focus();
 
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !isSaving) onClose();
     };
     document.addEventListener("keydown", closeOnEscape);
 
@@ -59,7 +63,7 @@ export default function MealActionDialog({
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, isSaving, onClose]);
 
   if (typeof document === "undefined") return null;
 
@@ -87,7 +91,7 @@ export default function MealActionDialog({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) onClose();
+            if (event.target === event.currentTarget && !isSaving) onClose();
           }}
         >
           <motion.section
@@ -135,7 +139,8 @@ export default function MealActionDialog({
                 type="button"
                 aria-label="Close dialog"
                 onClick={onClose}
-                className="rounded-lg p-2 text-[#7b887f] transition hover:bg-[#f3f6f3] hover:text-[#344239]"
+                disabled={isSaving}
+                className="rounded-lg p-2 text-[#7b887f] transition hover:bg-[#f3f6f3] hover:text-[#344239] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -196,6 +201,7 @@ export default function MealActionDialog({
               <EditMealForm
                 key={meal.id}
                 meal={meal}
+                isSaving={isSaving}
                 onCancel={onClose}
                 onSave={onSave}
               />
@@ -237,12 +243,14 @@ export default function MealActionDialog({
 
 function EditMealForm({
   meal,
+  isSaving,
   onCancel,
   onSave,
 }: {
   meal: ManagedMeal;
+  isSaving: boolean;
   onCancel: () => void;
-  onSave: (id: string, updates: MealEdits) => void;
+  onSave: (id: string, updates: MealEdits, image?: File) => Promise<boolean>;
 }) {
   const [form, setForm] = useState<MealEdits>(() => ({
     name: meal.name,
@@ -251,37 +259,55 @@ function EditMealForm({
     price: meal.price.replace(/[^\d.]/g, ""),
     calories: meal.calories.replace(/[^\d.]/g, ""),
   }));
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!imagePreviewUrl) return;
+    return () => URL.revokeObjectURL(imagePreviewUrl);
+  }, [imagePreviewUrl]);
 
   const updateField = (field: keyof MealEdits, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const submitEdit = (event: FormEvent<HTMLFormElement>) => {
+  const canSaveImageWithoutCalories =
+    Boolean(imageFile) &&
+    !form.calories.trim() &&
+    form.name.trim() === meal.name &&
+    form.description.trim() === meal.description &&
+    form.category === meal.category &&
+    Number(form.price) === Number(meal.price.replace(/[^\d.]/g, ""));
+
+  const submitEdit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const price = Number(form.price);
-    const calories = Number(form.calories);
+    const calories = form.calories.trim() ? Number(form.calories) : null;
     if (
       !form.name.trim() ||
       !form.description.trim() ||
       !Number.isFinite(price) ||
       price < 0 ||
-      !Number.isFinite(calories) ||
-      calories < 0
+      (calories === null && !canSaveImageWithoutCalories) ||
+      (calories !== null &&
+        (!Number.isFinite(calories) || calories < 0))
     ) {
       return;
     }
 
-    onSave(meal.id, {
+    await onSave(meal.id, {
       ...form,
       name: form.name.trim(),
       description: form.description.trim(),
       price: `₦${price.toLocaleString("en-NG")}`,
-      calories: `${calories} Kcal`,
-    });
+      calories: calories === null ? meal.calories : `${calories} Kcal`,
+    }, imageFile ?? undefined);
   };
 
+  const previewImage = imagePreviewUrl ?? meal.image;
+
   return (
-    <form onSubmit={submitEdit}>
+    <form onSubmit={submitEdit} aria-busy={isSaving}>
       <div className="grid max-h-[min(65vh,560px)] gap-4 overflow-y-auto px-5 py-5 sm:grid-cols-2 sm:px-6">
         <label className="block text-xs font-semibold text-[#526056] sm:col-span-2">
           Meal name
@@ -292,6 +318,7 @@ function EditMealForm({
             value={form.name}
             onChange={(event) => updateField("name", event.target.value)}
             className={inputClassName}
+            disabled={isSaving}
           />
         </label>
         <label className="block text-xs font-semibold text-[#526056]">
@@ -301,6 +328,7 @@ function EditMealForm({
             value={form.category}
             onChange={(event) => updateField("category", event.target.value)}
             className={inputClassName}
+            disabled={isSaving}
           >
             {!categories.includes(form.category) && (
               <option value={form.category}>{form.category}</option>
@@ -314,13 +342,14 @@ function EditMealForm({
           Price (NGN)
           <input
             type="number"
-            required
+            required={!canSaveImageWithoutCalories}
             min="0"
             step="any"
             inputMode="decimal"
             value={form.price}
             onChange={(event) => updateField("price", event.target.value)}
             className={inputClassName}
+            disabled={isSaving}
           />
         </label>
         <label className="block text-xs font-semibold text-[#526056]">
@@ -334,8 +363,53 @@ function EditMealForm({
             value={form.calories}
             onChange={(event) => updateField("calories", event.target.value)}
             className={inputClassName}
+            disabled={isSaving}
           />
         </label>
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-semibold text-[#526056]">
+            Meal image
+            <div className="mt-1.5 flex flex-col gap-3 rounded-xl border border-[#e5ede7] bg-[#f8fbf8] p-3 sm:flex-row sm:items-center">
+              <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-lg bg-white sm:w-32">
+                {previewImage ? (
+                  <Image
+                    src={previewImage}
+                    alt={`Preview of ${meal.name}`}
+                    fill
+                    unoptimized
+                    sizes="128px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-[#829087]">
+                    <ImagePlus className="h-7 w-7" aria-hidden="true" />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  aria-label="Choose a meal image"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setImageFile(file);
+                    setImagePreviewUrl(
+                      file ? URL.createObjectURL(file) : null,
+                    );
+                  }}
+                  className="block w-full text-xs text-[#526056] file:mr-3 file:rounded-lg file:border-0 file:bg-[#eaf4ee] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#247443]"
+                  disabled={isSaving}
+                />
+                <p className="mt-2 text-[11px] leading-relaxed text-[#829087]">
+                  {imageFile
+                    ? `Selected: ${imageFile.name}. It will upload when you save changes.`
+                    : "Choose an image to replace the current meal photo. Leave empty to keep it unchanged."}
+                </p>
+              </div>
+            </div>
+          </label>
+        </div>
         <label className="block text-xs font-semibold text-[#526056] sm:col-span-2">
           Description
           <textarea
@@ -347,11 +421,13 @@ function EditMealForm({
               updateField("description", event.target.value)
             }
             className={`${inputClassName} h-auto py-3`}
+            disabled={isSaving}
           />
         </label>
       </div>
       <DialogFooter
         onCancel={onCancel}
+        isSubmitting={isSaving}
         submitLabel="Save changes"
         className="px-5 pb-5 sm:px-6"
       />
@@ -370,10 +446,12 @@ function Detail({ label, value }: { label: string; value: string }) {
 
 function DialogFooter({
   onCancel,
+  isSubmitting,
   submitLabel,
   className = "",
 }: {
   onCancel: () => void;
+  isSubmitting: boolean;
   submitLabel?: string;
   className?: string;
 }) {
@@ -384,17 +462,23 @@ function DialogFooter({
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#dfe6e1] px-5 text-sm font-semibold text-[#526056] transition hover:bg-[#f5f8f5]"
+        disabled={isSubmitting}
+        className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#dfe6e1] px-5 text-sm font-semibold text-[#526056] transition hover:bg-[#f5f8f5] disabled:cursor-not-allowed disabled:opacity-50"
       >
         Close
       </button>
       {submitLabel && (
         <button
           type="submit"
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-5 text-sm font-bold text-white transition hover:bg-[#185a31]"
+          disabled={isSubmitting}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1E6B3C] px-5 text-sm font-bold text-white transition hover:bg-[#185a31] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Pencil className="h-4 w-4" aria-hidden="true" />
-          {submitLabel}
+          {isSubmitting ? (
+            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+          )}
+          {isSubmitting ? "Saving changes..." : submitLabel}
         </button>
       )}
     </footer>

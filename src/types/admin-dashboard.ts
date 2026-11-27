@@ -13,3 +13,8 @@ export interface AdminTopMeal {
   count: number;
 }
 
+export interface AdminRecentActivity {
+  _id: string;
+  description: string;
+}
+
