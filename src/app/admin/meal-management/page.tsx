@@ -16,6 +16,7 @@ import type {
   AdminMeal,
   MealEdits,
   MealStats as MealStatsData,
+  MealUpdateData,
   MealWriteData,
   ManagedMeal,
 } from "@/types/admin-meals";
@@ -239,14 +240,17 @@ export default function MealManagementPage() {
 
     const updatedPrice = Number(updates.price.replace(/[^\d.]/g, ""));
     const updatedCalories = Number(updates.calories.replace(/[^\d.]/g, ""));
-    const mealUpdates: Partial<MealWriteData> = {
+    const originalNutrition = original.source.averageNutritionalInfo;
+    const mealUpdates: MealUpdateData = {
       mealTitle: updates.name,
       description: updates.description,
       category: updates.category,
       estimatedPrice: updatedPrice,
       averageNutritionalInfo: {
-        ...original.source.averageNutritionalInfo,
         estimatedCalories: updatedCalories,
+        estimatedMacronutrients:
+          originalNutrition?.estimatedMacronutrients ??
+          originalNutrition?.macronutrients,
       },
     };
     const hasMealDetailChanges =
@@ -457,8 +461,7 @@ export default function MealManagementPage() {
 
 function toManagedMeal(meal: AdminMeal): ManagedMeal {
   const calories =
-    meal.averageNutritionalInfo?.estimatedCalories ??
-    meal.averageNutritionalInfo?.estimatedMacronutrients?.calories;
+    meal.averageNutritionalInfo?.estimatedCalories;
   return {
     id: meal._id,
     name: meal.mealTitle,

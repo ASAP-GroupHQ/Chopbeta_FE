@@ -2,6 +2,7 @@ import { apiClient } from "@/services/api-client";
 import type {
   AdminMeal,
   DecimalValue,
+  MealUpdateData,
   MealWriteData,
 } from "@/types/admin-meals";
 
@@ -97,9 +98,26 @@ export const adminMealsService = {
   },
 
   async createMeal(data: MealWriteData): Promise<string> {
+    const estimatedCalories = data.averageNutritionalInfo?.estimatedCalories;
+    if (
+      typeof estimatedCalories !== "number" ||
+      !Number.isFinite(estimatedCalories) ||
+      estimatedCalories <= 0
+    ) {
+      throw new Error("Estimated calories must be greater than zero.");
+    }
+
+    const mealData: MealWriteData = {
+      ...data,
+      averageNutritionalInfo: {
+        estimatedCalories,
+        estimatedMacronutrients:
+          data.averageNutritionalInfo.estimatedMacronutrients,
+      },
+    };
     const response = await apiClient.post<ApiEnvelope<AdminMeal>>(
       "/meals/add",
-      data,
+      mealData,
     );
     const id = response.data.data?._id;
     if (!id) {
@@ -123,7 +141,7 @@ export const adminMealsService = {
     return imageUrl;
   },
 
-  async updateMeal(id: string, data: Partial<MealWriteData>): Promise<void> {
+  async updateMeal(id: string, data: MealUpdateData): Promise<void> {
     await apiClient.put(`/meals/edit/${encodeURIComponent(id)}`, data);
   },
 

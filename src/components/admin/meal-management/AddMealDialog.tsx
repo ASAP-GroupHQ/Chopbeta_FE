@@ -10,7 +10,11 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { LoaderCircle, Plus, X } from "lucide-react";
-import type { MealWriteData } from "@/types/admin-meals";
+import {
+  MEAL_TYPES,
+  type MealType,
+  type MealWriteData,
+} from "@/types/admin-meals";
 
 interface AddMealDialogProps {
   isOpen: boolean;
@@ -22,6 +26,7 @@ interface AddMealDialogProps {
 const initialForm = {
   mealTitle: "",
   category: "",
+  type: "",
   estimatedPrice: "",
   description: "",
   estimatedCalories: "",
@@ -29,6 +34,9 @@ const initialForm = {
   proteins: "",
   fats: "",
 };
+
+const isMealType = (value: string): value is MealType =>
+  MEAL_TYPES.some((type) => type === value);
 
 export default function AddMealDialog({
   isOpen,
@@ -39,12 +47,15 @@ export default function AddMealDialog({
   const [form, setForm] = useState(initialForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const closeDialog = useCallback(() => {
     if (isSubmitting) return;
     setForm(initialForm);
     setImageFile(null);
+    setImagePreviewUrl(null);
+    setFormError(null);
     onClose();
   }, [isSubmitting, onClose]);
 
@@ -81,38 +92,63 @@ export default function AddMealDialog({
 
   const updateField = (field: keyof typeof initialForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setFormError(null);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const numericFields = [
+    const mealType = form.type;
+    if (!isMealType(mealType)) {
+      setFormError("Select a meal type.");
+      return;
+    }
+
+    const numericValues = [
       form.estimatedPrice,
       form.estimatedCalories,
       form.carbohydrates,
       form.proteins,
       form.fats,
-    ].map(Number);
-    if (numericFields.some((value) => !Number.isFinite(value) || value < 0)) {
+    ];
+    if (numericValues.some((value) => !value.trim())) {
+      setFormError(
+        "Enter all required numeric values, including estimated calories.",
+      );
       return;
     }
 
-    const wasAdded = await onSubmit({
+    const numericFields = numericValues.map(Number);
+    if (numericFields.some((value) => !Number.isFinite(value) || value < 0)) {
+      setFormError("Numeric values must be valid numbers greater than or equal to zero.");
+      return;
+    }
+    if (Number(form.estimatedCalories) <= 0) {
+      setFormError("Estimated calories must be greater than zero.");
+      return;
+    }
+
+    setFormError(null);
+    const meal: MealWriteData = {
       mealTitle: form.mealTitle.trim(),
       category: form.category,
+      type: mealType,
       estimatedPrice: Number(form.estimatedPrice),
       description: form.description.trim(),
       averageNutritionalInfo: {
         estimatedCalories: Number(form.estimatedCalories),
-        macronutrients: {
+        estimatedMacronutrients: {
           carbohydrates: Number(form.carbohydrates),
           proteins: Number(form.proteins),
           fats: Number(form.fats),
         },
       },
-    }, imageFile ?? undefined);
+    };
+    const wasAdded = await onSubmit(meal, imageFile ?? undefined);
     if (wasAdded) {
       setForm(initialForm);
       setImageFile(null);
+      setImagePreviewUrl(null);
+      setFormError(null);
       onClose();
     }
   };
@@ -124,20 +160,24 @@ export default function AddMealDialog({
     field: keyof typeof initialForm,
     label: string,
     unit?: string,
+    minimum = 0,
   ) => (
     <label className="block min-w-0 text-xs font-semibold text-[#526056]">
       {label}
       <div className="relative">
         <input
           type="number"
-          min="0"
+          min={minimum}
           step="any"
           inputMode="decimal"
           required
+          name={field}
           value={form[field]}
           onChange={(event) => updateField(field, event.target.value)}
           className={`${inputClassName} ${unit ? "pr-14" : ""}`}
-          placeholder="0"
+          placeholder={
+            field === "estimatedCalories" ? "e.g. 250" : "0"
+          }
           disabled={isSubmitting}
         />
         {unit && (
@@ -236,6 +276,29 @@ export default function AddMealDialog({
                       <option value="quick meal">Quick meal</option>
                     </select>
                   </label>
+                  <label className="block text-xs font-semibold text-[#526056]">
+                    Meal type
+                    <select
+                      required
+                      value={form.type}
+                      onChange={(event) =>
+                        updateField("type", event.target.value)
+                      }
+                      className={inputClassName}
+                      disabled={isSubmitting}
+                    >
+                      <option value="" disabled>
+                        Select a meal type
+                      </option>
+                      {MEAL_TYPES.map((type) => (
+                        <option key={type} value={type}>
+                          {type === "others"
+                            ? "Others"
+                            : type.charAt(0).toUpperCase() + type.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   {numberInput("estimatedPrice", "Estimated price", "NGN")}
                   <label className="block text-xs font-semibold text-[#526056] sm:col-span-2">
                     Meal image
@@ -305,6 +368,7 @@ export default function AddMealDialog({
                       "estimatedCalories",
                       "Estimated calories",
                       "kcal",
+                      0.01,
                     )}
                     {numberInput(
                       "carbohydrates",
@@ -315,6 +379,11 @@ export default function AddMealDialog({
                     {numberInput("fats", "Fats", "g")}
                   </div>
                 </section>
+                {formError && (
+                  <p role="alert" className="text-xs font-medium text-red-600">
+                    {formError}
+                  </p>
+                )}
               </div>
 
               <footer className="flex flex-col-reverse gap-2 border-t border-[#edf0ed] bg-[#fcfdfc] px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
