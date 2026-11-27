@@ -46,6 +46,7 @@ export default function MealManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [isAddingMeal, setIsAddingMeal] = useState(false);
+  const [isSavingMeal, setIsSavingMeal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMealDialog, setActiveMealDialog] = useState<{
     meal: ManagedMeal;
@@ -66,40 +67,34 @@ export default function MealManagementPage() {
     [],
   );
 
-  const loadMealStats = useCallback(
-    (isActive: () => boolean = () => true) => {
-      const loadStat = (
-        key: keyof MealStatsData,
-        request: Promise<number>,
-      ) => {
-        request
-          .then((value) => {
-            if (!isActive()) return;
-            setMealStats((current) => ({ ...current, [key]: value }));
-            setMealStatsErrors((current) => {
-              const next = { ...current };
-              delete next[key];
-              return next;
-            });
-          })
-          .catch((error: unknown) => {
-            if (!isActive()) return;
-            const message =
-              error instanceof Error ? error.message : "Please try again.";
-            setMealStatsErrors((current) => ({
-              ...current,
-              [key]: `Could not load ${key}: ${message}`,
-            }));
+  const loadMealStats = useCallback((isActive: () => boolean = () => true) => {
+    const loadStat = (key: keyof MealStatsData, request: Promise<number>) => {
+      request
+        .then((value) => {
+          if (!isActive()) return;
+          setMealStats((current) => ({ ...current, [key]: value }));
+          setMealStatsErrors((current) => {
+            const next = { ...current };
+            delete next[key];
+            return next;
           });
-      };
+        })
+        .catch((error: unknown) => {
+          if (!isActive()) return;
+          const message =
+            error instanceof Error ? error.message : "Please try again.";
+          setMealStatsErrors((current) => ({
+            ...current,
+            [key]: `Could not load ${key}: ${message}`,
+          }));
+        });
+    };
 
-      loadStat("totalMeals", adminMealsService.getTotalMeals());
-      loadStat("activeMeals", adminMealsService.getActiveMeals());
-      loadStat("inactiveMeals", adminMealsService.getInactiveMeals());
-      loadStat("categories", adminMealsService.getCategoryCount());
-    },
-    [],
-  );
+    loadStat("totalMeals", adminMealsService.getTotalMeals());
+    loadStat("activeMeals", adminMealsService.getActiveMeals());
+    loadStat("inactiveMeals", adminMealsService.getInactiveMeals());
+    loadStat("categories", adminMealsService.getCategoryCount());
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -228,48 +223,96 @@ export default function MealManagementPage() {
     }
   };
 
-  const saveMealEdits = async (id: string, updates: MealEdits) => {
+  const saveMealEdits = async (
+    id: string,
+    updates: MealEdits,
+    image?: File,
+  ): Promise<boolean> => {
     const original = meals.find((meal) => meal.id === id);
-    if (!original) return;
-    try {
-      await adminMealsService.updateMeal(id, {
-        mealTitle: updates.name,
-        description: updates.description,
-        category: updates.category,
-        estimatedPrice: Number(updates.price.replace(/[^\d.]/g, "")),
-        averageNutritionalInfo: {
-          ...original.source.averageNutritionalInfo,
-          estimatedCalories: Number(updates.calories.replace(/[^\d.]/g, "")),
-        },
-      });
-    } catch (error) {
+    if (!original) {
       toast.error(
         "Could not update meal",
+        "This meal is no longer available. Refresh the page and try again.",
+      );
+      return false;
+    }
+
+    const updatedPrice = Number(updates.price.replace(/[^\d.]/g, ""));
+    const updatedCalories = Number(updates.calories.replace(/[^\d.]/g, ""));
+    const mealUpdates: Partial<MealWriteData> = {
+      mealTitle: updates.name,
+      description: updates.description,
+      category: updates.category,
+      estimatedPrice: updatedPrice,
+      averageNutritionalInfo: {
+        ...original.source.averageNutritionalInfo,
+        estimatedCalories: updatedCalories,
+      },
+    };
+    const hasMealDetailChanges =
+      updates.name !== original.name ||
+      updates.description !== original.description ||
+      updates.category !== original.category ||
+      updatedPrice !==
+        adminMealsService.toPrice(original.source.estimatedPrice) ||
+      updates.calories !== original.calories;
+
+    if (!hasMealDetailChanges && !image) {
+      setActiveMealDialog(null);
+      toast.success("Meal is already up to date.");
+      return true;
+    }
+
+    setIsSavingMeal(true);
+    let mealDetailsSaved = false;
+    try {
+      if (hasMealDetailChanges) {
+        await adminMealsService.updateMeal(id, mealUpdates);
+        mealDetailsSaved = true;
+        setMeals((previousMeals) =>
+          previousMeals.map((meal) =>
+            meal.id === id
+              ? {
+                  ...meal,
+                  ...updates,
+                  source: { ...meal.source, ...mealUpdates },
+                }
+              : meal,
+          ),
+        );
+      }
+
+      if (image) {
+        const imageUrl = await adminMealsService.uploadMealImage(id, image);
+        setMeals((previousMeals) =>
+          previousMeals.map((meal) =>
+            meal.id === id
+              ? {
+                  ...meal,
+                  image: imageUrl,
+                  source: { ...meal.source, imageUrl },
+                }
+              : meal,
+          ),
+        );
+      }
+
+      setActiveMealDialog(null);
+      toast.success("Meal updated successfully.");
+      return true;
+    } catch (error) {
+      toast.error(
+        mealDetailsSaved && image
+          ? "Meal details updated, but the image could not be uploaded"
+          : hasMealDetailChanges
+            ? "Could not update meal"
+            : "Could not upload meal image",
         error instanceof Error ? error.message : "Please try again.",
       );
-      return;
+      return false;
+    } finally {
+      setIsSavingMeal(false);
     }
-    setMeals((previousMeals) =>
-      previousMeals.map((meal) =>
-        meal.id === id
-          ? {
-              ...meal,
-              ...updates,
-              source: {
-                ...meal.source,
-                mealTitle: updates.name,
-                category: updates.category,
-                estimatedPrice: Number(
-                  updates.price.replace(/[^\d.]/g, ""),
-                ),
-                description: updates.description,
-              },
-            }
-          : meal,
-      ),
-    );
-    setActiveMealDialog(null);
-    toast.success("Meal updated successfully.");
   };
 
   const deleteMeal = async (mealToDelete: ManagedMeal) => {
@@ -301,9 +344,7 @@ export default function MealManagementPage() {
         },
       };
       setMeals((previousMeals) =>
-        previousMeals.map((item) =>
-          item.id === meal.id ? updatedMeal : item,
-        ),
+        previousMeals.map((item) => (item.id === meal.id ? updatedMeal : item)),
       );
       setActiveMealDialog((current) =>
         current?.meal.id === meal.id
@@ -364,7 +405,9 @@ export default function MealManagementPage() {
             selectedStatus={selectedStatus}
             searchQuery={searchQuery}
             sortBy={sortBy}
-            onSearchChange={(value) => updateFilter(() => setSearchQuery(value))}
+            onSearchChange={(value) =>
+              updateFilter(() => setSearchQuery(value))
+            }
             onCategoryChange={(value) =>
               updateFilter(() => setSelectedCategory(value))
             }
@@ -402,6 +445,7 @@ export default function MealManagementPage() {
         isOpen={Boolean(activeMealDialog)}
         meal={activeMealDialog?.meal ?? null}
         mode={activeMealDialog?.mode ?? "view"}
+        isSaving={isSavingMeal}
         onClose={closeMealDialog}
         onSave={saveMealEdits}
         onDelete={deleteMeal}
@@ -428,9 +472,7 @@ function toManagedMeal(meal: AdminMeal): ManagedMeal {
         : meal.isActive
           ? "Active"
           : "Inactive",
-    dateAdded: meal.createdAt
-      ? new Date(meal.createdAt).toLocaleString()
-      : "—",
+    dateAdded: meal.createdAt ? new Date(meal.createdAt).toLocaleString() : "—",
     image: meal.imageUrl,
     source: meal,
   };
